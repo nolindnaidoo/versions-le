@@ -152,7 +152,7 @@ fn read_max_results(arguments: &Value) -> Result<usize, String> {
         return Ok(DEFAULT_MAX_RESULTS);
     };
     let invalid = "maxResults must be a positive integer".to_string();
-    let value = raw.as_u64().ok_or(invalid.clone())?;
+    let value = raw.as_u64().ok_or_else(|| invalid.clone())?;
     if value < 1 {
         return Err(invalid);
     }

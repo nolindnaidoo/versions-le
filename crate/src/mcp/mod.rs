@@ -145,20 +145,23 @@ fn call_tool(params: Option<&Value>) -> Result<Value, (i64, String)> {
         .cloned()
         .unwrap_or_else(|| json!({}));
 
-    match name {
-        "compare_versions" => Ok(match compare::run(&arguments) {
-            Ok(result) => tool_result(&result),
-            Err(message) => tool_failure(&message),
-        }),
-        "versions_le_check" => Ok(match check_tool(&arguments) {
-            Ok(result) => tool_result(&result),
-            Err(message) => tool_failure(&message),
-        }),
-        other => Err((
-            INVALID_PARAMS,
-            format!("this server offers no tool named {other}"),
-        )),
-    }
+    // Dispatch first, then the one place a tool outcome becomes a result:
+    // a second copy of that mapping is how one tool ends up reporting a
+    // failure differently from the other.
+    let outcome = match name {
+        "compare_versions" => compare::run(&arguments),
+        "versions_le_check" => check_tool(&arguments),
+        other => {
+            return Err((
+                INVALID_PARAMS,
+                format!("this server offers no tool named {other}"),
+            ));
+        }
+    };
+    Ok(match outcome {
+        Ok(result) => tool_result(&result),
+        Err(message) => tool_failure(&message),
+    })
 }
 
 fn check_tool(arguments: &Value) -> Result<Value, String> {
