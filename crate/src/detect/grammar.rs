@@ -54,10 +54,22 @@ pub(crate) enum Constraint {
 }
 
 impl Constraint {
+    /// Exhaustive rather than a catch-all: a fourth verdict added here
+    /// has to state whether it is comparable, and a wildcard would
+    /// silently answer "no" on its behalf.
     pub(crate) fn range(&self) -> Option<&Range> {
         match self {
             Self::Range(range) => Some(range),
-            _ => None,
+            Self::Unknown(_) | Self::Malformed(_) => None,
+        }
+    }
+
+    /// Why the manifest is at fault, when it is. Exhaustive for the same
+    /// reason as `range`.
+    pub(crate) fn malformed_reason(&self) -> Option<&'static str> {
+        match self {
+            Self::Malformed(reason) => Some(reason),
+            Self::Range(_) | Self::Unknown(_) => None,
         }
     }
 }
@@ -127,7 +139,8 @@ fn meet(left: &Interval, right: &Interval) -> Option<Interval> {
             std::cmp::Ordering::Equal => low.inclusive && high.inclusive,
             std::cmp::Ordering::Greater => false,
         },
-        _ => true,
+        // Open at either end, so there is always room between them.
+        (None, _) | (_, None) => true,
     };
     inhabited.then_some(Interval { lower, upper })
 }

@@ -21,7 +21,7 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
-use super::grammar::{self, Constraint};
+use super::grammar;
 use super::heuristics::Ecosystem;
 use super::parser::{Entry, Kind, Refusal, Site};
 
@@ -229,8 +229,8 @@ fn msrv(entries: &[Entry]) -> Vec<Finding> {
         .collect();
 
     let mut findings = Vec::new();
-    let constraints = distinct_constraints(&declared);
     if distinct_ranges(&declared) > 1 {
+        let constraints = distinct_constraints(&declared);
         findings.push(Finding {
             code: "msrv-mismatch".to_string(),
             severity: WARNING.to_string(),
@@ -309,22 +309,24 @@ fn prereleases(entries: &[Entry]) -> Vec<Finding> {
 }
 
 fn malformed(entries: &[Entry]) -> Vec<Finding> {
-    let broken = |entry: &Entry| matches!(entry.constraint, Constraint::Malformed(_));
+    let broken = |entry: &Entry| entry.constraint.malformed_reason().is_some();
     group_by_name(entries, broken)
         .into_iter()
-        .map(|((ecosystem, name), group)| {
-            let reason = match group[0].constraint {
-                Constraint::Malformed(reason) => reason,
-                _ => "not a version constraint",
-            };
-            Finding {
+        // The reason is read back out of the group rather than assumed:
+        // a group with none is no finding, not a finding with a
+        // substituted message nobody wrote.
+        .filter_map(|((ecosystem, name), group)| {
+            let reason = group
+                .iter()
+                .find_map(|entry| entry.constraint.malformed_reason())?;
+            Some(Finding {
                 code: "malformed-constraint".to_string(),
                 severity: ERROR.to_string(),
                 ecosystem,
                 name: name.to_string(),
                 message: format!("{reason}: {}", distinct_constraints(&group).join(", ")),
                 sites: sites(&group),
-            }
+            })
         })
         .collect()
 }
@@ -335,13 +337,18 @@ fn malformed(entries: &[Entry]) -> Vec<Finding> {
 fn floating(entries: &[Entry]) -> Vec<Finding> {
     group_by_name(entries, |entry| entry.floats.is_some())
         .into_iter()
-        .map(|((ecosystem, name), group)| Finding {
-            code: "floating-pin".to_string(),
-            severity: INFO.to_string(),
-            ecosystem,
-            name: name.to_string(),
-            message: group[0].floats.unwrap_or("an unpinned version").to_string(),
-            sites: sites(&group),
+        // As in `malformed`: the reason comes back out of the group, so
+        // no finding can carry a message the readers did not write.
+        .filter_map(|((ecosystem, name), group)| {
+            let why = group.iter().find_map(|entry| entry.floats)?;
+            Some(Finding {
+                code: "floating-pin".to_string(),
+                severity: INFO.to_string(),
+                ecosystem,
+                name: name.to_string(),
+                message: why.to_string(),
+                sites: sites(&group),
+            })
         })
         .collect()
 }
