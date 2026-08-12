@@ -1,0 +1,49 @@
+# Contributor and agent instructions
+
+**Read [AGENTS.md](AGENTS.md) first, then [`crate/AGENTS.md`](crate/AGENTS.md)
+before writing any code.** This repository is crate-only: the root file is a
+router, and the crate's file carries the engineering standard — layout, control
+flow, error handling, testing, the definition of done — plus the decisions that
+are already made and are not to be relitigated.
+[`crate/SPEC.md`](crate/SPEC.md) defines what the tool does.
+[CLAUDE.md](CLAUDE.md) is the short version: gates and traps.
+
+This file exists only to route you there. It is deliberately thin: the standard
+lives in one place so it cannot drift between tools.
+
+## Non-negotiables
+
+- **Refuse rather than guess.** A constraint in a grammar this tool does not
+  model is named in `refusals` and takes part in no comparison — never
+  approximated into a range.
+- **`Unknown` blames the tool, `Malformed` blames the manifest.** When in
+  doubt, blame the tool.
+- **Comparison never crosses an ecosystem.** `msrv-mismatch` is the one bridge
+  and it names both keys; a second is a spec change, not a patch.
+- **The exit code is the product** — 0 clean, 1 findings, 2 malformed question.
+  No manifests at all is 0.
+- **Nothing writes.** No `--fix`, no `--pin`, no `--update`, on either surface.
+- Guard clauses first. **No statement-position `else`**; value-position
+  `if/else` and `match` are fine. Nesting stops at two levels inside a
+  function.
+- **No inline `#[allow(...)]`** — fix the lint or relax it, with a reason, in
+  `[lints.clippy]`.
+- `detect/` is pure: a `std::fs` call there is a bug.
+- **Never report success or coverage you did not achieve.** A skipped case says
+  so by name.
+- Errors are descriptive, name the file or value they are about, and are never
+  swallowed.
+- Comments explain **why**, never what.
+- Commits are conventional (`fix:`, `feat:`, `docs:`, `test:`, `ci:`…),
+  imperative, and enforced by a hook.
+
+## Before you commit
+
+```bash
+cd crate
+cargo fmt --all --check && cargo clippy --all-targets -- -D warnings && cargo test --locked
+```
+
+Coverage thresholds are a floor and are never lowered to make a build pass.
+Every claim in a README, `SPEC.md` or the help text must be provable against
+the code.
