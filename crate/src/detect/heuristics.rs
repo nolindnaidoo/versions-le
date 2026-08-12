@@ -116,10 +116,14 @@ pub(crate) fn is_vendored(name: &str) -> bool {
 /// `**/` matches zero or more directories.
 pub(crate) fn should_exclude(filepath: &str, patterns: &[String]) -> bool {
     let path = filepath.replace('\\', "/");
-    let name = basename(&path).to_string();
+    let name = basename(&path);
 
     patterns.iter().any(|pattern| {
-        let target = if pattern.contains('/') { &path } else { &name };
+        let target = if pattern.contains('/') {
+            path.as_str()
+        } else {
+            name
+        };
         glob_to_regex(pattern).is_match(target)
     })
 }
@@ -133,12 +137,8 @@ fn glob_to_regex(pattern: &str) -> Regex {
         match character {
             '*' if chars.peek() == Some(&'*') => {
                 chars.next();
-                if chars.peek() == Some(&'/') {
-                    chars.next();
-                    source.push_str("(?:.*/)?");
-                } else {
-                    source.push_str(".*");
-                }
+                let separated = chars.next_if_eq(&'/').is_some();
+                source.push_str(if separated { "(?:.*/)?" } else { ".*" });
             }
             '*' => source.push_str("[^/]*"),
             '?' => source.push_str("[^/]"),
@@ -168,12 +168,15 @@ pub(crate) fn looks_like_a_version(text: &str) -> bool {
     if text.is_empty() || text.contains("${{") || text.contains(',') || text.starts_with('[') {
         return false;
     }
-    let first = text.chars().next().unwrap_or(' ');
-    if first.is_ascii_digit() || matches!(first, '^' | '~' | '>' | '<' | '=' | '*') {
-        return true;
+    // `v` first: a leading `v` is only evidence when a digit follows it,
+    // and the other openings are all one character wide.
+    if let Some(rest) = text.strip_prefix(['v', 'V']) {
+        return rest.starts_with(|c: char| c.is_ascii_digit());
     }
-    if matches!(first, 'v' | 'V') {
-        return text[1..].starts_with(|c: char| c.is_ascii_digit());
+    if text.starts_with(|c: char| c.is_ascii_digit())
+        || text.starts_with(['^', '~', '>', '<', '=', '*'])
+    {
+        return true;
     }
     // The moving channel names, which are refused later with a reason
     // rather than dropped here without one.
