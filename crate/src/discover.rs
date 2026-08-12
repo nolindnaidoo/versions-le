@@ -120,18 +120,26 @@ fn descend(path: &Path, hidden: bool) -> bool {
     }
     // `.github` is always descended: the workflows are in it, and a tool
     // that needed a flag to see them would ship with the CI half off.
-    hidden || name == ".github" || !name.starts_with('.') || name == ".."
+    hidden || name == ".github" || !name.starts_with('.')
 }
+
+/// A leading byte-order mark is three invisible bytes that Notepad, Excel
+/// and a PowerShell redirect all add. Before a `{` it makes a JSON parser
+/// reject the whole document, which is indistinguishable from a manifest
+/// with no dependencies in it.
+const BYTE_ORDER_MARK: char = '\u{feff}';
 
 pub(crate) fn read(path: &Path) -> Result<String, String> {
     let bytes = std::fs::read(path).map_err(|error| format!("{}: {error}", path.display()))?;
-    let text =
+    let mut text =
         String::from_utf8(bytes).map_err(|_| format!("{}: not UTF-8 text", path.display()))?;
-    // A leading byte-order mark is three invisible bytes that Notepad,
-    // Excel and a PowerShell redirect all add. Before a `{` it makes a
-    // JSON parser reject the whole document, which is indistinguishable
-    // from a manifest with no dependencies in it.
-    Ok(text.strip_prefix('\u{feff}').unwrap_or(&text).to_string())
+    // Removed in place rather than by copying the tail into a second
+    // string: a manifest can be tens of megabytes, and every one of them
+    // would otherwise pay for the three bytes almost none of them carry.
+    if text.starts_with(BYTE_ORDER_MARK) {
+        text.replace_range(..BYTE_ORDER_MARK.len_utf8(), "");
+    }
+    Ok(text)
 }
 
 /// How a manifest is named in the report.
