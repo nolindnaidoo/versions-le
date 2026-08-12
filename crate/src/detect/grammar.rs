@@ -992,6 +992,31 @@ mod tests {
         assert!(!range(npm("^1.0.0")).mentions_prerelease());
     }
 
+    #[test]
+    fn an_inclusive_and_an_exclusive_bound_meeting_at_a_point_do_not_overlap() {
+        // `<2.0.0` and `>=2.0.0` share exactly one candidate and admit
+        // none of it.
+        assert!(!overlap(npm("<2.0.0"), npm(">=2.0.0")));
+        assert!(overlap(npm("<=2.0.0"), npm(">=2.0.0")));
+    }
+
+    /// The constraint that names no version at all. It is a real value in
+    /// three grammars — Cargo's `*`, an npm dependency spelled `""`, a
+    /// PEP 508 requirement with no specifier — and it must never be the
+    /// half of a pair that makes a conflict.
+    #[test]
+    fn an_unbounded_constraint_is_disjoint_with_nothing() {
+        for unbounded in [cargo("*"), npm(""), python("")] {
+            assert!(range(unbounded.clone()).floor().is_none(), "{unbounded:?}");
+            for other in [npm("0.0.1"), npm("9999.0.0"), npm("^1.0.0-rc.1")] {
+                assert!(
+                    !disjoint(&range(unbounded.clone()), &range(other.clone())),
+                    "{unbounded:?} refused {other:?}"
+                );
+            }
+        }
+    }
+
     /// **Regression.** `floor` answers "how old a toolchain does this
     /// permit", and the MSRV check believes it. A union with an
     /// alternative that is unbounded below permits everything, so the
@@ -1010,11 +1035,102 @@ mod tests {
         );
     }
 
+    /// PEP 440 compares the release it was given rather than the line
+    /// above it: `>3.9` admits 3.9.1 and refuses 3.9.0, where npm's
+    /// `>3.9` means the whole 3.9 line is below the bar.
     #[test]
-    fn an_inclusive_and_an_exclusive_bound_meeting_at_a_point_do_not_overlap() {
-        // `<2.0.0` and `>=2.0.0` share exactly one candidate and admit
-        // none of it.
-        assert!(!overlap(npm("<2.0.0"), npm(">=2.0.0")));
-        assert!(overlap(npm("<=2.0.0"), npm(">=2.0.0")));
+    fn a_pep440_strict_inequality_is_about_one_release() {
+        assert!(!overlap(python(">3.9"), python("==3.9")));
+        assert!(overlap(python(">3.9"), python("==3.9.1")));
+        assert!(overlap(python("<=2.0"), python("==2.0")));
+        assert!(!overlap(python("<=2.0"), python("==2.0.1")));
+    }
+
+    /// A complete version has no line above it, so `>1.2.3` moves the
+    /// bound rather than the version.
+    #[test]
+    fn a_bound_above_a_complete_version_excludes_only_that_version() {
+        assert!(!overlap(npm(">1.2.3"), npm("1.2.3")));
+        assert!(overlap(npm(">1.2.3"), npm("1.2.4")));
+    }
+
+    /// A bare major with no minor: the tilde and the caret both widen to
+    /// the whole major line, and the 0.x caret to everything below 1.
+    #[test]
+    fn a_tilde_and_a_caret_on_a_bare_major_cover_the_line() {
+        assert!(overlap(npm("~1"), npm("1.9.9")));
+        assert!(!overlap(npm("~1"), npm("2.0.0")));
+        assert!(overlap(npm("^0"), npm("0.9.9")));
+        assert!(!overlap(npm("^0"), npm("1.0.0")));
+    }
+
+    /// An alternative no version satisfies contributes nothing to the
+    /// union — but a range whose every alternative is like that is not
+    /// "matches nothing", which would be disjoint with everything. The
+    /// manifest earned a `malformed-constraint` instead.
+    #[test]
+    fn a_self_contradictory_alternative_drops_out_and_a_lone_one_is_malformed() {
+        assert!(overlap(npm("^1.0.0 || >=2 <1"), npm("1.5.0")));
+        assert!(!overlap(npm("^1.0.0 || >=2 <1"), npm("2.5.0")));
+        assert!(matches!(npm(">=2 <1"), Constraint::Malformed(_)));
+        assert!(matches!(cargo(">=2, <1"), Constraint::Malformed(_)));
+        assert!(matches!(python(">=2,<1"), Constraint::Malformed(_)));
+        assert!(matches!(python(">=1,"), Constraint::Malformed(_)));
+        // npm reads an empty comparator set as `*`, and so does this.
+        assert!(overlap(npm("^1.0.0 || "), npm("9.9.9")));
+    }
+
+    /// Every Cargo comparator, against a version it admits and the one
+    /// just past it. `>` and `<=` are the pair most easily written the
+    /// wrong way round: both are about the whole line a partial names, so
+    /// `>1.2` starts at 1.3.0 and `<=1.2` runs to the end of 1.2.
+    #[test]
+    fn every_cargo_comparator_covers_the_line_cargo_says_it_does() {
+        for (requirement, inside, outside) in [
+            (">1.2", "=1.3.0", "=1.2.9"),
+            (">=1.2", "=1.2.0", "=1.1.9"),
+            ("<1.2", "=1.1.9", "=1.2.0"),
+            ("<=1.2", "=1.2.9", "=1.3.0"),
+            ("~1.2", "=1.2.9", "=1.3.0"),
+            ("1.*", "=1.9.9", "=2.0.0"),
+        ] {
+            assert!(
+                overlap(cargo(requirement), cargo(inside)),
+                "{requirement} refused {inside}"
+            );
+            assert!(
+                !overlap(cargo(requirement), cargo(outside)),
+                "{requirement} admitted {outside}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_cargo_requirement_that_does_not_parse_is_malformed() {
+        for spec in ["^^1.0.0", "1.2.beta", "not-a-version"] {
+            assert!(
+                matches!(cargo(spec), Constraint::Malformed(_)),
+                "{spec} was read as {:?}",
+                cargo(spec)
+            );
+        }
+    }
+
+    /// `Unknown` blames the tool and `Malformed` blames the manifest,
+    /// held apart on the two declarations that are bare minimums.
+    #[test]
+    fn a_minimum_version_that_is_not_one_is_refused_by_the_right_verdict() {
+        assert!(matches!(minimum("*"), Constraint::Unknown(_)));
+        assert!(matches!(minimum("nope"), Constraint::Malformed(_)));
+        assert!(matches!(action_ref("v"), Constraint::Unknown(_)));
+    }
+
+    /// A PEP 440 clause the tool cannot read is `Unknown` when the form
+    /// is one it declined to model and `Malformed` only when the
+    /// characters are not a version at all.
+    #[test]
+    fn a_pep440_clause_with_no_operator_or_no_version_is_refused() {
+        assert!(matches!(python("1.2.3"), Constraint::Unknown(_)));
+        assert!(matches!(python(">=nope"), Constraint::Malformed(_)));
     }
 }
