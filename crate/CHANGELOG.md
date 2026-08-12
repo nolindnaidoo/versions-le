@@ -62,6 +62,16 @@ three refusal reasons, and both surfaces.
 
 ### Fixed
 
+- **A range with an unbounded alternative reported the wrong floor.**
+  `Range::floor` answers "how old a toolchain does this permit" and the
+  MSRV check believes it, but it took the lowest bound anybody had
+  written down and ignored the alternative that had none: a CI pin of
+  `<1.80 || >=1.90` came back as 1.90 while admitting every version below
+  1.80, so the check cleared a toolchain that was not pinned at all. A
+  union with an alternative that is unbounded below now has no floor, and
+  the check skips what it cannot bound rather than believing a number.
+  Reachable only through a `||` union in a workflow's tool version, which
+  is why no corpus document had one — the unit test does.
 - **Report paths carried a Windows path prefix verbatim.** On Windows
   `std::fs::canonicalize` returns an extended-length path, so a manifest
   named as its own root was labelled

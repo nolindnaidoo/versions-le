@@ -72,9 +72,21 @@ impl Range {
     /// The lowest version this range can admit, if it has one.
     ///
     /// Used by the MSRV check, which asks "how old a toolchain does this
-    /// permit", and by the prerelease check, which asks whether the
-    /// floor is a prerelease.
+    /// permit".
+    ///
+    /// **One unbounded alternative means no floor at all.** A union like
+    /// `<1.80 || >=1.90` admits everything below 1.80, so answering
+    /// 1.90 — the lowest bound anybody wrote down — would tell the MSRV
+    /// check that CI builds no older than 1.90 when it builds on
+    /// anything.
     pub(crate) fn floor(&self) -> Option<&Version> {
+        if self
+            .intervals
+            .iter()
+            .any(|interval| interval.lower.is_none())
+        {
+            return None;
+        }
         self.intervals
             .iter()
             .filter_map(|interval| interval.lower.as_ref())
@@ -965,6 +977,24 @@ mod tests {
     fn a_prerelease_is_visible_in_the_range() {
         assert!(range(npm("^1.0.0-rc.1")).mentions_prerelease());
         assert!(!range(npm("^1.0.0")).mentions_prerelease());
+    }
+
+    /// **Regression.** `floor` answers "how old a toolchain does this
+    /// permit", and the MSRV check believes it. A union with an
+    /// alternative that is unbounded below permits everything, so the
+    /// lowest bound anybody wrote down is not the answer — reporting it
+    /// would have the check clear a CI pin that admits any version at
+    /// all.
+    #[test]
+    fn a_union_with_an_unbounded_alternative_has_no_floor() {
+        assert!(range(npm("<1.80 || >=1.90")).floor().is_none());
+        assert_eq!(
+            range(npm(">=1.85 || >=1.90"))
+                .floor()
+                .expect("a floor")
+                .to_string(),
+            "1.85.0"
+        );
     }
 
     #[test]
