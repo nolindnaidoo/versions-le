@@ -27,7 +27,13 @@
 ///
 /// Panics on a path the corpus does not carry — a test naming a file
 /// that is not there is a broken test, not a runtime condition.
-#[cfg_attr(not(test), expect(dead_code, reason = "the corpus is a test fixture"))]
+///
+/// **Compiled only under `cfg(test)`.** Nothing outside the tests reads a
+/// fixture, so a shipped binary carries neither this function nor the
+/// documents it embeds — and the crate keeps its rule of no inline lint
+/// suppression, which the alternative (a `dead_code` exemption for the
+/// non-test build) would have cost it.
+#[cfg(test)]
 pub(crate) fn document(path: &str) -> &'static str {
     match path {
         // The planted tree.
