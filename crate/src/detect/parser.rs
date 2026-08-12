@@ -19,8 +19,8 @@ use super::grammar::{self, Constraint};
 use super::heuristics::{Ecosystem, ManifestKind, looks_like_a_version};
 
 /// Where a constraint sits in a manifest. `line` is carried only where
-/// the reader honestly knows it — the workflow reader scans lines, and
-/// the structured readers address by key.
+/// the reader honestly knows it — the two line-scanning readers, `go.mod`
+/// and the workflow one, do; the structured readers address by key.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct Site {
     pub(crate) file: String,
@@ -345,16 +345,23 @@ fn cargo_dependency(alias: &str, value: &Toml) -> (String, Option<String>, Optio
     if let Some(raw) = table.get("version").and_then(Toml::as_str) {
         return (name, Some(raw.to_string()), None);
     }
-    let reason = if table.contains_key("workspace") {
-        "an inherited workspace dependency carries its version elsewhere"
-    } else if table.contains_key("git") {
-        "a git dependency resolves outside the registry"
-    } else if table.contains_key("path") {
-        "a path dependency with no version has no registry requirement"
-    } else {
-        "a dependency table with no version"
-    };
-    (name, None, Some(reason))
+    (name, None, Some(no_version_reason(table)))
+}
+
+/// Why a dependency table has nothing to compare — ranked, most specific
+/// source first, so `{ workspace = true, path = "…" }` is named as the
+/// inheritance it is.
+fn no_version_reason(table: &toml::Table) -> &'static str {
+    if table.contains_key("workspace") {
+        return "an inherited workspace dependency carries its version elsewhere";
+    }
+    if table.contains_key("git") {
+        return "a git dependency resolves outside the registry";
+    }
+    if table.contains_key("path") {
+        return "a path dependency with no version has no registry requirement";
+    }
+    "a dependency table with no version"
 }
 
 fn cargo_floats(raw: &str) -> Option<&'static str> {
@@ -503,7 +510,7 @@ fn go_mod(out: &mut Parsed, file: &str, content: &str) {
             continue;
         }
         if let Some(rest) = line.strip_prefix("go ") {
-            out.push(go_entry(file, "go", rest.trim(), number, Kind::Engine));
+            out.push(go_language(file, rest.trim(), number));
             continue;
         }
         if line.starts_with("require (") {
@@ -518,35 +525,56 @@ fn go_mod(out: &mut Parsed, file: &str, content: &str) {
         let Some((module, version)) = requirement.split_once(char::is_whitespace) else {
             continue;
         };
-        out.push(go_entry(
-            file,
-            module,
-            version.trim(),
-            number,
-            Kind::Runtime,
-        ));
+        out.push(go_module(file, module, version.trim(), number));
     }
 }
 
-fn go_entry(file: &str, name: &str, raw: &str, line: u32, kind: Kind) -> Entry {
+/// The `go` directive: a floor, not a version.
+fn go_language(file: &str, raw: &str, line: u32) -> Entry {
+    go_entry(
+        file,
+        "go",
+        Kind::Engine,
+        "go",
+        grammar::minimum(raw),
+        raw,
+        line,
+    )
+}
+
+/// A `require` version. Go module versions are exact.
+fn go_module(file: &str, name: &str, raw: &str, line: u32) -> Entry {
+    go_entry(
+        file,
+        name,
+        Kind::Runtime,
+        "require",
+        grammar::go(raw),
+        raw,
+        line,
+    )
+}
+
+/// Both go.mod entries, without a `match` on `Kind` deciding which
+/// grammar to use: the two callers above are the only two shapes the
+/// file has, and a wildcard arm would quietly hand a future kind to the
+/// wrong one.
+fn go_entry(
+    file: &str,
+    name: &str,
+    kind: Kind,
+    key: &str,
+    constraint: Constraint,
+    raw: &str,
+    line: u32,
+) -> Entry {
     Entry {
         ecosystem: Ecosystem::Go,
         name: name.to_string(),
         kind,
-        site: site(file, kind_key(kind), raw, Some(line)),
-        // Go module versions are exact; the `go` directive is a floor.
-        constraint: match kind {
-            Kind::Engine => grammar::minimum(raw),
-            _ => grammar::go(raw),
-        },
+        site: site(file, key.to_string(), raw, Some(line)),
+        constraint,
         floats: None,
-    }
-}
-
-fn kind_key(kind: Kind) -> String {
-    match kind {
-        Kind::Engine => "go".to_string(),
-        _ => "require".to_string(),
     }
 }
 
@@ -614,7 +642,7 @@ fn workflow_tool(key: &str) -> Option<&str> {
     }
     let tool = key.strip_suffix("-version")?;
     (!tool.is_empty() && tool.chars().all(|c| c.is_ascii_alphanumeric() || c == '-'))
-        .then_some(if tool == "rust" { "rust" } else { tool })
+        .then_some(tool)
 }
 
 fn workflow_uses(out: &mut Parsed, file: &str, value: &str, line: u32) {
