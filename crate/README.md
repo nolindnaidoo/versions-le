@@ -44,11 +44,18 @@ named in the report's `refusals` and takes part in no comparison:
 refused unknown_grammar pkg: PEP 440 compatible-release (~=); excluded from comparison
 refused cross_ecosystem semver: appears in cargo and npm; different ecosystems name different things, so these were not compared
 refused ambiguous_version_string node: not evidently a version; excluded from comparison
+refused per_job_tool_version python: installed as 3.12 and 3.9 by different jobs; a CI tool version belongs to the job that installs it, so these were not compared
 ```
 
-That last one is `node-version: ${{ matrix.node }}`. A `<tool>-version:`
+The third is `node-version: ${{ matrix.node }}`. A `<tool>-version:`
 key in a workflow is a naming convention, not a schema, so a value that
 is not evidently a version is refused rather than read.
+
+The fourth is the one that matters most for a repository that has done
+nothing wrong. Testing on the oldest interpreter a project supports and
+publishing on the newest is correct, and two jobs are not two claims
+about one requirement. An action `uses:` pin is a repository-wide choice
+and is still compared; only the per-job tool version steps out.
 
 **Comparison never crosses an ecosystem.** An npm `semver` and a Cargo
 `semver` are unrelated packages that share a word — and a bare

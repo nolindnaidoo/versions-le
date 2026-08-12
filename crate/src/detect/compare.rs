@@ -39,8 +39,9 @@ const ERROR: &str = "error";
 const WARNING: &str = "warning";
 const INFO: &str = "info";
 
-/// Every check, over every entry. The refusals returned here are the
-/// `cross_ecosystem` ones; the rest come from the readers.
+/// Every check, over every entry. The refusals returned here are the two
+/// the comparison itself declines to make — `cross_ecosystem` and
+/// `per_job_tool_version`; the rest come from the readers.
 pub(crate) fn analyse(entries: &[Entry]) -> (Vec<Finding>, Vec<Refusal>) {
     let mut findings = Vec::new();
     findings.extend(conflicts(entries));
@@ -56,7 +57,10 @@ pub(crate) fn analyse(entries: &[Entry]) -> (Vec<Finding>, Vec<Refusal>) {
             .then_with(|| left.ecosystem.cmp(&right.ecosystem))
             .then_with(|| left.name.cmp(&right.name))
     });
-    (findings, cross_ecosystem(entries))
+
+    let mut refusals = cross_ecosystem(entries);
+    refusals.extend(per_job_tool_versions(entries));
+    (findings, refusals)
 }
 
 fn rank(severity: &str) -> u8 {
@@ -150,7 +154,9 @@ fn distinct_files(entries: &[&Entry]) -> usize {
 /// difference as a conflict would spend the reader's attention on
 /// something that is not a defect.
 fn conflicts(entries: &[Entry]) -> Vec<Finding> {
-    let comparable = |entry: &Entry| entry.kind != Kind::Msrv && entry.constraint.range().is_some();
+    let comparable = |entry: &Entry| {
+        entry.kind != Kind::Msrv && !per_job(entry) && entry.constraint.range().is_some()
+    };
 
     group_by_name(entries, comparable)
         .into_iter()
@@ -193,6 +199,51 @@ fn conflicts(entries: &[Entry]) -> Vec<Finding> {
             })
         })
         .collect()
+}
+
+/// Whether this constraint belongs to a **job** rather than to the
+/// repository.
+///
+/// A `<tool>-version:` input is what one CI job installs before it runs.
+/// Testing on the oldest supported interpreter and publishing on the
+/// newest is correct and common, and so is a job that needs an old
+/// toolchain for one build step — two jobs are not two claims about a
+/// single requirement, they are two jobs.
+///
+/// Everything else keeps its repository-wide reading. An action `uses:`
+/// pin is which version of a dependency the repository has chosen, and
+/// two workflows disagreeing about that is exactly the drift this crate
+/// exists for; `packageManager` is Corepack's one-per-repository pin and
+/// is `Kind::Tool` in npm, not here.
+fn per_job(entry: &Entry) -> bool {
+    entry.ecosystem == Ecosystem::Ci && entry.kind == Kind::Tool
+}
+
+/// The refusal that replaces the comparison `per_job` withholds.
+///
+/// It fires exactly where a conflict used to, so nothing goes quiet: the
+/// reader still sees that one tool is installed two ways and still sees
+/// every site. What changes is the verdict — the tool cannot know
+/// whether two jobs were meant to agree, and inventing an answer to that
+/// was an `error` and a failed build against a repository that had done
+/// nothing wrong.
+fn per_job_tool_versions(entries: &[Entry]) -> Vec<Refusal> {
+    group_by_name(entries, |entry| {
+        per_job(entry) && entry.constraint.range().is_some()
+    })
+    .into_iter()
+    .filter(|(_, group)| distinct_ranges(group) > 1)
+    .map(|((ecosystem, name), group)| Refusal {
+        reason: "per_job_tool_version".to_string(),
+        ecosystem: Some(ecosystem),
+        name: name.to_string(),
+        message: format!(
+            "installed as {} by different jobs; a CI tool version belongs to the job that installs it, so these were not compared",
+            distinct_constraints(&group).join(" and ")
+        ),
+        sites: sites(&group),
+    })
+    .collect()
 }
 
 fn first_disjoint_pair<'a>(group: &[&'a Entry]) -> Option<(&'a Entry, &'a Entry)> {
@@ -535,6 +586,80 @@ mod tests {
         ]);
         assert!(coded(&found, "constraint-conflict").is_empty());
         assert!(coded(&found, "disjoint-constraint").is_empty());
+    }
+
+    /// **A CI tool version belongs to the job that installs it.**
+    /// Testing on the oldest supported interpreter and publishing on the
+    /// newest is correct, common, and not a contradiction — but it is
+    /// two versions of one name, which is the shape a conflict is made
+    /// of. The tool cannot know whether two jobs were meant to agree, so
+    /// it says what it saw and declines to compare.
+    #[test]
+    fn two_jobs_pinning_one_tool_differently_is_refused_not_a_conflict() {
+        let (entries, _) = entries(&[
+            (
+                ManifestKind::Workflow,
+                ".github/workflows/ci.yml",
+                "      - uses: actions/setup-python@v5\n        with:\n          python-version: 3.9\n",
+            ),
+            (
+                ManifestKind::Workflow,
+                ".github/workflows/publish.yml",
+                "      - uses: actions/setup-python@v5\n        with:\n          python-version: 3.12\n",
+            ),
+        ]);
+        let (found, refusals) = analyse(&entries);
+        assert!(coded(&found, "disjoint-constraint").is_empty(), "{found:?}");
+        assert!(coded(&found, "constraint-conflict").is_empty(), "{found:?}");
+
+        let refused: Vec<&Refusal> = refusals
+            .iter()
+            .filter(|refusal| refusal.reason == "per_job_tool_version")
+            .collect();
+        assert_eq!(refused.len(), 1, "{refusals:?}");
+        assert_eq!(refused[0].name, "python");
+        assert_eq!(refused[0].sites.len(), 2);
+        assert!(refused[0].message.contains("3.9"), "{}", refused[0].message);
+    }
+
+    /// The action pin beside it is **not** per job. Which version of an
+    /// action the repository uses is the repository's decision, and two
+    /// workflows disagreeing about it is the drift this crate is for.
+    #[test]
+    fn an_action_pinned_two_ways_is_still_a_conflict() {
+        let found = findings(&[
+            (
+                ManifestKind::Workflow,
+                ".github/workflows/ci.yml",
+                "      - uses: actions/checkout@v4\n",
+            ),
+            (
+                ManifestKind::Workflow,
+                ".github/workflows/publish.yml",
+                "      - uses: actions/checkout@v5\n",
+            ),
+        ]);
+        assert_eq!(coded(&found, "disjoint-constraint").len(), 1, "{found:?}");
+    }
+
+    /// Corepack's `packageManager` is one per repository, so it keeps
+    /// being compared: the exemption is for a CI job's toolchain, not
+    /// for everything the report calls a tool.
+    #[test]
+    fn a_package_manager_pinned_two_ways_is_still_a_conflict() {
+        let found = findings(&[
+            (
+                ManifestKind::PackageJson,
+                "package.json",
+                r#"{ "packageManager": "bun@1.1.0" }"#,
+            ),
+            (
+                ManifestKind::PackageJson,
+                "app/package.json",
+                r#"{ "packageManager": "bun@1.2.0" }"#,
+            ),
+        ]);
+        assert_eq!(coded(&found, "disjoint-constraint").len(), 1, "{found:?}");
     }
 
     #[test]

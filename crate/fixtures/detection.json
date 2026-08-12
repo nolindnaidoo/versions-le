@@ -138,6 +138,16 @@
     },
     {
       "files": [
+        ".github/workflows/jobs.yml"
+      ],
+      "findings": [],
+      "name": "refuses to compare two jobs' tool versions",
+      "refusals": [
+        "per_job_tool_version python"
+      ]
+    },
+    {
+      "files": [
         "crates/caret/Cargo.toml"
       ],
       "findings": [
@@ -385,6 +395,16 @@
       "refusals": [
         "ambiguous_version_string node"
       ]
+    },
+    {
+      "entries": [
+        "ci Action uses actions/setup-python=v5",
+        "ci Tool python-version python=3.9",
+        "ci Action uses actions/setup-python=v5",
+        "ci Tool python-version python=3.12"
+      ],
+      "file": ".github/workflows/jobs.yml",
+      "refusals": []
     },
     {
       "entries": [

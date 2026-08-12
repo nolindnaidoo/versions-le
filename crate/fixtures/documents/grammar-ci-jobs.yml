@@ -1,0 +1,19 @@
+# Two jobs, two interpreters, and both are right: the tests run on the
+# oldest version the project supports and the wheel is built on the
+# newest. A tool comparing names would call this a conflict — and would
+# call it `disjoint-constraint`, an error, against a workflow that has
+# done nothing wrong.
+#
+# One file rather than two on purpose: scoping the comparison per file
+# would still have fabricated the finding here.
+jobs:
+  test:
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.9
+  publish:
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12

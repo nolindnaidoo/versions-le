@@ -181,6 +181,36 @@ fn a_name_in_two_ecosystems_is_refused_rather_than_compared() {
     assert_eq!(run(&["--strict", &root]).code, 0);
 }
 
+/// **A CI tool version belongs to the job that installs it.** Testing on
+/// the oldest supported interpreter and publishing on the newest is
+/// correct and common; calling it a `disjoint-constraint` failed a build
+/// over a workflow that had done nothing wrong. Like `cross_ecosystem`,
+/// this refusal is the answer rather than a failure to answer, so
+/// `--strict` leaves it alone too.
+#[test]
+fn two_jobs_pinning_one_tool_differently_is_refused_and_exits_zero() {
+    let tree = Tree::new("per-job");
+    tree.write(
+        ".github/workflows/ci.yml",
+        "jobs:\n  test:\n    steps:\n      - uses: actions/setup-python@v5\n        with:\n          python-version: 3.9\n",
+    );
+    tree.write(
+        ".github/workflows/publish.yml",
+        "jobs:\n  publish:\n    steps:\n      - uses: actions/setup-python@v5\n        with:\n          python-version: 3.12\n",
+    );
+    let root = tree.path().to_string_lossy().to_string();
+
+    let relaxed = run(&[&root]);
+    assert_eq!(relaxed.code, 0, "{}", relaxed.stderr);
+    let report = report(&relaxed);
+    assert!(codes(&report).is_empty(), "{:?}", codes(&report));
+    assert_eq!(report["refusals"][0]["reason"], "per_job_tool_version");
+    assert_eq!(report["refusals"][0]["name"], "python");
+    assert!(relaxed.stderr.contains("refused"), "{}", relaxed.stderr);
+    assert_eq!(run(&["--strict", &root]).code, 0);
+    assert_eq!(run(&["--fail-on", "any", &root]).code, 0);
+}
+
 /// A `<tool>-version:` key is a naming convention, not a schema, so a
 /// value that is not evidently a version is refused rather than read.
 #[test]

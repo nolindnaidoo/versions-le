@@ -22,7 +22,7 @@ about the *set* of manifests — which is why the report is one object,
 why discovery matters as much as parsing, and why the crate it most
 resembles is `envsync-le`.
 
-**Status: v0.1.0 core.** Five readers, six checks, three refusal
+**Status: v0.1.0 core.** Five readers, six checks, four refusal
 reasons, both surfaces, and the corpus that pins them.
 
 ## Layout

@@ -62,6 +62,25 @@ three refusal reasons, and both surfaces.
 
 ### Fixed
 
+- **Two CI jobs at two tool versions were reported as a disjoint
+  constraint.** `python-version: 3.9` in the test job and `3.12` in the
+  publish job produced the crate's loudest output — `error`, exit 1 —
+  against a workflow that had done nothing wrong. Testing on the oldest
+  interpreter a project supports and publishing on the newest is
+  correct, and two jobs are not two claims about one requirement. A
+  `<tool>-version:` input is now excluded from comparison and reported
+  as a new refusal, **`per_job_tool_version`**, which fires exactly
+  where the finding used to: the reader still sees that one tool is
+  installed two ways, with every site, and the build no longer fails
+  over it. Like `cross_ecosystem` it is the answer rather than a failure
+  to answer, so `--strict` leaves it alone.
+
+  Scoped as tightly as the reason justifies: an action `uses:` pin is
+  the repository's own choice and is still compared, `packageManager`
+  is still compared, and `toolchain:` is still an MSRV claim. Found by
+  running the binary against a real repository — `pixelactions` went
+  from exit 1 with a fabricated error to exit 0 with a refusal, and
+  nothing else in its report moved.
 - **A range with an unbounded alternative reported the wrong floor.**
   `Range::floor` answers "how old a toolchain does this permit" and the
   MSRV check believes it, but it took the lowest bound anybody had

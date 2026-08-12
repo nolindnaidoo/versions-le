@@ -37,6 +37,7 @@ one.
 | `unknown_grammar` | The value is a constraint, in a syntax this tool does not model: PEP 440 `~=`, `!=`, `===`, `==1.2.*`; npm `workspace:`, `npm:`, `file:`, `link:`, a git or https URL, an `owner/repo` shorthand, a dist tag; a Cargo dependency table with no `version` (`workspace = true`, a bare `path`, a bare `git`); a commit-SHA or branch action ref; a CI channel name (`stable`, `latest`, `lts/*`) | The entry stays in the report, named with the reason. **It takes part in no comparison.** |
 | `cross_ecosystem` | The same name appears under two ecosystems | Named once, with a site in each. **The two are never compared.** |
 | `ambiguous_version_string` | A `<tool>-version:` value in a workflow that is not evidently a version — `${{ matrix.node }}`, a list, a filename | No entry is created at all. There is nothing to compare and nothing was invented. |
+| `per_job_tool_version` | One CI tool installed at two different versions — `python-version: 3.9` in the test job, `3.12` in the publish job | Named once, with every site. **The two are never compared.** |
 
 `malformed-constraint` is a **finding**, not a refusal, and the
 difference is deliberate: it is the narrower verdict that the value is
@@ -47,8 +48,29 @@ meaning this tool chose not to model.
 
 `--strict` turns `unknown_grammar` and `ambiguous_version_string` into
 exit 2, for a pipeline that wants zero unanalysed corners.
-`cross_ecosystem` never trips it: that refusal is not a failure to
-answer, it **is** the answer.
+`cross_ecosystem` and `per_job_tool_version` never trip it: those two are
+not failures to answer, they **are** the answer.
+
+### A CI tool version belongs to the job that installs it
+
+A `<tool>-version:` input is what one job installs before it runs. Two
+jobs at two versions is not a repository contradicting itself — testing
+on the oldest interpreter a project supports and publishing on the
+newest is correct, and so is a build step that needs an old toolchain.
+The tool cannot know whether two jobs were meant to agree, so it names
+what it saw and refuses, exactly where it used to report a conflict.
+
+This is scoped as tightly as the reason justifies. An action `uses:` pin
+is which version of a dependency the *repository* has chosen, so two
+workflows disagreeing about `actions/checkout` is still a finding.
+`packageManager` is Corepack's one-per-repository pin and is still
+compared. `toolchain:` is still an MSRV claim and still bridges to
+`rust-version`. Only the per-job tool version steps out of the
+comparison.
+
+Scoping the comparison per file would not have been enough: the two jobs
+are as often in one workflow as in two, and the corpus case that pins
+this is a single file for that reason.
 
 ## Per-ecosystem scoping — the settled rule
 

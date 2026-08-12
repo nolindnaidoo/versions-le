@@ -229,14 +229,14 @@ fn summarise(report: &Report) -> Summary {
 /// went unanalysed, and exit 2 says so rather than letting a narrower
 /// answer read as a clean one.
 ///
-/// `cross_ecosystem` never triggers it. That refusal is not a failure to
-/// answer — it *is* the answer.
+/// The refusals that *are* the answer never trigger it — see
+/// `Refusal::is_the_answer`, which is the one place that list lives.
 pub(crate) fn exit_code(report: &Report, fail_on: FailOn, strict: bool) -> u8 {
     let unanalysed = !report.diagnostics.is_empty()
         || report
             .refusals
             .iter()
-            .any(|refusal| refusal.reason != "cross_ecosystem");
+            .any(|refusal| !refusal.is_the_answer());
     if strict && unanalysed {
         return 2;
     }

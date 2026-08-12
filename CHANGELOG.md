@@ -11,7 +11,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [0.1.0] - 2026-08-12
 
 First release. The Rust CLI and MCP server in [`crate/`](crate/): five
-manifest readers, six checks, three refusal reasons, and both surfaces.
+manifest readers, six checks, four refusal reasons, and both surfaces.
 Not published to crates.io yet — build from source.
 
 ### Added

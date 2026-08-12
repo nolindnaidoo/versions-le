@@ -83,6 +83,23 @@ pub(crate) struct Refusal {
     pub(crate) sites: Vec<Site>,
 }
 
+impl Refusal {
+    /// Whether this refusal **is** the answer rather than a failure to
+    /// produce one.
+    ///
+    /// `--strict` exists for the corners the tool did not analyse. These
+    /// two are corners it analysed and then declined to read anything
+    /// into: a name that means different things in two ecosystems, and a
+    /// tool version that belongs to the job installing it. Failing a
+    /// build over either would be failing it over the tool being right.
+    pub(crate) fn is_the_answer(&self) -> bool {
+        matches!(
+            self.reason.as_str(),
+            "cross_ecosystem" | "per_job_tool_version"
+        )
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct ParseError {
     #[serde(rename = "type")]

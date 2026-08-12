@@ -56,9 +56,10 @@ fn seed() -> u64 {
 /// job that never ends.
 const CASE_LIMIT: Duration = Duration::from_secs(20);
 
-/// The six codes a finding can carry, and the three reasons a refusal
+/// The six codes a finding can carry, and the four reasons a refusal
 /// can. Pinned here as well as in the corpus so a fuzz case that
-/// produced a seventh of either would fail rather than pass unnoticed.
+/// produced a seventh finding or a fifth reason would fail rather than
+/// pass unnoticed.
 const CODES: [&str; 6] = [
     "constraint-conflict",
     "disjoint-constraint",
@@ -67,9 +68,10 @@ const CODES: [&str; 6] = [
     "msrv-mismatch",
     "prerelease-in-production",
 ];
-const REASONS: [&str; 3] = [
+const REASONS: [&str; 4] = [
     "ambiguous_version_string",
     "cross_ecosystem",
+    "per_job_tool_version",
     "unknown_grammar",
 ];
 const CONFLICTS: [&str; 2] = ["constraint-conflict", "disjoint-constraint"];

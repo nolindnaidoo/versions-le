@@ -339,7 +339,7 @@ jobs:
             | tee "$RUNNER_TEMP/coverage-matrix.txt"
           grep -q 'coverage-matrix: 5 ecosystems and 5 manifest kinds reachable' \
             "$RUNNER_TEMP/coverage-matrix.txt"
-          grep -q 'coverage-matrix: 6 finding codes and 3 refusal reasons reachable' \
+          grep -q 'coverage-matrix: 6 finding codes and 4 refusal reasons reachable' \
             "$RUNNER_TEMP/coverage-matrix.txt"
 
   # The commit convention was claimed by .githooks/commit-msg and by

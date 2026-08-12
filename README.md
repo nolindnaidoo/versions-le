@@ -98,7 +98,7 @@ twice.
 constrained four ways is one problem with four sites, and four findings
 would read as four problems.
 
-## The three refusals
+## The four refusals
 
 **It never guesses.** A constraint in a grammar this tool does not model
 is named in the report's `refusals` and takes part in **no comparison** —
@@ -109,6 +109,7 @@ never approximated into a range.
 | `unknown_grammar` | The value is a constraint in a syntax this tool does not model: PEP 440 `~=`, `!=`, `===`, `==1.2.*`; npm `workspace:`, `npm:`, `file:`, `link:`, a git or https URL, an `owner/repo` shorthand, a dist tag; a Cargo dependency table with no `version`; a commit-SHA or branch action ref; a CI channel name (`stable`, `latest`, `lts/*`). |
 | `cross_ecosystem` | The same name appears under two ecosystems. Named once, with a site in each, and **the two are never compared**. |
 | `ambiguous_version_string` | A `<tool>-version:` value in a workflow that is not evidently a version — `${{ matrix.node }}`, a list, a filename. No entry is created at all: there is nothing to compare and nothing was invented. |
+| `per_job_tool_version` | One CI tool installed at two versions — `python-version: 3.9` in the test job, `3.12` in the publish job. A tool version belongs to the job that installs it, so **the two are never compared**. |
 
 `malformed-constraint` is a **finding**, not a refusal, and the
 difference is deliberate: it is the narrower verdict that the value is

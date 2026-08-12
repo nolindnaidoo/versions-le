@@ -79,6 +79,9 @@ pub(crate) fn document(path: &str) -> &'static str {
         ".github/workflows/matrix.yml" => {
             include_str!("../../fixtures/documents/grammar-ci-matrix.yml")
         }
+        ".github/workflows/jobs.yml" => {
+            include_str!("../../fixtures/documents/grammar-ci-jobs.yml")
+        }
         "go.mod" => include_str!("../../fixtures/documents/grammar-go.mod"),
 
         // The pin pair. Same package, same source, one character apart.
@@ -290,9 +293,10 @@ mod tests {
         "prerelease-in-production",
     ];
 
-    const REFUSALS: [&str; 3] = [
+    const REFUSALS: [&str; 4] = [
         "ambiguous_version_string",
         "cross_ecosystem",
+        "per_job_tool_version",
         "unknown_grammar",
     ];
 
