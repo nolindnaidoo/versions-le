@@ -70,6 +70,7 @@ pub(crate) fn definition() -> Value {
 }
 
 pub(crate) fn run(arguments: &Value) -> Result<Value, String> {
+    super::only(arguments, &["files", "maxResults"], "this tool")?;
     let documents = read_files(arguments)?;
     let max_results = read_max_results(arguments)?;
     let mut report = scan::report_for(&documents);
@@ -123,6 +124,7 @@ fn read_files(arguments: &Value) -> Result<Vec<Document>, String> {
     items
         .iter()
         .map(|item| {
+            super::only(item, &["path", "content"], "a file")?;
             let path = item
                 .get("path")
                 .and_then(Value::as_str)
@@ -238,6 +240,27 @@ mod tests {
         let error = run(&json!({})).expect_err("a refusal");
         assert!(error.contains("files is required"), "{error}");
         assert!(run(&json!({ "files": [] })).is_err());
+    }
+
+    /// The schema says `additionalProperties: false` for the call and
+    /// for every file in it. A schema that says so and a reader that
+    /// ignores it is a claim with nothing behind it: `maxResult` would
+    /// have silently kept the default cap, which is the one thing a
+    /// truncating tool must never do quietly.
+    #[test]
+    fn an_unknown_argument_is_refused_by_name() {
+        let error = run(&json!({
+            "files": [{ "path": "Cargo.toml", "content": "" }],
+            "maxResult": 1
+        }))
+        .expect_err("a refusal");
+        assert!(error.contains("maxResult"), "{error}");
+
+        let error = run(&json!({
+            "files": [{ "path": "Cargo.toml", "content": "", "encoding": "utf-8" }]
+        }))
+        .expect_err("a refusal");
+        assert!(error.contains("encoding"), "{error}");
     }
 
     #[test]

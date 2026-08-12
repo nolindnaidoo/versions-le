@@ -125,6 +125,7 @@ fn tool_definitions() -> Value {
                     },
                 },
                 "required": ["path"],
+                "additionalProperties": false,
             },
         },
     ])
@@ -164,35 +165,20 @@ fn call_tool(params: Option<&Value>) -> Result<Value, (i64, String)> {
     })
 }
 
+const CHECK_ARGUMENTS: [&str; 5] = ["path", "ecosystems", "exclude", "hidden", "ignored"];
+
 fn check_tool(arguments: &Value) -> Result<Value, String> {
+    only(arguments, &CHECK_ARGUMENTS, "this tool")?;
     let path = arguments
         .get("path")
         .and_then(Value::as_str)
         .ok_or_else(|| "no directory was supplied to analyse".to_string())?;
-    let flag = |name: &str| {
-        arguments
-            .get(name)
-            .and_then(Value::as_bool)
-            .unwrap_or(false)
-    };
-    let list = |name: &str| -> Vec<String> {
-        arguments
-            .get(name)
-            .and_then(Value::as_array)
-            .map(|items| {
-                items
-                    .iter()
-                    .filter_map(|item| item.as_str().map(str::to_string))
-                    .collect()
-            })
-            .unwrap_or_default()
-    };
 
     // An ecosystem name the tool does not know is a refusal, never a
     // silently wider walk: an answer over a scope nobody asked for reads
     // as clean when it is simply different.
     let mut ecosystems = Vec::new();
-    for name in list("ecosystems") {
+    for name in list(arguments, "ecosystems")? {
         let ecosystem = Ecosystem::parse(&name)
             .ok_or_else(|| format!("{name} is not one of npm, cargo, python, go or ci"))?;
         ecosystems.push(ecosystem);
@@ -200,9 +186,9 @@ fn check_tool(arguments: &Value) -> Result<Value, String> {
 
     let options = ScanOptions {
         discover: DiscoverOptions {
-            hidden: flag("hidden"),
-            respect_ignore: !flag("ignored"),
-            exclude: list("exclude"),
+            hidden: flag(arguments, "hidden")?,
+            respect_ignore: !flag(arguments, "ignored")?,
+            exclude: list(arguments, "exclude")?,
             ecosystems,
         },
     };
@@ -229,6 +215,63 @@ fn check_tool(arguments: &Value) -> Result<Value, String> {
         &diagnostics,
         false,
     ))
+}
+
+// -----------------------------------------------------------------------
+// Arguments
+//
+// **This surface is no laxer than the terminal one.** The CLI refuses
+// `--stict` rather than ignoring it, because a flag that silently does
+// nothing reports a clean audit of a check that never ran. `"hidden":
+// "true"` is the same mistake wearing JSON: it walked past every hidden
+// directory and said nothing. Absent is still absent — a default the
+// schema declares — and so is an explicit `null`, which is how a client
+// spells "not supplied". A value of the wrong shape is a refusal.
+// -----------------------------------------------------------------------
+
+/// Absent or null, or exactly the named arguments. A misspelled one is
+/// refused rather than ignored, and the schemas say
+/// `additionalProperties: false` — a schema that says so and a reader
+/// that shrugs is a claim with nothing behind it.
+fn only(arguments: &Value, allowed: &[&str], what: &str) -> Result<(), String> {
+    let Some(object) = arguments.as_object() else {
+        return Err(format!("{what} takes an object of arguments"));
+    };
+    let Some(unknown) = object.keys().find(|key| !allowed.contains(&key.as_str())) else {
+        return Ok(());
+    };
+    Err(format!(
+        "{unknown} is not an argument {what} takes. It takes {}.",
+        allowed.join(", ")
+    ))
+}
+
+fn flag(arguments: &Value, name: &str) -> Result<bool, String> {
+    match supplied(arguments, name) {
+        None => Ok(false),
+        Some(value) => value
+            .as_bool()
+            .ok_or_else(|| format!("{name} takes true or false")),
+    }
+}
+
+fn list(arguments: &Value, name: &str) -> Result<Vec<String>, String> {
+    let Some(value) = supplied(arguments, name) else {
+        return Ok(Vec::new());
+    };
+    let wrong = || format!("{name} takes a list of strings");
+    value
+        .as_array()
+        .ok_or_else(wrong)?
+        .iter()
+        .map(|item| item.as_str().map(str::to_string).ok_or_else(wrong))
+        .collect()
+}
+
+/// An explicit `null` is a client spelling "not supplied", not a value
+/// of the wrong type. Everything else present is judged on its shape.
+fn supplied<'a>(arguments: &'a Value, name: &str) -> Option<&'a Value> {
+    arguments.get(name).filter(|value| !value.is_null())
 }
 
 /// The one result shape every tool returns: `{ ok, data, diagnostics,
@@ -426,6 +469,67 @@ mod tests {
             "constraint-conflict"
         );
         assert_eq!(envelope["data"]["summary"]["manifests"], 2);
+    }
+
+    /// **The terminal surface refuses `--stict` rather than ignoring
+    /// it**, because a flag that silently does nothing reports a clean
+    /// audit of a check that never ran. A wrongly-typed argument is the
+    /// same mistake wearing JSON — `"hidden": "true"` walked past every
+    /// hidden directory and said nothing — and this surface must not be
+    /// the lax one.
+    #[test]
+    fn a_wrongly_typed_argument_is_refused_rather_than_coerced() {
+        let tree = TempTree::new("mcp-types");
+        tree.write("Cargo.toml", "[dependencies]\nserde = \"1\"\n");
+        let path = tree.path().to_string_lossy().to_string();
+
+        for arguments in [
+            json!({ "path": path, "hidden": "true" }),
+            json!({ "path": path, "ignored": 1 }),
+            json!({ "path": path, "ecosystems": "cargo" }),
+            json!({ "path": path, "ecosystems": [7, "cargo"] }),
+            json!({ "path": path, "exclude": [42] }),
+        ] {
+            let response = call("versions_le_check", &arguments);
+            assert_eq!(
+                response["result"]["isError"], true,
+                "{arguments} was accepted"
+            );
+        }
+
+        // Absent stays absent, and an explicit null is how a client
+        // spells "not supplied" — neither is a wrong value.
+        for arguments in [
+            json!({ "path": path }),
+            json!({ "path": path, "hidden": null, "ecosystems": null }),
+        ] {
+            assert_eq!(
+                call("versions_le_check", &arguments)["result"]["isError"],
+                false,
+                "{arguments} was refused"
+            );
+        }
+    }
+
+    /// A misspelled argument must not silently widen or narrow the walk.
+    /// `--hiden` is refused on the command line; `"hiden"` is refused
+    /// here.
+    #[test]
+    fn an_unknown_argument_is_refused_by_name() {
+        let tree = TempTree::new("mcp-unknown");
+        tree.write("Cargo.toml", "[dependencies]\nserde = \"1\"\n");
+        let response = call(
+            "versions_le_check",
+            &json!({ "path": tree.path().to_string_lossy(), "hiden": true }),
+        );
+        assert_eq!(response["result"]["isError"], true, "{response}");
+        assert!(
+            response["result"]["content"][0]["text"]
+                .as_str()
+                .expect("a message")
+                .contains("hiden"),
+            "{response}"
+        );
     }
 
     #[test]

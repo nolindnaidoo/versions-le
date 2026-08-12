@@ -273,6 +273,14 @@ Both return `{ ok, data, diagnostics, meta }`, where **`ok` reports
 whether the check ran, not whether the answer is yes**. A tree full of
 conflicting pins is the answer, not a failure to produce one.
 
+**Arguments are parsed as strictly here as flags are on the command
+line.** An argument of the wrong type and an argument the tool does not
+take are both refusals naming what was wrong — `"hidden": "true"` is the
+same mistake as `--stict`, and silently doing nothing would report a
+clean audit of a check that never ran. An absent argument takes its
+declared default, and an explicit `null` is read as absent: that is how
+a client spells "not supplied", not a value of the wrong type.
+
 Refusals speak the caller's vocabulary: an MCP caller has no command
 line, and a test asserts no message on that surface contains `--`.
 

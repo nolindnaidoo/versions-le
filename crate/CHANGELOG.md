@@ -81,6 +81,18 @@ three refusal reasons, and both surfaces.
   running the binary against a real repository — `pixelactions` went
   from exit 1 with a fabricated error to exit 0 with a refusal, and
   nothing else in its report moved.
+- **The MCP surface coerced arguments the CLI would have refused.**
+  `"hidden": "true"` read as false and walked past every hidden
+  directory; `"ecosystems": [7, "cargo"]` dropped the 7; a misspelled
+  `"hiden"` did nothing at all. The terminal surface refuses `--stict`
+  precisely because a flag that silently does nothing reports a clean
+  audit of a check that never ran, and the agent surface was the lax
+  one. Both tools now refuse a wrongly-typed argument and an argument
+  they do not take, naming it. Absent is still absent, and so is an
+  explicit `null` — that is how a client spells "not supplied", not a
+  value of the wrong type. `versions_le_check` also declares
+  `additionalProperties: false`, which `compare_versions` claimed and
+  neither enforced.
 - **A range with an unbounded alternative reported the wrong floor.**
   `Range::floor` answers "how old a toolchain does this permit" and the
   MSRV check believes it, but it took the lowest bound anybody had
