@@ -37,7 +37,15 @@ any conflict.
 - **Corpus documents are stored flat and dot-free**, mapped to logical
   paths in `corpus.rs`. `cargo package` skips dotfiles and a corpus of
   them ships a crate that cannot run its own tests.
+- **Report paths are always forward-slashed**, on every OS. A sibling
+  shipped a release that used `\` on Windows; `tests/platform.rs` is why
+  this one cannot.
+- The gated suites are opt-in and CI sets them: `VERSIONS_LE_BUDGET=1`,
+  `VERSIONS_LE_FUZZ_SECONDS=60`, `VERSIONS_LE_SCENARIOS=1`. A skipped
+  case says so by name; a skip is never reported as a pass.
 - Write a regression test for every bug you fix. Three of the existing
   ones came from running the binary against a real repository, and all
   three were invisible to a green suite — so **run the binary, not only
-  the tests**.
+  the tests**. The fourth is `pin-*` in the corpus: a bare `version` in
+  a Cargo `path` dependency is a caret, not the exact pin its author
+  meant.

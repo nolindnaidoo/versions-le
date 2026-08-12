@@ -166,7 +166,7 @@ and so `cargo test` on the unpacked tarball runs every case. The refusal
 claims in the README are then checkable by whoever installed it rather
 than taken on trust.
 
-Two halves, and the second is the point:
+Three groups, and the last two are the point:
 
 - **`tree-*`** is one synthetic repository carrying a planted instance
   of every finding this tool makes and every refusal reason.
@@ -175,6 +175,21 @@ Two halves, and the second is the point:
   that started guessing at `workspace = true` turns a refusal into a
   fabricated finding, and `no_unmodelled_grammar_pairing_produces_a_conflict`
   is what fails.
+- **`pin-*`** is the finding a real repository actually had. A Cargo
+  `path` dependency carrying a bare `version = "0.7.7"` is a **caret**
+  requirement — `[0.7.7, 0.8.0)` — and not the exact pin its author
+  believed they had written; `=0.7.7` is the exact one. The pair is here
+  because that one-character difference is the crate's most useful
+  real-world finding and it must be impossible to regress.
+
+**The coverage matrix lives here too**, in `corpus.rs`: every ecosystem,
+every manifest kind, every finding code and every refusal reason has to
+be reachable from a real document, and nothing in the code may emit a
+code or a reason the corpus cannot produce. Both directions matter — a
+seventh check added without a corpus case is a README claim no test
+stands behind. The two `Ecosystem` and `ManifestKind` mappings are
+exhaustive `match`es on purpose: a sixth reader with no document behind
+it stops compiling.
 
 Documents are stored **flat and dot-free** on disk and mapped to their
 logical paths in `corpus.rs`: `cargo package` skips dotfiles, so a corpus
@@ -196,6 +211,30 @@ CHANGELOG entry.
   `tests/scenarios.rs`**, gated behind `VERSIONS_LE_SCENARIOS`. A
   skipped scenario says plainly that it did not run; it is never
   reported as a pass.
+- **Four hardening suites, each aimed at a shape of bug a green suite
+  let through somewhere in this family.** They build their trees at
+  runtime, because half of what they need cannot be checked into git:
+  - `tests/hazards.rs` — what a real machine holds and a fixture
+    directory cannot: a byte-order mark, a manifest that is not UTF-8,
+    a symlink loop, a FIFO named `Cargo.toml`, a mode-000 file, a path
+    over 260 characters, an empty file, a 50 MB manifest, a workspace
+    whose `members` point outside the tree. The property under all of
+    them is that **a manifest never silently vanishes from the report**.
+  - `tests/platform.rs` — every path the report uses as a manifest's
+    identity is forward-slashed on every OS; plus case-folding
+    filesystems, reserved Windows device names, CRLF manifests, and
+    independence from `TZ`.
+  - `tests/fuzz.rs` — time-boxed (`VERSIONS_LE_FUZZ_SECONDS`, one
+    second locally, sixty in CI) and seeded (`VERSIONS_LE_FUZZ_SEED`,
+    printed on every run). Hostile constraint strings through
+    `compare_versions`, asserting a well-formed report and, above all,
+    that **a grammar the tool does not model never becomes a conflict**.
+    Adding a refusal adds its case to the pool there as well as to the
+    corpus.
+  - `tests/budget.rs` — gated behind `VERSIONS_LE_BUDGET`. A wall-clock
+    ceiling, and linearity in both directions: four times the manifests,
+    and four times the dependencies in one manifest. The second is the
+    one this crate is exposed to, because disjointness is pairwise.
 - **Every bug fix ships with a regression test** that fails before the
   fix. Three came out of the first dogfood run and each has one: a
   SHA-pinned `rust-toolchain` read as a malformed toolchain, `>=20` and

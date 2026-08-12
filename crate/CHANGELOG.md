@@ -35,6 +35,40 @@ three refusal reasons, and both surfaces.
   an `--ecosystem` filter, `--fail-on conflict|any` and `--strict`.
 - **The MCP server** (`versions-le mcp`) with `compare_versions`
   (contents in, no filesystem) and `versions_le_check` (a directory in).
+- **A third corpus group, `pin-*`**, carrying the finding that came out
+  of running the binary against a real workspace: a Cargo `path`
+  dependency whose bare `version = "0.7.7"` is a **caret** requirement —
+  `[0.7.7, 0.8.0)` — and not the exact pin its author believed they had
+  written. `=0.7.7` is the exact one. The pair is pinned as a
+  `floating-pin` and a silence respectively, plus a `constraint-conflict`
+  when the two are compared, so the one-character difference cannot
+  collapse into "both are pins".
+- **Four hardening suites** — `tests/hazards.rs` (a byte-order mark on
+  every manifest kind, a manifest that is not UTF-8, a document that
+  parses but is not a manifest, symlinks and symlink loops, a FIFO named
+  `Cargo.toml`, permission denied, a path over 260 characters, an empty
+  file, a 50 MB manifest, a workspace pointing outside its own tree),
+  `tests/platform.rs` (every path the report uses as an identity is
+  forward-slashed on every OS; case folding, reserved Windows names,
+  CRLF manifests, `TZ`), `tests/fuzz.rs` (time-boxed and seeded over
+  generated constraint strings, asserting a well-formed report and that
+  a grammar the tool does not model never becomes a conflict) and
+  `tests/budget.rs` (a wall-clock ceiling, and linearity in both the
+  number of manifests and the width of one).
+- **A coverage matrix** in `detect/corpus.rs`: every ecosystem, every
+  manifest kind, every finding code and every refusal reason reachable
+  from a real fixture, and nothing in the code that the corpus cannot
+  produce.
+
+### Fixed
+
+- `tests/scenarios.rs` expected 500 refusal rows from 500 crates
+  inheriting one workspace dependency, from before refusals for one name
+  merged into a single row carrying every site. Nothing set
+  `VERSIONS_LE_SCENARIOS`, so the suite had never run. It now asserts the
+  merge — one row, 500 sites — and CI runs it.
+- The install instructions claimed `cargo install versions-le`. The
+  crate is not on crates.io yet, and a README may not say it is.
 
 ### The shape of it
 
