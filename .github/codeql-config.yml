@@ -1,0 +1,15 @@
+# CodeQL scope. Identical in every crate-only *-le repo.
+#
+# Fixtures are excluded deliberately. They contain inputs that are supposed to
+# look dangerous — deliberately hostile text for the refusal paths to catch —
+# and scanning them produces findings that can only ever be dismissed.
+# Suppressing per-alert leaves a permanent backlog of "known false" entries and
+# every new fixture adds another; excluding the paths keeps the alert list
+# meaningful.
+#
+# Production source is fully in scope.
+name: "LE crate CodeQL config"
+
+paths-ignore:
+  - "crate/fixtures/**"
+  - "crate/target/**"

@@ -1,0 +1,22 @@
+# Normalize line endings for all text files
+* text=auto eol=lf
+
+# Specific file types
+*.rs text eol=lf
+*.toml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.csv text eol=lf
+
+# Fixture documents are inputs, and their bytes are the test. A CRLF fixture
+# that git rewrites to LF stops testing what it was written to test.
+crate/fixtures/** -text
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary

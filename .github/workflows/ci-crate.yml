@@ -1,0 +1,136 @@
+# The Rust CLI's CI.
+#
+# This repo is crate-only: there is no extension beside it yet, so the `parity`
+# and `differential` jobs the two-frontend siblings run have nothing to compare
+# and are deliberately absent rather than present and vacuous. They arrive with
+# the extension.
+name: CI (crate)
+
+on:
+  # Manually runnable as well as push-triggered. Push events are not
+  # guaranteed: during a GitHub Actions incident they are throttled and
+  # silently dropped, and a dropped event never replays — leaving a commit with
+  # no way to be verified. Dispatch is the escape hatch.
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'crate/**'
+      - '.github/workflows/ci-crate.yml'
+  pull_request:
+    paths:
+      - 'crate/**'
+      - '.github/workflows/ci-crate.yml'
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+defaults:
+  run:
+    working-directory: crate
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, windows-2025, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+      - run: cargo fmt --all --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test --locked
+      - run: cargo build --locked
+
+  msrv:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        with:
+          toolchain: "1.88"
+      - name: Verify the declared rust-version actually builds
+        run: cargo check --locked
+
+  policy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Forbid inline lint suppressions
+        working-directory: .
+        run: |
+          if grep -rn '#\[allow(' crate/src --include='*.rs'; then
+            echo 'Inline #[allow] found — fix the lint or relax it in [lints.clippy] in crate/Cargo.toml.'
+            exit 1
+          fi
+
+  # AGENTS.md sets a 90% line coverage floor per module for detect/.
+  # Enforced per module, not on the total: a total hides one module sliding
+  # while the others carry it. Scoped to detect/ because everything else
+  # is I/O verified by the contract job.
+  coverage:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        with:
+          toolchain: stable
+          components: llvm-tools-preview
+      - uses: taiki-e/install-action@6c6fd71fe4fb72c3697d269963d0e15df8adedad # v2.85.10
+        with:
+          tool: cargo-llvm-cov
+      - name: Measure coverage
+        run: |
+          cargo llvm-cov --no-report
+          cargo llvm-cov report --json --output-path coverage.json
+          cargo llvm-cov report --html
+      - name: Publish the browsable report
+        # Uploaded even when the floor check fails — a failing run is exactly
+        # when someone wants to see which lines are uncovered.
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: coverage-report
+          path: crate/target/llvm-cov/html/
+          if-no-files-found: error
+      - name: Enforce the per-module floor on detect/
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          FLOOR = 90.0
+          files = json.load(open("coverage.json"))["data"][0]["files"]
+          under = []
+          for f in files:
+              if "/detect/" not in f["filename"]:
+                  continue
+              name = f["filename"].split("/")[-1]
+              pct = f["summary"]["lines"]["percent"]
+              print(f"{name:20} {pct:6.2f}%")
+              if pct < FLOOR:
+                  under.append((name, pct))
+          if under:
+              print(f"\nAGENTS.md sets a {FLOOR}% line coverage floor per module in detect/:")
+              for name, pct in under:
+                  print(f"  {name}: {pct:.2f}%")
+              sys.exit(1)
+          PY
+
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        with:
+          toolchain: stable
+      - uses: taiki-e/install-action@6c6fd71fe4fb72c3697d269963d0e15df8adedad # v2.85.10
+        with:
+          tool: cargo-audit
+      - run: cargo audit

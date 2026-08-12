@@ -1,0 +1,30 @@
+# Weekly grouped dependency PRs. Identical in every crate-only *-le repo.
+#
+# Two ecosystems only: this repo ships a Rust binary and its CI. There is no
+# package.json here, so the bun updater the extension repos carry has nothing
+# to maintain and is deliberately absent rather than present-and-idle.
+#
+# Grouping keeps this to roughly one PR per ecosystem per week.
+#
+# Auto-merge is handled by .github/workflows/dependabot-auto-merge.yml, which
+# merges only patch/minor updates and only after CI concludes green. A major is
+# a deliberate migration, not a merge.
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/crate"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      minor-patch:
+        applies-to: version-updates
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns: ["*"]

@@ -1,0 +1,102 @@
+# Publishing versions-le to crates.io.
+#
+# Dispatch-only, never by pushing a tag: a crates.io version can never be
+# reused, so the irreversible step is one someone chooses on purpose. The
+# preflight runs on a dry run too — the point is to find the problem before the
+# publish, not to discover it halfway through one.
+name: Release (crate)
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Actually publish to crates.io (unchecked = dry run)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency: release-crate
+
+env:
+  CARGO_TERM_COLOR: always
+
+defaults:
+  run:
+    working-directory: crate
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+      - run: cargo fmt --all --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test --locked
+      - name: Read the version being released
+        id: version
+        run: |
+          version=$(cargo metadata --no-deps --format-version 1 \
+            | python3 -c "import json,sys; print(json.load(sys.stdin)['packages'][0]['version'])")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Releasing versions-le $version"
+      - name: The packaged crate carries its fixtures
+        # `cargo package` walks its own directory only, and a fixture that does
+        # not travel makes the published tests unrunnable by anyone else.
+        run: |
+          cargo package --list --allow-dirty > /tmp/packaged.txt
+          if ! grep -q '^fixtures/' /tmp/packaged.txt; then
+            echo 'No fixtures/ in the package — check Cargo.toml exclude/include.'
+            exit 1
+          fi
+          echo "Packaged files: $(wc -l < /tmp/packaged.txt)"
+      - name: The version is not already on crates.io
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          published=$(curl -sS -H 'User-Agent: le-release-check' \
+            "https://crates.io/api/v1/crates/versions-le" \
+            | python3 -c "import json,sys; d=json.load(sys.stdin); print(' '.join(v['num'] for v in d.get('versions',[])))" \
+            2>/dev/null || echo "")
+          for v in $published; do
+            if [ "$v" = "$version" ]; then
+              echo "versions-le $version is already published. A version cannot be reused."
+              exit 1
+            fi
+          done
+          echo "$version is free."
+      - name: The changelog documents this version
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          if ! grep -q "^## \[$version\]" CHANGELOG.md; then
+            echo "CHANGELOG.md has no '## [$version]' heading."
+            exit 1
+          fi
+      - run: cargo publish --dry-run --locked
+
+  publish:
+    needs: preflight
+    if: inputs.publish
+    runs-on: ubuntu-24.04
+    environment: crates-io
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        with:
+          toolchain: stable
+      - name: Verify the token before doing anything irreversible
+        run: |
+          if [ -z "${{ secrets.CARGO_REGISTRY_TOKEN }}" ]; then
+            echo 'CARGO_REGISTRY_TOKEN is not set on the crates-io environment.'
+            exit 1
+          fi
+      - name: Publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish --locked
