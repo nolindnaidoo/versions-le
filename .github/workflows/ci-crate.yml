@@ -125,14 +125,22 @@ jobs:
           FLOOR = 90.0
           files = json.load(open("coverage.json"))["data"][0]["files"]
           under = []
+          measured = 0
           for f in files:
               if "/detect/" not in f["filename"]:
                   continue
               name = f["filename"].split("/")[-1]
               pct = f["summary"]["lines"]["percent"]
+              measured += 1
               print(f"{name:20} {pct:6.2f}%")
               if pct < FLOOR:
                   under.append((name, pct))
+          # Zero matches is not zero failures. Rename the directory and the
+          # filter above stops matching, the loop never runs, and the job
+          # reports success having checked nothing at all.
+          if measured == 0:
+              print("No modules matched the coverage filter — the job checked nothing.")
+              sys.exit(1)
           if under:
               print(f"\nAGENTS.md sets a {FLOOR}% line coverage floor per module in detect/:")
               for name, pct in under:
