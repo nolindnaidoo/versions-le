@@ -12,7 +12,7 @@
 use std::path::{Component, Path, PathBuf, Prefix};
 
 use crate::detect::heuristics::{
-    Ecosystem, ManifestKind, basename, is_vendored, manifest_kind, should_exclude,
+    Ecosystem, Excludes, ManifestKind, basename, is_vendored, manifest_kind,
 };
 
 #[derive(Debug, Clone)]
@@ -85,6 +85,11 @@ pub(crate) fn discover(root: &Path, options: &DiscoverOptions) -> Result<Vec<Fou
             }
         });
 
+    // Compiled before the walk, not inside it: the patterns are the same
+    // for every file, and building the matcher per file made the cost of
+    // one `--exclude` scale with the size of the tree.
+    let excluded = Excludes::new(&options.exclude);
+
     let mut found = Vec::new();
     for entry in builder.build() {
         let entry = entry.map_err(|error| format!("{}: {error}", root.display()))?;
@@ -96,7 +101,7 @@ pub(crate) fn discover(root: &Path, options: &DiscoverOptions) -> Result<Vec<Fou
         let Some(kind) = manifest_kind(&relative) else {
             continue;
         };
-        if should_exclude(&relative, &options.exclude) || !wanted(kind, &options.ecosystems) {
+        if excluded.matches(&relative) || !wanted(kind, &options.ecosystems) {
             continue;
         }
         found.push(Found { path, kind });

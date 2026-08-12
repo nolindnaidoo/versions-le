@@ -130,6 +130,12 @@ No runtime, no network, nothing written.
 --no-ignore          walk files that .gitignore excludes
 ```
 
+`--exclude` takes ripgrep's glob syntax, from the same crate as the walk:
+a pattern with no `/` matches the basename anywhere, one with a `/`
+matches the root-relative path, `*` and `?` stop at a separator and `**`
+crosses one. A pattern that will not compile excludes nothing rather than
+everything, and the patterns beside it still work.
+
 `--fail-on any` includes the `info` findings, for a repository that has
 decided it wants no floating pins at all. `--strict` is for a pipeline
 that wants no unanalysed corners: it turns `unknown_grammar` and

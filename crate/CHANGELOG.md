@@ -81,6 +81,18 @@ three refusal reasons, and both surfaces.
   running the binary against a real repository — `pixelactions` went
   from exit 1 with a fabricated error to exit 0 with a refusal, and
   nothing else in its report moved.
+- **`--exclude` now takes ripgrep's glob syntax**, from `globset` — the
+  crate `ignore` already carried, so the dependency count is unchanged
+  and `regex` is gone from the tree entirely. It replaced a hand-rolled
+  glob-to-regex translation that was **compiled once per file per
+  pattern**, so one `--exclude` cost more the larger the tree. Three
+  behaviour changes come with it, all in the direction of doing what the
+  pattern says: `[Cc]argo.toml` is a character class rather than five
+  literal characters, `{examples,fixtures}/**` is an alternation rather
+  than a literal brace, and a pattern that cannot compile now genuinely
+  excludes nothing — the old translation escaped a broken `[` into a
+  literal and the fallback under it was unreachable. `*` and `?` still
+  stop at a separator and `**` still crosses one.
 - **A Cargo dependency that is neither a version nor a table blamed the
   tool.** `serde = 1` came back as `unknown_grammar`, "not a version
   requirement" — the verdict for a syntax this tool declined to model.

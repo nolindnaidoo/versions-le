@@ -54,10 +54,15 @@ toml = "1"
 # ripgrep walks" are the same answer — which is the answer a person
 # auditing a repository already has in their head.
 ignore = "0.4"
-# One regex engine, for turning an exclude glob into a matcher. It needs
-# no backreferences or lookaround, so `regex` expresses it exactly and
-# its matching cannot fail.
-regex = "1"
+# The exclude-glob matcher. `globset` is ripgrep's, and `ignore` above
+# already carries it, so this costs a name in the manifest and no new
+# code in the tree — and the glob syntax a person auditing a repository
+# gets is the one they already know. It replaced a hand-rolled
+# glob-to-regex translation and the `regex` dependency under it: the
+# translation was compiled once per file per pattern, could not express
+# a character class or an alternation, and quietly matched a broken
+# pattern as a literal.
+globset = "0.4"
 
 [profile.release]
 strip = true

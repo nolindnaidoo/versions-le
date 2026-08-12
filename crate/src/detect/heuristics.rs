@@ -4,9 +4,7 @@
 //! One place, so discovery and the readers cannot disagree about which
 //! files exist.
 
-use std::sync::LazyLock;
-
-use regex::Regex;
+use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use serde::{Deserialize, Serialize};
 
 /// The five grammars this tool models.
@@ -109,51 +107,52 @@ pub(crate) fn is_vendored(name: &str) -> bool {
     matches!(name, "node_modules" | ".git" | "vendor")
 }
 
-/// Whether an exclude pattern hides this file.
+/// The exclude patterns, compiled once.
 ///
-/// A pattern with no `/` matches the basename, gitignore-style. A
-/// pattern with a `/` matches the root-relative path, and a leading
-/// `**/` matches zero or more directories.
-pub(crate) fn should_exclude(filepath: &str, patterns: &[String]) -> bool {
-    let path = filepath.replace('\\', "/");
-    let name = basename(&path);
-
-    patterns.iter().any(|pattern| {
-        let target = if pattern.contains('/') {
-            path.as_str()
-        } else {
-            name
-        };
-        glob_to_regex(pattern).is_match(target)
-    })
+/// **Once, not once per file.** This was a fresh matcher built for every
+/// (file, pattern) pair, so a thousand-file tree paid for a thousand
+/// compilations of the same pattern — work that is quadratic in nothing
+/// anyone can see.
+///
+/// The syntax is `globset`'s, which is ripgrep's, which is the syntax a
+/// person auditing a repository already has in their head — the same
+/// argument that chose `ignore` for the walk. `*` and `?` stop at a `/`
+/// and `**` crosses one; a pattern with a `/` matches the root-relative
+/// path and one without matches the basename, gitignore-style.
+#[derive(Debug, Default)]
+pub(crate) struct Excludes {
+    paths: GlobSet,
+    names: GlobSet,
 }
 
-fn glob_to_regex(pattern: &str) -> Regex {
-    // `**/` first, so it can match zero directories as well as many;
-    // translating it after `*` would leave a `/` that must be there.
-    let mut source = String::from("^");
-    let mut chars = pattern.chars().peekable();
-    while let Some(character) = chars.next() {
-        match character {
-            '*' if chars.peek() == Some(&'*') => {
-                chars.next();
-                let separated = chars.next_if_eq(&'/').is_some();
-                source.push_str(if separated { "(?:.*/)?" } else { ".*" });
+impl Excludes {
+    pub(crate) fn new(patterns: &[String]) -> Self {
+        let mut paths = GlobSetBuilder::new();
+        let mut names = GlobSetBuilder::new();
+        for pattern in patterns {
+            // A pattern that will not compile excludes **nothing**,
+            // rather than everything: a typo in a config must not
+            // silently hide the manifests this tool exists to compare.
+            let Ok(glob) = GlobBuilder::new(pattern).literal_separator(true).build() else {
+                continue;
+            };
+            if pattern.contains('/') {
+                paths.add(glob);
+            } else {
+                names.add(glob);
             }
-            '*' => source.push_str("[^/]*"),
-            '?' => source.push_str("[^/]"),
-            other => source.push_str(&regex::escape(&other.to_string())),
+        }
+        Self {
+            paths: paths.build().unwrap_or_else(|_| GlobSet::empty()),
+            names: names.build().unwrap_or_else(|_| GlobSet::empty()),
         }
     }
-    source.push('$');
-    Regex::new(&source).unwrap_or_else(|_| NOTHING.clone())
-}
 
-/// A pattern that cannot be compiled excludes nothing rather than
-/// everything: a typo in a config must not silently hide the manifests
-/// the tool exists to compare.
-static NOTHING: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^\b$").expect("a constant pattern compiles"));
+    pub(crate) fn matches(&self, filepath: &str) -> bool {
+        let path = filepath.replace('\\', "/");
+        self.paths.is_match(&path) || self.names.is_match(basename(&path))
+    }
+}
 
 /// Whether a string found outside a typed manifest key is evidently a
 /// version at all.
@@ -250,25 +249,50 @@ mod tests {
         assert!(!is_vendored("packages"));
     }
 
+    fn excludes(patterns: &[&str], filepath: &str) -> bool {
+        let patterns: Vec<String> = patterns.iter().map(|p| (*p).to_string()).collect();
+        Excludes::new(&patterns).matches(filepath)
+    }
+
     #[test]
     fn a_bare_pattern_matches_the_basename_anywhere() {
-        let patterns = vec!["package.json".to_string()];
-        assert!(should_exclude("examples/package.json", &patterns));
-        assert!(!should_exclude("Cargo.toml", &patterns));
+        assert!(excludes(&["package.json"], "examples/package.json"));
+        assert!(!excludes(&["package.json"], "Cargo.toml"));
     }
 
     #[test]
     fn a_pattern_with_a_slash_matches_the_path() {
-        let patterns = vec!["examples/**".to_string()];
-        assert!(should_exclude("examples/a/package.json", &patterns));
-        assert!(!should_exclude("src/package.json", &patterns));
+        assert!(excludes(&["examples/**"], "examples/a/package.json"));
+        assert!(!excludes(&["examples/**"], "src/package.json"));
     }
 
     /// A typo in a config must not silently hide the manifests this
-    /// exists to compare.
+    /// exists to compare. `[` is an unterminated character class, and
+    /// the pattern beside it still works.
     #[test]
     fn an_uncompilable_pattern_excludes_nothing() {
-        assert!(!should_exclude("package.json", &["[".to_string()]));
+        assert!(!excludes(&["["], "package.json"));
+        assert!(!excludes(&["["], "["));
+        assert!(excludes(&["[", "Cargo.toml"], "Cargo.toml"));
+    }
+
+    /// The glob syntax, pinned. `*` and `?` stop at a separator and `**`
+    /// crosses one; a character class and an alternation mean what they
+    /// do in every other glob a person writes.
+    #[test]
+    fn the_glob_syntax_is_the_one_ripgrep_uses() {
+        assert!(excludes(&["*.json"], "a/package.json"));
+        assert!(!excludes(&["src/*.json"], "src/a/package.json"));
+        assert!(excludes(&["src/**/*.json"], "src/a/b/package.json"));
+        assert!(excludes(&["**/vendor/**"], "a/vendor/b/Cargo.toml"));
+        assert!(excludes(&["Cargo.???l"], "Cargo.toml"));
+        assert!(!excludes(&["Cargo.?"], "Cargo.toml"));
+        assert!(excludes(&["[Cc]argo.toml"], "Cargo.toml"));
+        assert!(excludes(
+            &["{examples,fixtures}/**"],
+            "fixtures/a/Cargo.toml"
+        ));
+        assert!(!excludes(&["{examples,fixtures}/**"], "src/a/Cargo.toml"));
     }
 
     #[test]

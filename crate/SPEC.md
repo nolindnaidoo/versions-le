@@ -255,9 +255,18 @@ sites with the same label, which reads as one file contradicting itself.
 directory by definition, so that one is always descended; a tool that
 needed a flag to see it would ship with the CI half switched off.
 
+**`--exclude` takes ripgrep's glob syntax**, from the same crate the
+walk uses, so what this tool skips and what `rg --glob '!…'` skips are
+the same answer. A pattern with no `/` matches the basename anywhere
+(`package.json`); a pattern with one matches the root-relative path
+(`examples/**`). `*` and `?` stop at a separator and `**` crosses one,
+and `[Cc]argo.toml` and `{examples,fixtures}/**` mean what they mean
+everywhere else.
+
 An exclude pattern that will not compile excludes **nothing**, rather
 than everything — a typo in a config must not silently hide the
-manifests this exists to compare.
+manifests this exists to compare — and the patterns beside it still
+work.
 
 ## The MCP surface
 
