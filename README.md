@@ -230,7 +230,7 @@ suite needs no filesystem at all. Around it:
 | unit tests in `crate/src/` | the grammars, the readers, the checks, and the embedded corpus — `fixtures/` run as tests, including the `grammar-*` pairs pinned as **refusals** so a regression that started guessing fails the build |
 | `tests/contracts.rs` | the exit codes and the stdout contract, driven against the built binary |
 | `tests/hazards.rs` | byte-order marks, undecodable manifests, symlink loops, a FIFO, permission denied, a 260-character path, an empty file, a 50 MB manifest |
-| `tests/platform.rs` | one path separator on every OS, case-folding filesystems, reserved Windows names, CRLF manifests, and independence from `TZ` |
+| `tests/platform.rs` | one path separator on every OS — Windows path prefixes included — plus case-folding filesystems, reserved Windows names, CRLF manifests, and independence from `TZ` |
 | `tests/fuzz.rs` | generated constraint strings nobody would write, time-boxed — never panic, never hang, always a well-formed report, and **never a conflict fabricated out of a grammar it does not model** |
 | `tests/budget.rs` | a wall-clock ceiling and two linearity checks: four times the manifests, and four times the dependencies in one manifest |
 | `tests/scenarios.rs` | trees larger than an editor opens |

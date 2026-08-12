@@ -249,13 +249,15 @@ pub(crate) fn exit_code(report: &Report, fail_on: FailOn, strict: bool) -> u8 {
 
 /// Classify a path the caller named, for the surfaces that take paths
 /// rather than a tree.
+///
+/// Through `discover::normalise` rather than its own `components()` walk:
+/// the two were the same job written twice, and the copy here joined a
+/// Windows prefix and its root separator into `\\?\C:/\/a/…` before
+/// classifying it. Nothing broke — `manifest_kind` only reads the
+/// basename and looks for `/.github/workflows/` — but a second spelling
+/// of one path is a divergence waiting for a rule that does care.
 pub(crate) fn manifest_of(path: &Path) -> Option<ManifestKind> {
-    let text = path
-        .components()
-        .map(|component| component.as_os_str().to_string_lossy())
-        .collect::<Vec<_>>()
-        .join("/");
-    crate::detect::heuristics::manifest_kind(&text)
+    crate::detect::heuristics::manifest_kind(&discover::normalise(path))
 }
 
 #[cfg(test)]
@@ -422,9 +424,29 @@ mod tests {
         assert!(scan(&[tree.path().join("nope")], &ScanOptions::default()).is_err());
     }
 
+    /// Classification goes through the same path spelling the labels do.
+    ///
+    /// This is a tidy-up rather than a fix: the old `components()` walk
+    /// here joined an absolute path into `//a/…` — and, on Windows, a
+    /// prefix and its root separator into `\\?\C:/\/a/…` — but
+    /// `manifest_kind` only ever reads the basename and looks for
+    /// `/.github/workflows/`, so both spellings classified alike. The
+    /// duplicate is gone because the next rule that cares about the rest
+    /// of the path would have found only one of the two copies.
     #[test]
-    fn a_named_manifest_is_classified() {
+    fn a_named_manifest_is_classified_whatever_the_path_shape() {
         assert!(manifest_of(Path::new("a/Cargo.toml")).is_some());
         assert!(manifest_of(Path::new("a/README.md")).is_none());
+        for (path, kind) in [
+            ("/Cargo.toml", ManifestKind::CargoToml),
+            ("./package.json", ManifestKind::PackageJson),
+            ("/a/.github/workflows/ci.yml", ManifestKind::Workflow),
+            (".github/workflows/ci.yml", ManifestKind::Workflow),
+        ] {
+            assert_eq!(manifest_of(Path::new(path)), Some(kind), "{path}");
+        }
+        // A workflow is decided by its directory, and an absolute path
+        // must not smuggle one in.
+        assert_eq!(manifest_of(Path::new("/a/deploy/k8s.yml")), None);
     }
 }

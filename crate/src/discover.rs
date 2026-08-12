@@ -9,7 +9,7 @@
 //! finds" and "what ripgrep finds" are the same answer. A file named
 //! explicitly is always read, whatever the ignore rules say.
 
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf, Prefix};
 
 use crate::detect::heuristics::{
     Ecosystem, ManifestKind, basename, is_vendored, manifest_kind, should_exclude,
@@ -166,20 +166,78 @@ pub(crate) fn label(path: &Path, root: &Path, qualify: bool) -> String {
 /// a component spelled `/`, so joining produces `//Users/…`. A label
 /// that is not the path the caller typed is a label they cannot paste
 /// back into a shell.
-fn normalise(path: &Path) -> String {
+///
+/// A Windows **prefix** is the one component whose own text carries
+/// separators, and it is the case that got through: `canonicalize`
+/// returns an extended-length path on Windows, so every absolute path
+/// arrived as `\\?\C:\…` and left as `\\?\C:/…` — backslashes in the one
+/// string this function promises has none.
+///
+/// The `match` below is **exhaustive on purpose**, and that is the guard
+/// rather than the fix. Only Windows ever parses a `Prefix` out of a
+/// string, so a version of this function that quietly ignored one was
+/// green on two of the three legs; an exhaustive match compiles on every
+/// platform, so deleting the prefix arm is a build failure on all of
+/// them. A wildcard here would put the bug back.
+pub(crate) fn normalise(path: &Path) -> String {
     let mut out = String::new();
     for component in path.components() {
-        let text = component.as_os_str().to_string_lossy();
-        if matches!(text.as_ref(), "/" | "\\") {
-            out.push('/');
-            continue;
+        match component {
+            Component::Prefix(prefix) => out.push_str(&designator(prefix.kind())),
+            // Guarded rather than unconditional: a UNC designator already
+            // ends in a share name, and `//server/share//a` would be a
+            // second identity for one file.
+            Component::RootDir => {
+                if !out.ends_with('/') {
+                    out.push('/');
+                }
+            }
+            Component::CurDir | Component::ParentDir | Component::Normal(_) => {
+                if !out.is_empty() && !out.ends_with('/') {
+                    out.push('/');
+                }
+                out.push_str(&component.as_os_str().to_string_lossy());
+            }
         }
-        if !out.is_empty() && !out.ends_with('/') {
-            out.push('/');
-        }
-        out.push_str(&text);
     }
     out
+}
+
+/// The forward-slashed designator for a Windows path prefix.
+///
+/// **A file gets one identity.** Windows spells the same file several
+/// ways — `C:\a`, `c:\a`, and the `\\?\C:\a` that `canonicalize`
+/// returns — and a label that kept them apart would report one manifest
+/// under two names, which is the "one file contradicting itself"
+/// problem `qualify` exists to prevent. So every disk prefix collapses
+/// to an upper-cased `C:`, verbatim marker dropped: drive letters are
+/// case-insensitive on Windows, so two spellings of one drive are one
+/// drive.
+///
+/// **A UNC prefix keeps its host and share**, as `//server/share`. That
+/// is the opposite mistake and the more dangerous one: dropping them
+/// would collapse `\\a\share\Cargo.toml` and `\\b\share\Cargo.toml` into
+/// a single label, and the report would claim two different files were
+/// the same one — a fabricated conflict, which is the output this crate
+/// cannot afford. `\\?\UNC\server\share` is the same share as
+/// `\\server\share`, so both give the same designator.
+///
+/// A device namespace (`\\.\COM1`) and a non-disk verbatim path
+/// (`\\?\Volume{…}`) are not places a manifest is read from. Neither is
+/// invented into something else: each keeps its namespace marker with
+/// the separators turned round, so it stays recognisable and cannot
+/// collide with a UNC share — `?` and `.` are not legal host names.
+fn designator(prefix: Prefix<'_>) -> String {
+    match prefix {
+        Prefix::Disk(letter) | Prefix::VerbatimDisk(letter) => {
+            format!("{}:", letter.to_ascii_uppercase() as char)
+        }
+        Prefix::UNC(server, share) | Prefix::VerbatimUNC(server, share) => {
+            format!("//{}/{}", server.to_string_lossy(), share.to_string_lossy())
+        }
+        Prefix::DeviceNS(name) => format!("//./{}", name.to_string_lossy()),
+        Prefix::Verbatim(name) => format!("//?/{}", name.to_string_lossy()),
+    }
 }
 
 /// The basename of a path, for a diagnostic that has nowhere else to
@@ -358,17 +416,155 @@ mod tests {
         assert!(!label(&file, &root, true).contains('\\'));
     }
 
-    /// Regression: the root of an absolute path is itself a component
-    /// spelled `/`, so joining components produced `//Users/…` — a
-    /// label nobody can paste back into a shell.
+    /// Regression, twice over. The root of an absolute path is itself a
+    /// component spelled `/`, so joining components produced `//Users/…`;
+    /// and on Windows `canonicalize` returns an extended-length path, so
+    /// the same label came back as
+    /// `\\?\C:/Users/runneradmin/…/Cargo.toml` — red on the Windows leg
+    /// alone, because no other platform has a prefix component at all.
+    ///
+    /// The assertion is written for both: one separator run, no
+    /// backslash, and a start this platform can actually produce. The
+    /// exact shapes are pinned by `every_windows_prefix_shape_…` below,
+    /// which needs no Windows to run.
     #[test]
-    fn an_absolute_file_root_is_labelled_with_one_leading_slash() {
+    fn an_absolute_file_root_is_labelled_with_one_separator_run() {
         let tree = TempTree::new("discover-absolute");
         let file = tree.write("Cargo.toml", "");
         let labelled = label(&file, &file, false);
-        assert!(labelled.starts_with('/'), "{labelled}");
-        assert!(!labelled.starts_with("//"), "{labelled}");
+        assert!(!labelled.contains('\\'), "{labelled}");
+        assert!(!labelled.contains("//"), "{labelled}");
         assert!(labelled.ends_with("/Cargo.toml"), "{labelled}");
+
+        // Rooted where a temporary directory is rooted, drive-designated
+        // where it is on a drive, and nothing else. A temp directory is
+        // never a UNC share on any runner this ships to.
+        let rooted = labelled.starts_with('/');
+        let drive = labelled.split_once(":/").is_some_and(|(head, _)| {
+            head.len() == 1 && head.starts_with(|c: char| c.is_ascii_uppercase())
+        });
+        assert!(rooted || drive, "{labelled}");
+    }
+
+    /// **Every prefix shape Windows can parse, built as a literal.**
+    ///
+    /// The defect this pins was asserted before and still shipped: the
+    /// property "a label carries no backslash" was only ever tested
+    /// against paths the running machine could produce, and only Windows
+    /// produces a prefix. `Prefix` is constructible on every platform
+    /// even though only Windows parses one, so these run everywhere —
+    /// which is the whole point.
+    #[test]
+    fn every_windows_prefix_shape_is_one_forward_slashed_designator() {
+        use std::ffi::OsStr;
+
+        let server = OsStr::new("server");
+        let share = OsStr::new("share");
+        for (prefix, expected) in [
+            (Prefix::Disk(b'C'), "C:"),
+            (Prefix::Disk(b'c'), "C:"),
+            (Prefix::VerbatimDisk(b'C'), "C:"),
+            (Prefix::UNC(server, share), "//server/share"),
+            (Prefix::VerbatimUNC(server, share), "//server/share"),
+            (Prefix::DeviceNS(OsStr::new("COM1")), "//./COM1"),
+            (Prefix::Verbatim(OsStr::new("Volume{0}")), "//?/Volume{0}"),
+        ] {
+            let designated = designator(prefix);
+            assert_eq!(designated, expected, "{prefix:?}");
+            assert!(!designated.contains('\\'), "{prefix:?} kept a backslash");
+        }
+    }
+
+    /// One file, one identity. `canonicalize` hands back the verbatim
+    /// spelling and a caller hands back the plain one; a label that told
+    /// them apart would report one manifest twice.
+    #[test]
+    fn a_verbatim_drive_and_a_plain_drive_are_the_same_identity() {
+        assert_eq!(
+            designator(Prefix::VerbatimDisk(b'C')),
+            designator(Prefix::Disk(b'C'))
+        );
+        assert_eq!(
+            designator(Prefix::VerbatimUNC(
+                std::ffi::OsStr::new("server"),
+                std::ffi::OsStr::new("share")
+            )),
+            designator(Prefix::UNC(
+                std::ffi::OsStr::new("server"),
+                std::ffi::OsStr::new("share")
+            ))
+        );
+    }
+
+    /// Two different shares must not become one label — that would be a
+    /// fabricated conflict between two files that never met.
+    #[test]
+    fn two_unc_shares_keep_two_identities() {
+        use std::ffi::OsStr;
+
+        let one = designator(Prefix::UNC(OsStr::new("alpha"), OsStr::new("share")));
+        let other = designator(Prefix::UNC(OsStr::new("beta"), OsStr::new("share")));
+        assert_ne!(one, other);
+        assert_ne!(
+            one,
+            designator(Prefix::UNC(OsStr::new("alpha"), OsStr::new("other")))
+        );
+    }
+
+    /// The integration the literals above cannot reach: only Windows
+    /// parses a prefix out of a string, so only Windows can prove
+    /// `normalise` puts the designator back together with the rest.
+    #[cfg(windows)]
+    #[test]
+    fn windows_paths_normalise_to_one_label_per_file() {
+        for (raw, expected) in [
+            (r"\\?\C:\a\Cargo.toml", "C:/a/Cargo.toml"),
+            (r"C:\a\Cargo.toml", "C:/a/Cargo.toml"),
+            (r"c:\a\Cargo.toml", "C:/a/Cargo.toml"),
+            (
+                r"\\server\share\a\Cargo.toml",
+                "//server/share/a/Cargo.toml",
+            ),
+            (
+                r"\\?\UNC\server\share\a\Cargo.toml",
+                "//server/share/a/Cargo.toml",
+            ),
+            (r"a\b\Cargo.toml", "a/b/Cargo.toml"),
+            (r".github\workflows\ci.yml", ".github/workflows/ci.yml"),
+        ] {
+            assert_eq!(normalise(Path::new(raw)), expected, "{raw}");
+        }
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn windows_paths_normalise_to_one_label_per_file() {
+        // Only Windows parses `\\?\C:\a` into a prefix and a root; here it
+        // is one ordinary filename. The designator logic is covered on
+        // every platform by the three tests above.
+        eprintln!("SKIPPED windows_paths_normalise_to_one_label_per_file: not a Windows target");
+    }
+
+    /// The prefix-free half of the same property, pinned as literals so
+    /// it does not depend on what the temporary directory happens to
+    /// look like on the machine running the suite.
+    ///
+    /// A leading `.` survives on purpose: it is what the caller typed,
+    /// and `label` has its own rule for a root spelled `.`. A rooted
+    /// path keeps exactly one leading slash — the original regression.
+    #[test]
+    fn prefix_free_paths_normalise_to_what_the_caller_typed() {
+        for (raw, expected) in [
+            ("a/b/Cargo.toml", "a/b/Cargo.toml"),
+            ("./a/Cargo.toml", "./a/Cargo.toml"),
+            ("Cargo.toml", "Cargo.toml"),
+            ("/a/b/Cargo.toml", "/a/b/Cargo.toml"),
+            ("/Cargo.toml", "/Cargo.toml"),
+            ("a//b/Cargo.toml", "a/b/Cargo.toml"),
+            ("../a/Cargo.toml", "../a/Cargo.toml"),
+        ] {
+            assert_eq!(normalise(Path::new(raw)), expected, "{raw}");
+        }
     }
 
     #[test]

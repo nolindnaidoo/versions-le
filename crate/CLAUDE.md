@@ -37,9 +37,12 @@ any conflict.
 - **Corpus documents are stored flat and dot-free**, mapped to logical
   paths in `corpus.rs`. `cargo package` skips dotfiles and a corpus of
   them ships a crate that cannot run its own tests.
-- **Report paths are always forward-slashed**, on every OS. A sibling
-  shipped a release that used `\` on Windows; `tests/platform.rs` is why
-  this one cannot.
+- **Report paths are always forward-slashed**, on every OS, **prefix
+  and all**. A sibling shipped a release that used `\` on Windows; this
+  one shipped a label of `\\?\C:/Users/…`, because `canonicalize`
+  returns an extended-length path there and `normalise` only
+  special-cased separators. The `match` on `Component` is exhaustive so
+  that arm cannot be dropped again — a wildcard puts the bug back.
 - The gated suites are opt-in and CI sets them: `VERSIONS_LE_BUDGET=1`,
   `VERSIONS_LE_FUZZ_SECONDS=60`, `VERSIONS_LE_SCENARIOS=1`. A skipped
   case says so by name; a skip is never reported as a pass.

@@ -64,6 +64,14 @@ Not published to crates.io yet — build from source.
 
 ### Fixed
 
+- **Report paths carried a Windows path prefix verbatim**, so a manifest
+  named as its own root was labelled
+  `\\?\C:/Users/runneradmin/…/Cargo.toml`. `canonicalize` returns an
+  extended-length path on Windows and nothing turned it back, which also
+  gave one file two identities depending on whether the caller had
+  canonicalized. Fixed in `discover::normalise`, and the prefix decision
+  is now an exhaustive `match` so it cannot be dropped again on the two
+  platforms that never see a prefix.
 - The crate's install instructions claimed `cargo install versions-le`.
   It is not on crates.io yet, and a README may not say it is.
 - `crate/tests/scenarios.rs` expected 500 refusal rows from 500 crates

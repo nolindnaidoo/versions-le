@@ -62,6 +62,24 @@ three refusal reasons, and both surfaces.
 
 ### Fixed
 
+- **Report paths carried a Windows path prefix verbatim.** On Windows
+  `std::fs::canonicalize` returns an extended-length path, so a manifest
+  named as its own root was labelled
+  `\\?\C:/Users/runneradmin/…/Cargo.toml` — backslashes and a verbatim
+  marker in the one string the report promises has neither, and two
+  identities for one file depending on whether the caller had
+  canonicalized. `normalise` now turns a prefix into a designator:
+  every disk prefix collapses to an upper-cased `C:`, a UNC prefix keeps
+  its host and share as `//server/share`, and `\\?\C:\a` and `C:\a`
+  produce the same label. Red on the Windows CI leg only, because no
+  other platform parses a path prefix at all.
+- The prefix decision is now an **exhaustive `match` on `Component`**,
+  which compiles on every platform — so dropping the prefix arm is a
+  build failure everywhere rather than a Windows-only test failure.
+- `scan::manifest_of` walked `components()` itself and joined a prefix
+  and its root separator into `\\?\C:/\/a/…`. Classification was
+  unaffected — it reads only the basename and `/.github/workflows/` —
+  but the duplicate is gone and both callers now share one spelling.
 - `tests/scenarios.rs` expected 500 refusal rows from 500 crates
   inheriting one workspace dependency, from before refusals for one name
   merged into a single row carrying every site. Nothing set

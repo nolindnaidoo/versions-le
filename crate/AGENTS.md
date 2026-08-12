@@ -223,7 +223,15 @@ CHANGELOG entry.
   - `tests/platform.rs` — every path the report uses as a manifest's
     identity is forward-slashed on every OS; plus case-folding
     filesystems, reserved Windows device names, CRLF manifests, and
-    independence from `TZ`.
+    independence from `TZ`. **A platform property has to be provable
+    off the platform**: this suite asserted "no backslash" and the
+    Windows leg still went red, because the only path shape that broke
+    it — the extended-length prefix `canonicalize` returns there — was
+    one no other runner can produce. The prefix rule is therefore unit
+    tested in `discover.rs` against literal `Prefix` values, which are
+    constructible everywhere, and the `match` that consumes them is
+    exhaustive so the arm cannot be dropped on the platforms that never
+    see one.
   - `tests/fuzz.rs` — time-boxed (`VERSIONS_LE_FUZZ_SECONDS`, one
     second locally, sixty in CI) and seeded (`VERSIONS_LE_FUZZ_SEED`,
     printed on every run). Hostile constraint strings through

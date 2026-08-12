@@ -199,6 +199,34 @@ fn the_human_summary_names_the_same_paths_as_the_report() {
     }
 }
 
+/// **The shape that actually shipped red.** A manifest named as its own
+/// root is labelled with the whole of the path it was given, and on
+/// Windows `canonicalize` hands back an extended-length path — so the
+/// label came out as `\\?\C:/Users/runneradmin/…/Cargo.toml`, verbatim
+/// marker and backslashes intact, in the one string the report promises
+/// has neither.
+///
+/// The unit tests in `discover.rs` pin the same property, but only this
+/// one goes through the binary, and only the binary is what a user runs.
+#[test]
+fn an_absolute_file_root_is_labelled_without_a_platform_prefix() {
+    let tree = Tree::new("file-root");
+    let file = tree.write("Cargo.toml", "[dependencies]\nserde = \"1\"\n");
+
+    let run = run(&[&file.to_string_lossy()]);
+    assert_eq!(run.code, 0, "{}", run.stderr);
+    let found = identities(&report(&run));
+    assert_eq!(found.len(), 1, "{found:?}");
+    for label in &found {
+        assert!(!label.contains('\\'), "{label} carries a backslash");
+        assert!(
+            !label.contains('?'),
+            "{label} carries an extended-length marker"
+        );
+        assert!(label.ends_with("/Cargo.toml"), "{label}");
+    }
+}
+
 /// Two roots qualify their labels, and the qualification is built from a
 /// path this machine supplied — the step where a separator most easily
 /// leaks in.

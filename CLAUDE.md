@@ -42,8 +42,12 @@ The timed and gated suites are opt-in and CI sets them:
   tested against the corpus; only `discover.rs` and `scan.rs` may read a file.
 - **Never add an inline `#[allow(...)]`** — a CI job greps for it. Fix the lint
   or add a commented relaxation to `[lints.clippy]` in `crate/Cargo.toml`.
-- **Report paths are always forward-slashed**, on every OS. A sibling shipped a
-  release that used `\` on Windows; `tests/platform.rs` is why this one cannot.
+- **Report paths are always forward-slashed**, on every OS, **prefix and all**.
+  A sibling shipped a release that used `\` on Windows; this one shipped a
+  label of `\\?\C:/Users/…` because `canonicalize` returns an extended-length
+  path there and `normalise` only special-cased separators. The `match` on
+  `Component` in `discover.rs` is exhaustive so that arm cannot be dropped
+  again — a wildcard there puts the bug straight back.
 - **Corpus documents are stored flat and dot-free** and mapped to logical paths
   in `detect/corpus.rs`. `cargo package` skips dotfiles, and a corpus of them
   ships a crate that cannot run its own tests.
