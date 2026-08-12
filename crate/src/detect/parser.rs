@@ -206,7 +206,14 @@ fn package_json(out: &mut Parsed, file: &str, content: &str) {
 
     if let Some(engines) = root.get("engines").and_then(Json::as_object) {
         for (name, value) in engines {
-            let Some(raw) = value.as_str() else { continue };
+            // Named, exactly as a dependency section names it. One
+            // reader must not be loud about one key and silent about the
+            // next, or a manifest reads as understood while a constraint
+            // in it has vanished.
+            let Some(raw) = value.as_str() else {
+                out.error(&format!("engines.{name} is not a version string"));
+                continue;
+            };
             out.push(Entry {
                 ecosystem: Ecosystem::Npm,
                 name: name.clone(),
@@ -449,36 +456,33 @@ fn pep621_list(out: &mut Parsed, file: &str, list: Option<&Toml>, key: &str, kin
             out.error(&format!("{key} holds something that is not a requirement"));
             continue;
         };
-        let (name, specifier, unknown) = pep508(text);
+        let (name, specifier, constraint) = pep508(text);
         if name.is_empty() {
             out.error(&format!("{key}: \"{text}\" names no distribution"));
             continue;
         }
+        let floats = matches!(constraint, Constraint::Range(_))
+            .then(|| python_floats(&specifier))
+            .flatten();
         out.push(Entry {
             ecosystem: Ecosystem::Python,
             name,
             kind,
             site: site(file, format!("{key}.{text}"), &specifier, None),
-            constraint: match unknown {
-                Some(reason) => Constraint::Unknown(reason),
-                None => grammar::python(&specifier),
-            },
-            floats: unknown
-                .is_none()
-                .then(|| python_floats(&specifier))
-                .flatten(),
+            constraint,
+            floats,
         });
     }
 }
 
-/// Split a PEP 508 requirement into a distribution name and a version
-/// specifier.
+/// Split a PEP 508 requirement into a distribution name, the text to
+/// record as its site, and how that text reads.
 ///
 /// Environment markers and direct URL references are refused rather than
 /// stripped: a requirement that only applies below Python 3.11 is not
 /// in conflict with one that does not, and pretending otherwise would
 /// manufacture a finding.
-fn pep508(text: &str) -> (String, String, Option<&'static str>) {
+fn pep508(text: &str) -> (String, String, Constraint) {
     let trimmed = text.trim();
     let name: String = trimmed
         .chars()
@@ -487,18 +491,38 @@ fn pep508(text: &str) -> (String, String, Option<&'static str>) {
     let rest = trimmed[name.len()..].trim();
 
     if trimmed.contains(';') {
-        return (name, String::new(), Some("an environment marker"));
+        return (
+            name,
+            String::new(),
+            Constraint::Unknown("an environment marker"),
+        );
     }
     if rest.starts_with('@') {
-        return (name, String::new(), Some("a direct URL reference"));
+        return (
+            name,
+            String::new(),
+            Constraint::Unknown("a direct URL reference"),
+        );
     }
-    // Extras change what is installed, never which versions are allowed.
+    // Extras change what is installed, never which versions are allowed
+    // — but an extras group that never closes is broken PEP 508, not a
+    // requirement with no specifier. Reading it as the latter reported a
+    // dependency as merely unpinned when the manifest was simply wrong.
     let rest = match rest.strip_prefix('[') {
-        Some(tail) => tail.split_once(']').map_or("", |(_, after)| after).trim(),
+        Some(tail) => match tail.split_once(']') {
+            Some((_, after)) => after.trim(),
+            None => {
+                return (
+                    name,
+                    rest.to_string(),
+                    Constraint::Malformed("an extras group with no closing bracket"),
+                );
+            }
+        },
         None => rest,
     };
     let specifier = rest.trim_start_matches('(').trim_end_matches(')').trim();
-    (name, specifier.to_string(), None)
+    (name, specifier.to_string(), grammar::python(specifier))
 }
 
 fn python_floats(raw: &str) -> Option<&'static str> {
@@ -539,7 +563,11 @@ fn go_mod(out: &mut Parsed, file: &str, content: &str) {
             None if in_require => line,
             None => continue,
         };
+        // A `require` naming no version is a broken go.mod. Dropping the
+        // line left the module out of the report altogether, which reads
+        // as a module nobody required.
         let Some((module, version)) = requirement.split_once(char::is_whitespace) else {
+            out.error(&format!("{requirement} is a require with no version"));
             continue;
         };
         out.push(go_module(file, module, version.trim(), number));
@@ -1073,6 +1101,67 @@ mod tests {
         let cargo = read(ManifestKind::CargoToml, "[dependencies]\nserde = 1\n");
         assert_eq!(cargo.refusals.len(), 1, "{:?}", cargo.refusals);
         assert!(cargo.refusals[0].message.contains("not a version"));
+    }
+
+    /// **The same reader must not be loud about one key and silent about
+    /// the next.** A non-string in `dependencies` was an error and a
+    /// non-string in `engines` was dropped without a word, so a
+    /// `package.json` could be reported as read while a constraint in it
+    /// had vanished.
+    #[test]
+    fn a_non_string_engine_is_an_error_like_every_other_section() {
+        let parsed = read(
+            ManifestKind::PackageJson,
+            r#"{ "engines": { "node": 20, "bun": ">=1" } }"#,
+        );
+        assert_eq!(parsed.errors.len(), 1, "{:?}", parsed.errors);
+        assert!(parsed.errors[0].message.contains("engines.node"));
+        // The one it could read still answers.
+        assert_eq!(parsed.entries.len(), 1);
+        assert_eq!(parsed.entries[0].name, "bun");
+    }
+
+    /// A `require` line with no version is a broken go.mod, and dropping
+    /// it left the module out of the report entirely — which reads as a
+    /// module nobody required.
+    #[test]
+    fn a_require_line_with_no_version_is_named_rather_than_dropped() {
+        let parsed = read(
+            ManifestKind::GoMod,
+            "module example.com/a\n\nrequire (\n\tgithub.com/x/y\n\tgithub.com/z/w v1.0.0\n)\n",
+        );
+        assert_eq!(parsed.errors.len(), 1, "{:?}", parsed.errors);
+        assert!(parsed.errors[0].message.contains("github.com/x/y"));
+        let names: Vec<&str> = parsed.entries.iter().map(|e| e.name.as_str()).collect();
+        assert_eq!(names, ["github.com/z/w"]);
+    }
+
+    /// An extras group that never closes is broken PEP 508, and reading
+    /// it as "no version specifier at all" reported a **wrong answer**:
+    /// an unpinned dependency, informational, where the manifest is
+    /// simply broken.
+    #[test]
+    fn an_unterminated_extras_group_is_malformed_not_unpinned() {
+        let parsed = read(
+            ManifestKind::PyprojectToml,
+            "[project]\ndependencies = [\"pkg[extra\"]\n",
+        );
+        assert_eq!(parsed.entries.len(), 1);
+        assert!(
+            matches!(parsed.entries[0].constraint, Constraint::Malformed(_)),
+            "{:?}",
+            parsed.entries[0].constraint
+        );
+        assert_eq!(parsed.entries[0].floats, None);
+        assert_eq!(parsed.entries[0].site.constraint, "[extra");
+
+        // A closed one still means what it always did: extras change
+        // what is installed, never which versions are allowed.
+        let closed = read(
+            ManifestKind::PyprojectToml,
+            "[project]\ndependencies = [\"pkg[extra]>=2\"]\n",
+        );
+        assert_eq!(closed.entries[0].site.constraint, ">=2");
     }
 
     /// Two refusals the README makes a claim about and nothing else here

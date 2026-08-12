@@ -81,6 +81,20 @@ three refusal reasons, and both surfaces.
   running the binary against a real repository — `pixelactions` went
   from exit 1 with a fabricated error to exit 0 with a refusal, and
   nothing else in its report moved.
+- **Three readers dropped a value while reporting the manifest as
+  read.** A non-string in `engines` was skipped without a word, though a
+  non-string in `dependencies` beside it was an error. A go.mod
+  `require` line naming no version left the module out of the report
+  entirely, which reads as a module nobody required. Both are now named
+  in `diagnostics`, which is the property the whole hazards suite exists
+  to defend: a manifest never silently vanishes, and neither does a
+  constraint inside one.
+- **An unterminated PEP 508 extras group was reported as unpinned.**
+  `"pkg[extra"` read as a requirement with no version specifier and came
+  back as `floating-pin`, informational — a wrong answer rather than a
+  silence. It is broken PEP 508 and is now `malformed-constraint`, which
+  is the verdict for a value shaped like a constraint of its own
+  ecosystem and broken.
 - **The MCP surface coerced arguments the CLI would have refused.**
   `"hidden": "true"` read as false and walked past every hidden
   directory; `"ecosystems": [7, "cargo"]` dropped the 7; a misspelled
