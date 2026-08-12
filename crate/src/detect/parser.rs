@@ -1022,6 +1022,62 @@ mod tests {
         let parsed = read(ManifestKind::PackageJson, "{ not json");
         assert!(parsed.entries.is_empty());
         assert_eq!(parsed.errors.len(), 1);
+
+        for kind in [ManifestKind::CargoToml, ManifestKind::PyprojectToml] {
+            let parsed = read(kind, "[dependencies");
+            assert!(parsed.entries.is_empty(), "{kind:?}");
+            assert_eq!(parsed.errors.len(), 1, "{kind:?}");
+        }
+    }
+
+    /// A value shaped wrong, rather than spelled wrong, is an error that
+    /// names the key it came from. Skipping it would leave a manifest
+    /// half-read, and a manifest half-read reads as one that agreed.
+    #[test]
+    fn a_value_that_cannot_be_a_constraint_is_an_error_naming_its_key() {
+        let npm = read(
+            ManifestKind::PackageJson,
+            r#"{ "dependencies": { "a": 20 }, "packageManager": "bun" }"#,
+        );
+        let messages: Vec<&str> = npm.errors.iter().map(|e| e.message.as_str()).collect();
+        assert_eq!(messages.len(), 2, "{messages:?}");
+        assert!(messages[0].contains("dependencies.a"), "{messages:?}");
+        assert!(messages[1].contains("packageManager"), "{messages:?}");
+
+        let python = read(
+            ManifestKind::PyprojectToml,
+            "[project]\ndependencies = [42, \"==1.0\"]\n",
+        );
+        assert_eq!(python.errors.len(), 2, "{:?}", python.errors);
+        assert!(python.errors[1].message.contains("names no distribution"));
+
+        // A Cargo value that is neither a string nor a table is not a
+        // grammar this tool models, so it is refused rather than blamed.
+        let cargo = read(ManifestKind::CargoToml, "[dependencies]\nserde = 1\n");
+        assert_eq!(cargo.refusals.len(), 1, "{:?}", cargo.refusals);
+        assert!(cargo.refusals[0].message.contains("not a version"));
+    }
+
+    /// Two refusals the README makes a claim about and nothing else here
+    /// pins: a PEP 508 direct URL, and an action ref that is a branch —
+    /// which is a pin that moves under the workflow rather than a version.
+    #[test]
+    fn a_direct_url_is_refused_and_a_branch_ref_floats() {
+        let python = read(
+            ManifestKind::PyprojectToml,
+            "[project]\ndependencies = [\"pkg @ https://example.com/pkg.whl\"]\n",
+        );
+        assert_eq!(python.refusals.len(), 1, "{:?}", python.refusals);
+        assert!(python.refusals[0].message.contains("direct URL"));
+
+        let workflow = read(
+            ManifestKind::Workflow,
+            "      - uses: actions/checkout@main\n",
+        );
+        assert_eq!(
+            workflow.entries[0].floats,
+            Some("a branch or tag reference moves under the workflow")
+        );
     }
 
     /// A key this tool has never heard of is not a dependency
