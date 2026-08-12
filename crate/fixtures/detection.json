@@ -135,6 +135,36 @@
       "refusals": [
         "ambiguous_version_string node"
       ]
+    },
+    {
+      "files": [
+        "crates/caret/Cargo.toml"
+      ],
+      "findings": [
+        "info floating-pin cargo pkg"
+      ],
+      "name": "a bare version in a path dependency is a caret and floats",
+      "refusals": []
+    },
+    {
+      "files": [
+        "crates/exact/Cargo.toml"
+      ],
+      "findings": [],
+      "name": "an = pin in a path dependency does not float",
+      "refusals": []
+    },
+    {
+      "files": [
+        "crates/caret/Cargo.toml",
+        "crates/exact/Cargo.toml"
+      ],
+      "findings": [
+        "warning constraint-conflict cargo pkg",
+        "info floating-pin cargo pkg"
+      ],
+      "name": "a bare version and an = pin are two different requirements",
+      "refusals": []
     }
   ],
   "classification": [
@@ -362,6 +392,20 @@
         "go Runtime require github.com/x/y=v1.4.0"
       ],
       "file": "go.mod",
+      "refusals": []
+    },
+    {
+      "entries": [
+        "cargo Runtime dependencies.pkg pkg=0.7.7"
+      ],
+      "file": "crates/caret/Cargo.toml",
+      "refusals": []
+    },
+    {
+      "entries": [
+        "cargo Runtime dependencies.pkg pkg==0.7.7"
+      ],
+      "file": "crates/exact/Cargo.toml",
       "refusals": []
     }
   ]

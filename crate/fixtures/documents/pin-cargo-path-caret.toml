@@ -1,0 +1,2 @@
+[dependencies]
+pkg = { path = "../pkg", version = "0.7.7" }

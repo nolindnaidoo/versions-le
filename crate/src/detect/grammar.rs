@@ -777,6 +777,17 @@ mod tests {
         assert!(!overlap(npm("1.0.200"), npm("1.9.0")));
     }
 
+    /// The reading behind the crate's most useful real-world finding. A
+    /// bare `0.7.7` beside a `path` admits every later 0.7 patch, so a
+    /// workspace that believed it had pinned its own core at an exact
+    /// patch had not; `=0.7.7` is the requirement that says so.
+    #[test]
+    fn a_bare_zero_x_version_admits_later_patches_and_an_equals_pin_does_not() {
+        assert!(overlap(cargo("0.7.7"), cargo("=0.7.9")));
+        assert!(!overlap(cargo("0.7.7"), cargo("=0.8.0")));
+        assert!(!overlap(cargo("=0.7.7"), cargo("=0.7.9")));
+    }
+
     #[test]
     fn a_caret_stops_at_the_next_major() {
         assert!(overlap(cargo("^1.2.3"), cargo("1.9.9")));

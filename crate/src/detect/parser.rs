@@ -799,6 +799,31 @@ mod tests {
         assert!(parsed.refusals.is_empty(), "{:?}", parsed.refusals);
     }
 
+    /// **The real-world finding**, from running the binary against a
+    /// workspace whose documentation said its binaries pinned their core
+    /// "at an exact patch". They did not: `version = "0.7.7"` beside a
+    /// `path` is a *caret* requirement in Cargo — `[0.7.7, 0.8.0)` — and
+    /// only `=0.7.7` is the pin that was meant. One character apart, and
+    /// the two must never collapse into each other.
+    #[test]
+    fn a_bare_version_in_a_path_dependency_floats_and_an_equals_pin_does_not() {
+        let floating = read(
+            ManifestKind::CargoToml,
+            "[dependencies]\ncore = { path = \"../core\", version = \"0.7.7\" }\n",
+        );
+        assert_eq!(
+            floating.entries[0].floats,
+            Some("a caret on a 0.x version, which promises no stability"),
+            "a bare 0.x version beside a path was read as a pin"
+        );
+
+        let pinned = read(
+            ManifestKind::CargoToml,
+            "[dependencies]\ncore = { path = \"../core\", version = \"=0.7.7\" }\n",
+        );
+        assert_eq!(pinned.entries[0].floats, None, "an = pin was read as float");
+    }
+
     #[test]
     fn a_dependency_table_with_no_version_is_refused() {
         let parsed = read(

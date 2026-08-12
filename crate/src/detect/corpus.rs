@@ -4,12 +4,18 @@
 //! tarball runs every case: whoever installed this can check the
 //! refusal claims in the README instead of trusting them.
 //!
-//! Two halves, and the second is the point. `tree-*` is one synthetic
-//! repository carrying a planted instance of every finding this tool
-//! makes. `grammar-*` is the opposite: pairs of manifests that a tool
-//! comparing strings would call a conflict, pinned here as **refusals**.
-//! A regression that started guessing at `workspace = true` would turn a
-//! refusal into a finding, and the corpus is what fails.
+//! Three groups, and the last two are the point. `tree-*` is one
+//! synthetic repository carrying a planted instance of every finding
+//! this tool makes. `grammar-*` is the opposite: pairs of manifests that
+//! a tool comparing strings would call a conflict, pinned here as
+//! **refusals**. A regression that started guessing at `workspace = true`
+//! would turn a refusal into a finding, and the corpus is what fails.
+//!
+//! `pin-*` is the finding a real repository actually had: a Cargo `path`
+//! dependency whose bare `version = "0.7.7"` is a **caret** requirement —
+//! `[0.7.7, 0.8.0)` — and not the exact pin its author believed they had
+//! written. `=0.7.7` is the exact one. The pair is here so the difference
+//! cannot regress into "both are pins".
 
 /// One corpus document, by its **logical** path.
 ///
@@ -69,6 +75,14 @@ pub(crate) fn document(path: &str) -> &'static str {
         }
         "go.mod" => include_str!("../../fixtures/documents/grammar-go.mod"),
 
+        // The pin pair. Same package, same source, one character apart.
+        "crates/caret/Cargo.toml" => {
+            include_str!("../../fixtures/documents/pin-cargo-path-caret.toml")
+        }
+        "crates/exact/Cargo.toml" => {
+            include_str!("../../fixtures/documents/pin-cargo-path-exact.toml")
+        }
+
         other => panic!("the corpus has no document at {other}"),
     }
 }
@@ -79,7 +93,7 @@ mod tests {
 
     use super::document;
     use crate::detect::compare::analyse;
-    use crate::detect::heuristics::manifest_kind;
+    use crate::detect::heuristics::{Ecosystem, ManifestKind, manifest_kind};
     use crate::detect::parser::{self, Entry, Refusal};
 
     const CORPUS: &str = include_str!("../../fixtures/detection.json");
@@ -200,6 +214,204 @@ mod tests {
             assert_eq!(actual, case.findings, "{} findings", case.name);
             assert_eq!(refusals, case.refusals, "{} refusals", case.name);
         }
+    }
+
+    // -----------------------------------------------------------------
+    // The coverage matrix: does the crate open what it claims?
+    //
+    // The extractor crates in this family answer that with one corpus
+    // document per extension in their alias table. This crate's table is
+    // its **five ecosystems, five manifest kinds, six findings and three
+    // refusal reasons** — every one of them a claim in SPEC.md and the
+    // README — so that is the matrix. A manifest kind with no document
+    // behind it, or a finding nothing in the corpus can produce, inflates
+    // what the tool says it covers.
+    //
+    // The two directions are checked separately and both matter:
+    // *reachable* is "the corpus proves this exists", and *exhaustive* is
+    // "the code can emit nothing the corpus does not prove".
+    // -----------------------------------------------------------------
+
+    /// The corpus document that proves a manifest kind is read.
+    ///
+    /// **Exhaustive on purpose.** A sixth reader added without a document
+    /// behind it stops compiling here rather than shipping as an
+    /// unproven line in the README's "what it reads" table.
+    fn document_for_kind(kind: ManifestKind) -> &'static str {
+        match kind {
+            ManifestKind::PackageJson => "package.json",
+            ManifestKind::CargoToml => "api/Cargo.toml",
+            ManifestKind::PyprojectToml => "svc/base/pyproject.toml",
+            ManifestKind::GoMod => "go.mod",
+            ManifestKind::Workflow => ".github/workflows/ci.yml",
+        }
+    }
+
+    /// The corpus document that proves an ecosystem yields constraints,
+    /// exhaustive for the same reason.
+    fn document_for_ecosystem(ecosystem: Ecosystem) -> &'static str {
+        match ecosystem {
+            Ecosystem::Cargo => "api/Cargo.toml",
+            Ecosystem::Ci => ".github/workflows/ci.yml",
+            Ecosystem::Go => "go.mod",
+            Ecosystem::Npm => "package.json",
+            Ecosystem::Python => "svc/base/pyproject.toml",
+        }
+    }
+
+    const KINDS: [ManifestKind; 5] = [
+        ManifestKind::PackageJson,
+        ManifestKind::CargoToml,
+        ManifestKind::PyprojectToml,
+        ManifestKind::GoMod,
+        ManifestKind::Workflow,
+    ];
+
+    const ECOSYSTEMS: [Ecosystem; 5] = [
+        Ecosystem::Cargo,
+        Ecosystem::Ci,
+        Ecosystem::Go,
+        Ecosystem::Npm,
+        Ecosystem::Python,
+    ];
+
+    const FINDINGS: [&str; 6] = [
+        "constraint-conflict",
+        "disjoint-constraint",
+        "floating-pin",
+        "malformed-constraint",
+        "msrv-mismatch",
+        "prerelease-in-production",
+    ];
+
+    const REFUSALS: [&str; 3] = [
+        "ambiguous_version_string",
+        "cross_ecosystem",
+        "unknown_grammar",
+    ];
+
+    /// Every identifier-shaped string literal a module's **non-test**
+    /// source carries, joined by `separator` and otherwise lowercase.
+    ///
+    /// The test half is cut off first: it names package fixtures like
+    /// `left-pad`, which is the same shape as a finding code and is not
+    /// one. Every piece between quotes is examined rather than every
+    /// other one, because a format string here escapes quotes of its own
+    /// and an alternating scan would lose its place after the first.
+    fn coded_literals(source: &str, separator: char) -> Vec<String> {
+        let declarations = source.split("#[cfg(test)]").next().unwrap_or(source);
+        let mut found: Vec<String> = Vec::new();
+        for piece in declarations.split('"') {
+            let shaped = piece.contains(separator)
+                && !piece.starts_with(separator)
+                && !piece.ends_with(separator)
+                && piece
+                    .chars()
+                    .all(|c| c.is_ascii_lowercase() || c == separator);
+            if shaped && !found.contains(&piece.to_string()) {
+                found.push(piece.to_string());
+            }
+        }
+        found.sort();
+        found
+    }
+
+    #[test]
+    fn coverage_matrix_every_ecosystem_and_manifest_kind_opens_a_real_document() {
+        for kind in KINDS {
+            let path = document_for_kind(kind);
+            assert_eq!(
+                manifest_kind(path),
+                Some(kind),
+                "{path} does not classify as the kind it is the proof for"
+            );
+            let parsed = parser::parse(kind, path, document(path));
+            assert!(
+                !parsed.entries.is_empty(),
+                "{path} is claimed as the proof for {kind:?} and yields no constraint"
+            );
+            assert!(parsed.errors.is_empty(), "{path}: {:?}", parsed.errors);
+        }
+
+        for ecosystem in ECOSYSTEMS {
+            let path = document_for_ecosystem(ecosystem);
+            let kind = manifest_kind(path).unwrap_or_else(|| panic!("{path} is not a manifest"));
+            assert_eq!(kind.ecosystem(), ecosystem, "{path}");
+            assert!(
+                parser::parse(kind, path, document(path))
+                    .entries
+                    .iter()
+                    .any(|entry| entry.ecosystem == ecosystem),
+                "{path} names no {} constraint",
+                ecosystem.name()
+            );
+        }
+
+        eprintln!(
+            "coverage-matrix: {} ecosystems and {} manifest kinds reachable",
+            ECOSYSTEMS.len(),
+            KINDS.len()
+        );
+    }
+
+    /// Every finding the crate can emit and every reason it can refuse
+    /// for, produced by a real corpus document — and nothing the corpus
+    /// cannot produce left in the code.
+    ///
+    /// The second half is the one that catches drift: a seventh check
+    /// added without a corpus case is a claim in the README that no test
+    /// stands behind.
+    #[test]
+    fn coverage_matrix_every_finding_and_refusal_is_produced_by_the_corpus() {
+        let mut produced_findings: Vec<String> = Vec::new();
+        let mut produced_refusals: Vec<String> = Vec::new();
+        for case in corpus().analysis {
+            let entries: Vec<Entry> = case
+                .files
+                .iter()
+                .flat_map(|path| read(path).entries)
+                .collect();
+            let (findings, crossings) = analyse(&entries);
+            let reasons = case
+                .files
+                .iter()
+                .flat_map(|path| read(path).refusals)
+                .chain(crossings);
+            for finding in findings {
+                if !produced_findings.contains(&finding.code) {
+                    produced_findings.push(finding.code);
+                }
+            }
+            for refusal in reasons {
+                if !produced_refusals.contains(&refusal.reason) {
+                    produced_refusals.push(refusal.reason);
+                }
+            }
+        }
+        produced_findings.sort();
+        produced_refusals.sort();
+
+        assert_eq!(produced_findings, FINDINGS, "findings the corpus produces");
+        assert_eq!(produced_refusals, REFUSALS, "refusals the corpus produces");
+
+        // And the other direction: nothing in the code that the corpus
+        // cannot reach. Finding codes are kebab-cased and live in
+        // compare.rs; refusal reasons are snake-cased and are split
+        // between the readers and the cross-ecosystem check.
+        let emitted = coded_literals(include_str!("compare.rs"), '-');
+        assert_eq!(emitted, FINDINGS, "finding codes compare.rs can emit");
+
+        let mut reasons = coded_literals(include_str!("compare.rs"), '_');
+        reasons.extend(coded_literals(include_str!("parser.rs"), '_'));
+        reasons.sort();
+        reasons.dedup();
+        assert_eq!(reasons, REFUSALS, "refusal reasons the readers can emit");
+
+        eprintln!(
+            "coverage-matrix: {} finding codes and {} refusal reasons reachable",
+            FINDINGS.len(),
+            REFUSALS.len()
+        );
     }
 
     /// **The refusal spine, over the corpus rather than a unit test.**

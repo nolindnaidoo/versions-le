@@ -225,6 +225,38 @@ fn a_floating_pin_fails_only_under_fail_on_any() {
     assert_eq!(run(&["--fail-on", "any", &root]).code, 1);
 }
 
+/// **The real-world finding, end to end.** A workspace holding its own
+/// crates together with `{ path = "…", version = "0.7.7" }` has not
+/// pinned them: that is a caret requirement, `[0.7.7, 0.8.0)`. Only
+/// `=0.7.7` is the pin. The tool must say so about the first spelling
+/// and stay silent about the second.
+#[test]
+fn a_bare_version_in_a_path_dependency_floats_and_an_equals_pin_does_not() {
+    let tree = Tree::new("path-pin");
+    tree.write(
+        "crates/binary/Cargo.toml",
+        "[dependencies]\ncore = { path = \"../core\", version = \"0.7.7\" }\n",
+    );
+    let root = tree.path().to_string_lossy().to_string();
+
+    let floating = run(&["--fail-on", "any", &root]);
+    assert_eq!(
+        codes(&report(&floating)),
+        ["floating-pin"],
+        "{}",
+        floating.stderr
+    );
+    assert_eq!(floating.code, 1, "{}", floating.stderr);
+
+    tree.write(
+        "crates/binary/Cargo.toml",
+        "[dependencies]\ncore = { path = \"../core\", version = \"=0.7.7\" }\n",
+    );
+    let pinned = run(&["--fail-on", "any", &root]);
+    assert!(codes(&report(&pinned)).is_empty(), "{}", pinned.stderr);
+    assert_eq!(pinned.code, 0, "{}", pinned.stderr);
+}
+
 /// The one check that reads across ecosystems, and it does so by naming
 /// both keys rather than by matching a package name.
 #[test]
