@@ -103,9 +103,12 @@ It wants two things — the `@ref` of a `uses:` and the value of a
 writes. A YAML parser would buy structure this then discards, at the
 cost of a dependency. What keeps the shortcut honest is the evidence
 gate: a value that is not evidently a version becomes an
-`ambiguous_version_string` refusal instead of an invented entry. This is
-also the only reader that knows a line number, and it is the only one
-whose sites carry one.
+`ambiguous_version_string` refusal instead of an invented entry.
+
+`go.mod` is read the same way and for the same reason. Those two are the
+readers that know a line number, and their sites are the only ones that
+carry one — the structured readers address by key, and a `line` a reader
+does not honestly know is worse than no `line` at all.
 
 `dtolnay/rust-toolchain@1.88` puts the toolchain in the ref, so that ref
 is read as an MSRV claim. `rust-toolchain@<sha>` is the hardened

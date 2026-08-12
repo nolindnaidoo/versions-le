@@ -29,10 +29,14 @@ categories = ["command-line-utilities", "development-tools", "development-tools:
 exclude = ["AGENTS.md", "CLAUDE.md", "rust-toolchain.toml"]
 
 [dependencies]
+# The report is the product — a consumer parses it — so its shape is
+# derived from the types that produce it rather than written out by hand
+# beside them, where the two would drift and only the JSON would be wrong.
 serde = { version = "1", features = ["derive"] }
+# Both the report's encoder and the npm reader: `package.json` is JSON,
+# so that reader is serde_json's either way, and the MCP surface speaks
+# JSON-RPC over the same types.
 serde_json = "1"
-# `package.json` is JSON, so the npm reader is serde_json's anyway.
-#
 # The Cargo grammar, from the crate Cargo itself uses. `^`, `~`, the 0.x
 # caret rules and prerelease ordering are exactly the parts a hand-rolled
 # parser gets subtly wrong, and a subtly wrong range here does not

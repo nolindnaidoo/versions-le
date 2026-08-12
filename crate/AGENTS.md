@@ -129,14 +129,72 @@ pixelactions and the sibling LE crates:
 - No nesting deeper than two levels inside a function; extract a named
   helper instead.
 
+## Data and errors
+
+The functional discipline the TypeScript half of this family is held to,
+in Rust:
+
+- **Immutable by default.** `&[T]` and `&str` parameters, iterator chains
+  over accumulate-and-mutate, and no function mutates something it was
+  handed. `let mut` is for a builder that is about to be returned, and
+  each one that survives review earns its keep — `Parsed` accumulating
+  entries, `String` assembling a label.
+- **No needless allocation.** A `to_string` in a hot path is a cost the
+  reader has to justify: a 50 MB manifest is a case this crate is tested
+  against, and copying it to strip three bytes is the shape of mistake
+  that only shows up there.
+- **Refuse rather than default.** A value the tool cannot read is a
+  refusal or an error naming it — never a substituted one. That applies
+  inside the code as well as at its edges: a message read back out of the
+  group that produced it cannot be a message nobody wrote, and an
+  `unwrap_or` supplying a plausible reason is the same defect as a
+  fabricated finding, one layer down.
+- **Every error names its subject.** The file, the flag, the value. A
+  message that could have come from any run is a message that helps with
+  none of them.
+- **No reachable panic.** No `unwrap`, no `expect`, no indexing that
+  depends on an input, no arithmetic that can overflow (release builds
+  keep `overflow-checks`). The four `expect`s in `src/` are three
+  serialisations of this crate's own types and one constant regex —
+  invariants of this code, not of its input, and each says so in its
+  message.
+
+### Exhaustive `match` is the guard, not the comment
+
+A wildcard arm answers on behalf of a variant nobody has written yet. Four
+matches here are exhaustive on purpose, and each is load-bearing:
+
+- `Component` in `discover.rs` — dropping the `Prefix` arm shipped a
+  Windows-only bug once, and only Windows could go red for it; an
+  exhaustive match fails the build on all three platforms.
+- `Constraint::range` and `Constraint::malformed_reason` — a fourth
+  verdict has to state whether it is comparable and whether it blames the
+  manifest, rather than having a wildcard answer "no" for it.
+- `ManifestKind` and `Ecosystem` in `corpus.rs` — a sixth reader with no
+  corpus document behind it stops compiling.
+
+The wildcards that remain are deliberate and each carries its reason: the
+`Op` arm in `grammar.rs` refuses a comparator a future `semver` adds
+rather than reading it as something else, and matches on `&str` have
+nowhere else to go.
+
 ## Hard rules
 
-- **No inline `#[allow(...)]`.** Either fix the lint or add a visible,
-  commented relaxation to `[lints.clippy]` in `Cargo.toml`. One is there
-  already, with its reason.
+- **No inline lint suppression.** `src/` carries no `#[allow]` and no
+  `#[expect]`; the `policy` job greps for the first. Fix the lint, or add
+  a visible, commented relaxation to `[lints.clippy]` in `Cargo.toml` —
+  one is there, with its reason. When the suppression would be
+  `dead_code`, the answer is usually `cfg(test)`: the corpus accessor is
+  read only by tests, so it is compiled only for them and a shipped
+  binary carries neither it nor the documents it embeds.
 - **Clippy pedantic, deny warnings.** `cargo clippy --all-targets --
   -D warnings` must pass exactly as CI runs it.
 - **`unsafe` is forbidden crate-wide** (`[lints.rust]`).
+- **No trait, no `dyn`, no generic where a function will do.** There is
+  not one trait of this crate's own in `src/`, and there is no
+  abstraction waiting for a second implementation that is never coming.
+- **Minimal visibility.** Everything is `pub(crate)` or narrower; nothing
+  is exported, because nothing outside the binary consumes it.
 - **No `anyhow` or `thiserror` in the library.** Errors are `String`,
   and every one of them names the file or the value it is about.
 - **No async runtime.** This tool reads files and compares numbers.
@@ -201,6 +259,11 @@ CHANGELOG entry.
 
 ## Testing
 
+- **`detect/`: 90% line coverage floor per module**, enforced by the
+  `coverage` job. Per module rather than on the crate total, because a
+  total lets one module slide while the others carry it. It is a floor to
+  ratchet up, never lowered to make a build pass — and the job fails when
+  it matches no module at all, because zero measured is not zero failures.
 - **`detect/` is pure and carries the corpus.** If something in it is
   hard to test, the design is wrong.
 - **Exit codes belong in `tests/contracts.rs`.** They are the API —
@@ -265,3 +328,56 @@ All three, before every push. A change is not done because it compiles;
 it is done when it is tested, linted, documented where behavior changed
 (README / CHANGELOG / SPEC / this file), and honest — claims in docs
 must match the code.
+
+Coverage locally, scoped the way the job scopes it:
+
+```bash
+cargo install cargo-llvm-cov          # once
+cargo llvm-cov --no-report
+cargo llvm-cov report --show-missing-lines
+```
+
+`--show-missing-lines` is the half worth reading: a module over the floor
+can still be over it on the strength of its happy path, and the refusal
+arms are the ones this crate is about.
+
+**A refactor is verified against a real tree, not only the suite.** Build
+the binary before and after and diff both streams over a repository that
+actually has manifests in it — stdout is byte-stable by design, so an
+unintended behaviour change shows up as a diff rather than as a hunch.
+
+## Git identity
+
+Every commit uses the GitHub noreply address:
+
+```
+13629544+nolindnaidoo@users.noreply.github.com
+```
+
+A real address in commit metadata is public forever — GitHub's API serves
+it for any public repo, and scrapers harvest it. A repo-local
+`user.email` silently overrides the global one, so check
+`git config user.email` in a fresh clone before the first commit.
+
+## Commits
+
+Conventional prefix — `feat · fix · docs · style · refactor · perf ·
+test · build · ci · chore · revert` — an optional `(scope)`, an
+imperative subject under 72 characters, and a body carrying the *why* and
+the user-visible consequence rather than a list of files. One concern per
+commit; refactors and behaviour changes travel separately.
+
+`.githooks/commit-msg` enforces the subject line **once
+`core.hooksPath` points at it**:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+There is no JavaScript in this repository and therefore no `prepare`
+script to wire it on install, so a fresh clone has to run that line. CI
+does not check commit subjects here the way the extension siblings do —
+the hook is the whole gate, and an unwired hook is no gate at all.
+
+**CHANGELOG.md is written by hand**, not generated from subjects: an
+entry that explains why a bug mattered is worth more than a list of them.
