@@ -134,3 +134,177 @@ jobs:
         with:
           tool: cargo-audit
       - run: cargo audit
+
+  # Trees larger than an editor opens: a 400-crate monorepo, a 20,000
+  # dependency package.json, and 500 crates inheriting one workspace
+  # dependency. Gated behind VERSIONS_LE_SCENARIOS so a bare `cargo test`
+  # does not own the run, which is exactly why it needs a job — the suite
+  # nothing runs is the suite that rots. Found by adding this job: the
+  # refusal scenario still expected 500 refusal rows, from before refusals
+  # for one name merged into one row carrying every site.
+  scenarios:
+    runs-on: ubuntu-24.04
+    env:
+      VERSIONS_LE_SCENARIOS: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        with:
+          toolchain: stable
+      - name: Scenarios at scale
+        run: cargo test --test scenarios -- --test-threads=1 --nocapture
+
+  # ---------------------------------------------------------------------
+  # The five below exist because something real got through a green suite
+  # somewhere in this family. Each one names the bug it exists to catch.
+  #
+  # None of them touches the network — this crate never does — and the
+  # three that need no filesystem drive the MCP server's `compare_versions`
+  # tool, which takes manifest contents directly.
+  # ---------------------------------------------------------------------
+
+  # Inputs a real machine holds and a fixture directory cannot: a
+  # byte-order mark, a manifest that is not UTF-8, a symlink loop, a FIFO
+  # named Cargo.toml, a mode-000 file, a path over 260 characters, an
+  # empty file, and a 50 MB manifest. The tree is built at runtime because
+  # Windows cannot check half of it into git, and every case the platform
+  # cannot express is skipped by name.
+  #
+  # The property under all of them is this crate's own: a manifest that
+  # misbehaves is named in `diagnostics`, never silently absent. A file
+  # that vanished from the report reads to whoever ran it as a file that
+  # was clean — which is the one way a validator can lie.
+  hazards:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, windows-2025, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        with:
+          toolchain: stable
+      - name: Hazardous inputs against the built binary
+        run: cargo test --test hazards -- --nocapture
+
+  # Behaviour that differs by operating system. envsync-le shipped a
+  # release whose report used `\` on Windows and `/` everywhere else, red
+  # on Windows CI for the whole release before anyone looked.
+  #
+  # This crate is directly exposed: every manifest it reads is named in
+  # the report four times over — `manifests[].path`, a finding's sites, a
+  # refusal's sites, and `diagnostics[].file` — and those names are what a
+  # reader greps for and diffs against a baseline. A report whose
+  # separators follow the machine cannot be diffed between two machines.
+  # The rest of the job is what the platform does to the walk: case
+  # folding, reserved device names, and CRLF manifests through the two
+  # readers that scan lines by hand.
+  platform:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, windows-2025, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        with:
+          toolchain: stable
+      - name: Separators, case folding, reserved names and line endings
+        run: cargo test --test platform -- --nocapture
+      # Windows ignores TZ entirely, so a suite that quietly depended on
+      # it would be red there and nowhere else. Both runs are compared
+      # line for line rather than merely required to pass.
+      - name: The suite answers the same with TZ set and unset
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Names and outcomes, not the summary lines: those carry a
+          # duration, and two runs of the same suite never agree on one.
+          names() { grep -E '^test ' | grep -v '^test result:' | sort; }
+          TZ=UTC cargo test --locked -- --test-threads=1 2>&1 \
+            | names > "$RUNNER_TEMP/tz-utc.txt"
+          unset TZ
+          cargo test --locked -- --test-threads=1 2>&1 \
+            | names > "$RUNNER_TEMP/tz-unset.txt"
+          test -s "$RUNNER_TEMP/tz-utc.txt"
+          diff -u "$RUNNER_TEMP/tz-utc.txt" "$RUNNER_TEMP/tz-unset.txt"
+
+  # The corpus pins the constraint strings somebody thought of; this
+  # generates the ones nobody did — prerelease chains hundreds of segments
+  # long, hundreds of `||` alternatives intersected against hundreds more,
+  # unicode digits, and every grammar the tool has declared it does not
+  # model.
+  #
+  # Two properties. The report must stay well-formed: one JSON object,
+  # `schema: 1`, a summary that counts the lists beside it, and no site
+  # naming a file nobody supplied. And the one this crate cannot afford to
+  # lose — **a grammar it does not model never becomes a conflict.** Half
+  # the generated pairs put a real constraint beside a `workspace:`
+  # specifier, a PEP 440 `~=`, a git URL or a CI channel name; each must
+  # come back as a named refusal that took part in no comparison. A
+  # regression that started guessing turns one of those into a
+  # `disjoint-constraint` against somebody's real manifest.
+  fuzz:
+    runs-on: ubuntu-24.04
+    env:
+      VERSIONS_LE_FUZZ_SECONDS: '60'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        with:
+          toolchain: stable
+      - name: Sixty seconds against the grammars and the readers
+        run: cargo test --test fuzz -- --test-threads=1 --nocapture
+
+  # A wall-clock ceiling on a corpus generated from a fixed seed, plus two
+  # linearity checks: four times the manifests, and four times the
+  # dependencies in one manifest. The second is the one this crate is
+  # exposed to — disjointness is interval arithmetic over pairs, so a
+  # comparison that reached for every entry rather than every entry of one
+  # name would be quadratic in how wide a manifest is. Every other test in
+  # the suite uses manifests narrow enough to hide that.
+  budget:
+    runs-on: ubuntu-24.04
+    env:
+      VERSIONS_LE_BUDGET: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        with:
+          toolchain: stable
+      - name: 500 manifests inside the budget, and linear in both directions
+        run: cargo test --test budget -- --test-threads=1 --nocapture
+
+  # Does the crate open what it claims?
+  #
+  # The extractor crates in this family answer that with one corpus
+  # document per extension in their alias table. This crate's table is its
+  # five ecosystems, five manifest kinds, six checks and three refusal
+  # reasons — every one of them a claim in SPEC.md and the README — so
+  # that is the matrix. Both directions are checked: every claim reachable
+  # from a real fixture, and nothing in the code the corpus cannot
+  # produce. A check with no corpus case behind it is a README line no
+  # test stands behind.
+  #
+  # The marker check is not decoration: `cargo test <filter>` exits 0 when
+  # the filter matches nothing, so a renamed test would pass this job
+  # silently.
+  coverage-matrix:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        with:
+          toolchain: stable
+      - name: Every ecosystem, manifest kind, finding and refusal
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --bins coverage_matrix -- --nocapture 2>&1 \
+            | tee "$RUNNER_TEMP/coverage-matrix.txt"
+          grep -q 'coverage-matrix: 5 ecosystems and 5 manifest kinds reachable' \
+            "$RUNNER_TEMP/coverage-matrix.txt"
+          grep -q 'coverage-matrix: 6 finding codes and 3 refusal reasons reachable' \
+            "$RUNNER_TEMP/coverage-matrix.txt"
