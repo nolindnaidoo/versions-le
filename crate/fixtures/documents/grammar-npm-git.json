@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "pkg": "git+https://example.com/pkg.git#v2.0.0"
+  }
+}

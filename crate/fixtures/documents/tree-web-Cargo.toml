@@ -1,0 +1,9 @@
+[package]
+name = "web"
+version = "0.1.0"
+rust-version = "1.82"
+
+[dependencies]
+serde = "1"
+regex = "2"
+shared = { workspace = true }

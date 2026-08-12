@@ -1,0 +1,11 @@
+[package]
+name = "api"
+version = "0.1.0"
+rust-version = "1.88"
+
+[dependencies]
+serde = "1.0.200"
+regex = "1"
+
+[dev-dependencies]
+tempfile = "3"

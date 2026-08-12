@@ -1,0 +1,2 @@
+[dependencies]
+pkg = { git = "https://example.com/pkg.git", branch = "main" }

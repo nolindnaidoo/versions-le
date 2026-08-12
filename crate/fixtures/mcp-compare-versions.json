@@ -1,0 +1,498 @@
+[
+  {
+    "arguments": {},
+    "expected": {
+      "data": {
+        "findings": [
+          {
+            "code": "disjoint-constraint",
+            "ecosystem": "cargo",
+            "message": "\"1\" (api/Cargo.toml) and \"2\" (web/Cargo.toml) cannot both be satisfied by one version",
+            "name": "regex",
+            "severity": "error",
+            "sites": [
+              {
+                "constraint": "1",
+                "file": "api/Cargo.toml",
+                "key": "dependencies.regex"
+              },
+              {
+                "constraint": "2",
+                "file": "web/Cargo.toml",
+                "key": "dependencies.regex"
+              }
+            ]
+          },
+          {
+            "code": "malformed-constraint",
+            "ecosystem": "npm",
+            "message": "not an npm version range: ^^1.0.0",
+            "name": "busted",
+            "severity": "error",
+            "sites": [
+              {
+                "constraint": "^^1.0.0",
+                "file": "package.json",
+                "key": "dependencies.busted"
+              }
+            ]
+          },
+          {
+            "code": "constraint-conflict",
+            "ecosystem": "cargo",
+            "message": "constrained 2 different ways across 2 files: 1, 1.0.200",
+            "name": "serde",
+            "severity": "warning",
+            "sites": [
+              {
+                "constraint": "1.0.200",
+                "file": "api/Cargo.toml",
+                "key": "dependencies.serde"
+              },
+              {
+                "constraint": "1",
+                "file": "web/Cargo.toml",
+                "key": "dependencies.serde"
+              }
+            ]
+          },
+          {
+            "code": "msrv-mismatch",
+            "ecosystem": "cargo",
+            "message": "rust-version is declared 2 different ways: 1.82, 1.88",
+            "name": "rust",
+            "severity": "warning",
+            "sites": [
+              {
+                "constraint": "1.88",
+                "file": "api/Cargo.toml",
+                "key": "package.rust-version"
+              },
+              {
+                "constraint": "1.82",
+                "file": "web/Cargo.toml",
+                "key": "package.rust-version"
+              }
+            ]
+          },
+          {
+            "code": "msrv-mismatch",
+            "ecosystem": "ci",
+            "message": "CI builds on 1.80.0, below the declared minimum 1.88.0 in api/Cargo.toml",
+            "name": "rust",
+            "severity": "warning",
+            "sites": [
+              {
+                "constraint": "1.80",
+                "file": ".github/workflows/ci.yml",
+                "key": "toolchain",
+                "line": 8
+              },
+              {
+                "constraint": "1.88",
+                "file": "api/Cargo.toml",
+                "key": "package.rust-version"
+              }
+            ]
+          },
+          {
+            "code": "prerelease-in-production",
+            "ecosystem": "npm",
+            "message": "a prerelease constraint outside dev dependencies: ^2.0.0-rc.1",
+            "name": "beta-lib",
+            "severity": "warning",
+            "sites": [
+              {
+                "constraint": "^2.0.0-rc.1",
+                "file": "package.json",
+                "key": "dependencies.beta-lib"
+              }
+            ]
+          },
+          {
+            "code": "floating-pin",
+            "ecosystem": "npm",
+            "message": "a dist tag resolves to whatever is newest at install time",
+            "name": "left-pad",
+            "severity": "info",
+            "sites": [
+              {
+                "constraint": "latest",
+                "file": "package.json",
+                "key": "dependencies.left-pad"
+              }
+            ]
+          }
+        ],
+        "manifests": [
+          {
+            "ecosystem": "cargo",
+            "entries": 4,
+            "path": "api/Cargo.toml"
+          },
+          {
+            "ecosystem": "cargo",
+            "entries": 4,
+            "path": "web/Cargo.toml"
+          },
+          {
+            "ecosystem": "npm",
+            "entries": 7,
+            "path": "package.json"
+          },
+          {
+            "ecosystem": "ci",
+            "entries": 5,
+            "path": ".github/workflows/ci.yml"
+          }
+        ],
+        "refusals": [
+          {
+            "ecosystem": "ci",
+            "message": "not evidently a version; excluded from comparison",
+            "name": "node",
+            "reason": "ambiguous_version_string",
+            "sites": [
+              {
+                "constraint": "${{ matrix.node }}",
+                "file": ".github/workflows/ci.yml",
+                "key": "node-version",
+                "line": 14
+              }
+            ]
+          },
+          {
+            "ecosystem": null,
+            "message": "appears in ci and npm; different ecosystems name different things, so these were not compared",
+            "name": "bun",
+            "reason": "cross_ecosystem",
+            "sites": [
+              {
+                "constraint": "1.1.0",
+                "file": ".github/workflows/ci.yml",
+                "key": "bun-version",
+                "line": 11
+              },
+              {
+                "constraint": "1.1.0",
+                "file": "package.json",
+                "key": "packageManager"
+              }
+            ]
+          },
+          {
+            "ecosystem": null,
+            "message": "appears in cargo and npm; different ecosystems name different things, so these were not compared",
+            "name": "regex",
+            "reason": "cross_ecosystem",
+            "sites": [
+              {
+                "constraint": "1",
+                "file": "api/Cargo.toml",
+                "key": "dependencies.regex"
+              },
+              {
+                "constraint": "^4.0.0",
+                "file": "package.json",
+                "key": "dependencies.regex"
+              }
+            ]
+          },
+          {
+            "ecosystem": "npm",
+            "message": "a dist tag is a moving target, not a version range; excluded from comparison",
+            "name": "left-pad",
+            "reason": "unknown_grammar",
+            "sites": [
+              {
+                "constraint": "latest",
+                "file": "package.json",
+                "key": "dependencies.left-pad"
+              }
+            ]
+          },
+          {
+            "ecosystem": "cargo",
+            "message": "an inherited workspace dependency carries its version elsewhere; excluded from comparison",
+            "name": "shared",
+            "reason": "unknown_grammar",
+            "sites": [
+              {
+                "constraint": "",
+                "file": "web/Cargo.toml",
+                "key": "dependencies.shared"
+              }
+            ]
+          }
+        ],
+        "schema": 1,
+        "summary": {
+          "entries": 20,
+          "errors": 2,
+          "findings": 7,
+          "infos": 1,
+          "manifests": 4,
+          "refusals": 5,
+          "warnings": 4
+        }
+      },
+      "diagnostics": [],
+      "meta": {
+        "count": 7,
+        "tool": "compare_versions",
+        "truncated": false
+      },
+      "ok": true
+    },
+    "files": [
+      "api/Cargo.toml",
+      "web/Cargo.toml",
+      "package.json",
+      ".github/workflows/ci.yml"
+    ],
+    "name": "the planted tree"
+  },
+  {
+    "arguments": {},
+    "expected": {
+      "data": {
+        "findings": [],
+        "manifests": [
+          {
+            "ecosystem": "cargo",
+            "entries": 1,
+            "path": "crates/base/Cargo.toml"
+          },
+          {
+            "ecosystem": "cargo",
+            "entries": 1,
+            "path": "crates/inherited/Cargo.toml"
+          }
+        ],
+        "refusals": [
+          {
+            "ecosystem": "cargo",
+            "message": "an inherited workspace dependency carries its version elsewhere; excluded from comparison",
+            "name": "pkg",
+            "reason": "unknown_grammar",
+            "sites": [
+              {
+                "constraint": "",
+                "file": "crates/inherited/Cargo.toml",
+                "key": "dependencies.pkg"
+              }
+            ]
+          }
+        ],
+        "schema": 1,
+        "summary": {
+          "entries": 2,
+          "errors": 0,
+          "findings": 0,
+          "infos": 0,
+          "manifests": 2,
+          "refusals": 1,
+          "warnings": 0
+        }
+      },
+      "diagnostics": [],
+      "meta": {
+        "count": 0,
+        "tool": "compare_versions",
+        "truncated": false
+      },
+      "ok": true
+    },
+    "files": [
+      "crates/base/Cargo.toml",
+      "crates/inherited/Cargo.toml"
+    ],
+    "name": "an unmodelled grammar is a refusal, not a conflict"
+  },
+  {
+    "arguments": {
+      "maxResults": 2
+    },
+    "expected": {
+      "data": {
+        "findings": [
+          {
+            "code": "disjoint-constraint",
+            "ecosystem": "cargo",
+            "message": "\"1\" (api/Cargo.toml) and \"2\" (web/Cargo.toml) cannot both be satisfied by one version",
+            "name": "regex",
+            "severity": "error",
+            "sites": [
+              {
+                "constraint": "1",
+                "file": "api/Cargo.toml",
+                "key": "dependencies.regex"
+              },
+              {
+                "constraint": "2",
+                "file": "web/Cargo.toml",
+                "key": "dependencies.regex"
+              }
+            ]
+          },
+          {
+            "code": "malformed-constraint",
+            "ecosystem": "npm",
+            "message": "not an npm version range: ^^1.0.0",
+            "name": "busted",
+            "severity": "error",
+            "sites": [
+              {
+                "constraint": "^^1.0.0",
+                "file": "package.json",
+                "key": "dependencies.busted"
+              }
+            ]
+          }
+        ],
+        "manifests": [
+          {
+            "ecosystem": "cargo",
+            "entries": 4,
+            "path": "api/Cargo.toml"
+          },
+          {
+            "ecosystem": "cargo",
+            "entries": 4,
+            "path": "web/Cargo.toml"
+          },
+          {
+            "ecosystem": "npm",
+            "entries": 7,
+            "path": "package.json"
+          },
+          {
+            "ecosystem": "ci",
+            "entries": 5,
+            "path": ".github/workflows/ci.yml"
+          }
+        ],
+        "refusals": [
+          {
+            "ecosystem": "ci",
+            "message": "not evidently a version; excluded from comparison",
+            "name": "node",
+            "reason": "ambiguous_version_string",
+            "sites": [
+              {
+                "constraint": "${{ matrix.node }}",
+                "file": ".github/workflows/ci.yml",
+                "key": "node-version",
+                "line": 14
+              }
+            ]
+          },
+          {
+            "ecosystem": null,
+            "message": "appears in ci and npm; different ecosystems name different things, so these were not compared",
+            "name": "bun",
+            "reason": "cross_ecosystem",
+            "sites": [
+              {
+                "constraint": "1.1.0",
+                "file": ".github/workflows/ci.yml",
+                "key": "bun-version",
+                "line": 11
+              },
+              {
+                "constraint": "1.1.0",
+                "file": "package.json",
+                "key": "packageManager"
+              }
+            ]
+          },
+          {
+            "ecosystem": null,
+            "message": "appears in cargo and npm; different ecosystems name different things, so these were not compared",
+            "name": "regex",
+            "reason": "cross_ecosystem",
+            "sites": [
+              {
+                "constraint": "1",
+                "file": "api/Cargo.toml",
+                "key": "dependencies.regex"
+              },
+              {
+                "constraint": "^4.0.0",
+                "file": "package.json",
+                "key": "dependencies.regex"
+              }
+            ]
+          },
+          {
+            "ecosystem": "npm",
+            "message": "a dist tag is a moving target, not a version range; excluded from comparison",
+            "name": "left-pad",
+            "reason": "unknown_grammar",
+            "sites": [
+              {
+                "constraint": "latest",
+                "file": "package.json",
+                "key": "dependencies.left-pad"
+              }
+            ]
+          },
+          {
+            "ecosystem": "cargo",
+            "message": "an inherited workspace dependency carries its version elsewhere; excluded from comparison",
+            "name": "shared",
+            "reason": "unknown_grammar",
+            "sites": [
+              {
+                "constraint": "",
+                "file": "web/Cargo.toml",
+                "key": "dependencies.shared"
+              }
+            ]
+          }
+        ],
+        "schema": 1,
+        "summary": {
+          "entries": 20,
+          "errors": 2,
+          "findings": 7,
+          "infos": 1,
+          "manifests": 4,
+          "refusals": 5,
+          "warnings": 4
+        }
+      },
+      "diagnostics": [],
+      "meta": {
+        "count": 2,
+        "tool": "compare_versions",
+        "truncated": true
+      },
+      "ok": true
+    },
+    "files": [
+      "api/Cargo.toml",
+      "web/Cargo.toml",
+      "package.json",
+      ".github/workflows/ci.yml"
+    ],
+    "name": "a cap truncates and says so"
+  },
+  {
+    "arguments": {},
+    "expectedError": "files is required and must be a non-empty array of { path, content }",
+    "name": "no files is a refusal"
+  },
+  {
+    "arguments": {
+      "files": [
+        {
+          "content": "{}",
+          "path": "config/settings.json"
+        }
+      ]
+    },
+    "expectedError": "config/settings.json is not a manifest this tool reads. It reads package.json, Cargo.toml, pyproject.toml, go.mod, and .yml or .yaml under .github/workflows/.",
+    "name": "a path that is not a manifest is a refusal"
+  }
+]

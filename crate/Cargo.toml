@@ -1,0 +1,75 @@
+[package]
+name = "versions-le"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+license = "MIT"
+readme = "README.md"
+description = "Find where the same dependency is constrained differently across a repository's manifests"
+authors = ["Nolin D Naidoo"]
+homepage = "https://letools.dev/tools/versions-le"
+repository = "https://github.com/nolindnaidoo/versions-le"
+keywords = ["semver", "dependencies", "manifest", "audit", "cli"]
+categories = ["command-line-utilities", "development-tools", "development-tools::cargo-plugins"]
+# What a consumer gets, and why.
+#
+# Ships: src/, Cargo.toml, Cargo.lock, LICENSE, README.md — needed to
+# build the binary. SPEC.md and CHANGELOG.md — the behavioural contract
+# someone scripting against the exit codes needs. tests/ and fixtures/ —
+# not needed to *build*, but needed to *verify*: `cargo test` on the
+# unpacked tarball runs the whole corpus, so the refusal claims in the
+# README are checkable by whoever installed it rather than taken on
+# trust.
+#
+# Excluded: AGENTS.md and CLAUDE.md are how this repo is worked on, not
+# how the tool is used. rust-toolchain.toml is a convenience for
+# contributors to *this* checkout; shipped, it would pin the toolchain of
+# anyone who unpacks or vendors the crate, which is not this crate's
+# business.
+exclude = ["AGENTS.md", "CLAUDE.md", "rust-toolchain.toml"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# `package.json` is JSON, so the npm reader is serde_json's anyway.
+#
+# The Cargo grammar, from the crate Cargo itself uses. `^`, `~`, the 0.x
+# caret rules and prerelease ordering are exactly the parts a hand-rolled
+# parser gets subtly wrong, and a subtly wrong range here does not
+# produce a wrong number — it produces a fabricated `disjoint-constraint`
+# against a real dependency, which is the one output this tool cannot
+# afford. What is ours is the interval conversion on top: `VersionReq`
+# answers "does this version match", and the question here is "can any
+# version match both".
+semver = "1"
+# Cargo.toml and pyproject.toml. Read as a generic `toml::Value` rather
+# than through derived structs, because a manifest key this tool does not
+# model must be *skipped*, never a parse failure for the whole file.
+toml = "1"
+# The walker. `ignore` is ripgrep's, so "what this tool walks" and "what
+# ripgrep walks" are the same answer — which is the answer a person
+# auditing a repository already has in their head.
+ignore = "0.4"
+# One regex engine, for turning an exclude glob into a matcher. It needs
+# no backreferences or lookaround, so `regex` expresses it exactly and
+# its matching cannot fail.
+regex = "1"
+
+[profile.release]
+strip = true
+lto = "thin"
+codegen-units = 1
+# A version number that wrapped would be a silently wrong bound, and a
+# wrong bound is a fabricated finding against somebody's real manifest.
+# Paying for the checks in release is cheaper than that.
+overflow-checks = true
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+# Manifest file names are compared case-sensitively on purpose. `Cargo.toml`
+# and `package.json` have exactly one spelling each; accepting `CARGO.TOML`
+# would mean this tool reads a file the toolchains themselves ignore.
+case_sensitive_file_extension_comparisons = "allow"

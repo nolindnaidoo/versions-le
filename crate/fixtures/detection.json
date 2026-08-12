@@ -1,0 +1,368 @@
+{
+  "analysis": [
+    {
+      "files": [
+        "api/Cargo.toml",
+        "web/Cargo.toml",
+        "package.json",
+        ".github/workflows/ci.yml"
+      ],
+      "findings": [
+        "error disjoint-constraint cargo regex",
+        "error malformed-constraint npm busted",
+        "warning constraint-conflict cargo serde",
+        "warning msrv-mismatch cargo rust",
+        "warning msrv-mismatch ci rust",
+        "warning prerelease-in-production npm beta-lib",
+        "info floating-pin npm left-pad"
+      ],
+      "name": "the planted tree",
+      "refusals": [
+        "ambiguous_version_string node",
+        "cross_ecosystem bun",
+        "cross_ecosystem regex",
+        "unknown_grammar left-pad",
+        "unknown_grammar shared"
+      ]
+    },
+    {
+      "files": [
+        "crates/base/Cargo.toml",
+        "crates/inherited/Cargo.toml"
+      ],
+      "findings": [],
+      "name": "refuses an inherited workspace dependency",
+      "refusals": [
+        "unknown_grammar pkg"
+      ]
+    },
+    {
+      "files": [
+        "crates/base/Cargo.toml",
+        "crates/local/Cargo.toml"
+      ],
+      "findings": [],
+      "name": "refuses a path dependency with no version",
+      "refusals": [
+        "unknown_grammar pkg"
+      ]
+    },
+    {
+      "files": [
+        "crates/base/Cargo.toml",
+        "crates/remote/Cargo.toml"
+      ],
+      "findings": [],
+      "name": "refuses a git dependency",
+      "refusals": [
+        "unknown_grammar pkg"
+      ]
+    },
+    {
+      "files": [
+        "apps/base/package.json",
+        "apps/inherited/package.json"
+      ],
+      "findings": [],
+      "name": "refuses the npm workspace protocol",
+      "refusals": [
+        "unknown_grammar pkg"
+      ]
+    },
+    {
+      "files": [
+        "apps/base/package.json",
+        "apps/remote/package.json"
+      ],
+      "findings": [],
+      "name": "refuses an npm git specifier",
+      "refusals": [
+        "unknown_grammar pkg"
+      ]
+    },
+    {
+      "files": [
+        "apps/base/package.json",
+        "apps/tagged/package.json"
+      ],
+      "findings": [
+        "info floating-pin npm pkg"
+      ],
+      "name": "refuses an npm dist tag",
+      "refusals": [
+        "unknown_grammar pkg"
+      ]
+    },
+    {
+      "files": [
+        "svc/base/pyproject.toml",
+        "svc/compatible/pyproject.toml"
+      ],
+      "findings": [],
+      "name": "refuses a PEP 440 compatible-release clause",
+      "refusals": [
+        "unknown_grammar pkg"
+      ]
+    },
+    {
+      "files": [
+        "svc/base/pyproject.toml",
+        "svc/marker/pyproject.toml"
+      ],
+      "findings": [],
+      "name": "refuses a PEP 440 environment marker",
+      "refusals": [
+        "unknown_grammar pkg"
+      ]
+    },
+    {
+      "files": [
+        ".github/workflows/build.yml",
+        ".github/workflows/release.yml"
+      ],
+      "findings": [],
+      "name": "refuses a commit-SHA action pin",
+      "refusals": [
+        "unknown_grammar actions/checkout"
+      ]
+    },
+    {
+      "files": [
+        ".github/workflows/matrix.yml"
+      ],
+      "findings": [],
+      "name": "refuses a matrix expression",
+      "refusals": [
+        "ambiguous_version_string node"
+      ]
+    }
+  ],
+  "classification": [
+    {
+      "ecosystem": "cargo",
+      "path": "api/Cargo.toml"
+    },
+    {
+      "ecosystem": "npm",
+      "path": "package.json"
+    },
+    {
+      "ecosystem": "python",
+      "path": "svc/base/pyproject.toml"
+    },
+    {
+      "ecosystem": "go",
+      "path": "go.mod"
+    },
+    {
+      "ecosystem": "ci",
+      "path": ".github/workflows/ci.yml"
+    },
+    {
+      "ecosystem": "ci",
+      "path": "repo/.github/workflows/release.yaml"
+    },
+    {
+      "ecosystem": null,
+      "path": "Cargo.lock"
+    },
+    {
+      "ecosystem": null,
+      "path": "package-lock.json"
+    },
+    {
+      "ecosystem": null,
+      "path": "requirements.txt"
+    },
+    {
+      "ecosystem": null,
+      "path": "deploy/k8s.yml"
+    },
+    {
+      "ecosystem": null,
+      "path": ".github/dependabot.yml"
+    },
+    {
+      "ecosystem": null,
+      "path": "my-package.json"
+    }
+  ],
+  "extraction": [
+    {
+      "entries": [
+        "cargo Runtime dependencies.regex regex=1",
+        "cargo Runtime dependencies.serde serde=1.0.200",
+        "cargo Dev dev-dependencies.tempfile tempfile=3",
+        "cargo Msrv package.rust-version rust=1.88"
+      ],
+      "file": "api/Cargo.toml",
+      "refusals": []
+    },
+    {
+      "entries": [
+        "cargo Runtime dependencies.regex regex=2",
+        "cargo Runtime dependencies.serde serde=1",
+        "cargo Runtime dependencies.shared shared=",
+        "cargo Msrv package.rust-version rust=1.82"
+      ],
+      "file": "web/Cargo.toml",
+      "refusals": [
+        "unknown_grammar shared"
+      ]
+    },
+    {
+      "entries": [
+        "npm Runtime dependencies.beta-lib beta-lib=^2.0.0-rc.1",
+        "npm Runtime dependencies.busted busted=^^1.0.0",
+        "npm Runtime dependencies.left-pad left-pad=latest",
+        "npm Runtime dependencies.regex regex=^4.0.0",
+        "npm Dev devDependencies.vitest vitest=^1.0.0",
+        "npm Engine engines.node node=>=20",
+        "npm Tool packageManager bun=1.1.0"
+      ],
+      "file": "package.json",
+      "refusals": [
+        "unknown_grammar left-pad"
+      ]
+    },
+    {
+      "entries": [
+        "ci Action uses actions/checkout=v4",
+        "ci Msrv toolchain rust=1.80",
+        "ci Action uses oven-sh/setup-bun=v2",
+        "ci Tool bun-version bun=1.1.0",
+        "ci Action uses actions/setup-node=v4"
+      ],
+      "file": ".github/workflows/ci.yml",
+      "refusals": [
+        "ambiguous_version_string node"
+      ]
+    },
+    {
+      "entries": [
+        "cargo Runtime dependencies.pkg pkg=^1.0.0"
+      ],
+      "file": "crates/base/Cargo.toml",
+      "refusals": []
+    },
+    {
+      "entries": [
+        "cargo Runtime dependencies.pkg pkg="
+      ],
+      "file": "crates/inherited/Cargo.toml",
+      "refusals": [
+        "unknown_grammar pkg"
+      ]
+    },
+    {
+      "entries": [
+        "cargo Runtime dependencies.pkg pkg="
+      ],
+      "file": "crates/local/Cargo.toml",
+      "refusals": [
+        "unknown_grammar pkg"
+      ]
+    },
+    {
+      "entries": [
+        "cargo Runtime dependencies.pkg pkg="
+      ],
+      "file": "crates/remote/Cargo.toml",
+      "refusals": [
+        "unknown_grammar pkg"
+      ]
+    },
+    {
+      "entries": [
+        "npm Runtime dependencies.pkg pkg=^1.0.0"
+      ],
+      "file": "apps/base/package.json",
+      "refusals": []
+    },
+    {
+      "entries": [
+        "npm Runtime dependencies.pkg pkg=workspace:*"
+      ],
+      "file": "apps/inherited/package.json",
+      "refusals": [
+        "unknown_grammar pkg"
+      ]
+    },
+    {
+      "entries": [
+        "npm Runtime dependencies.pkg pkg=git+https://example.com/pkg.git#v2.0.0"
+      ],
+      "file": "apps/remote/package.json",
+      "refusals": [
+        "unknown_grammar pkg"
+      ]
+    },
+    {
+      "entries": [
+        "npm Runtime dependencies.pkg pkg=latest"
+      ],
+      "file": "apps/tagged/package.json",
+      "refusals": [
+        "unknown_grammar pkg"
+      ]
+    },
+    {
+      "entries": [
+        "python Runtime project.dependencies.pkg>=1.0 pkg=>=1.0"
+      ],
+      "file": "svc/base/pyproject.toml",
+      "refusals": []
+    },
+    {
+      "entries": [
+        "python Runtime project.dependencies.pkg~=1.4.2 pkg=~=1.4.2"
+      ],
+      "file": "svc/compatible/pyproject.toml",
+      "refusals": [
+        "unknown_grammar pkg"
+      ]
+    },
+    {
+      "entries": [
+        "python Runtime project.dependencies.pkg>=2 ; python_version < '3.11' pkg="
+      ],
+      "file": "svc/marker/pyproject.toml",
+      "refusals": [
+        "unknown_grammar pkg"
+      ]
+    },
+    {
+      "entries": [
+        "ci Action uses actions/checkout=v4"
+      ],
+      "file": ".github/workflows/build.yml",
+      "refusals": []
+    },
+    {
+      "entries": [
+        "ci Action uses actions/checkout=11bd71901bbe5b1630ceea73d27597364c9af683"
+      ],
+      "file": ".github/workflows/release.yml",
+      "refusals": [
+        "unknown_grammar actions/checkout"
+      ]
+    },
+    {
+      "entries": [
+        "ci Action uses actions/setup-node=v4"
+      ],
+      "file": ".github/workflows/matrix.yml",
+      "refusals": [
+        "ambiguous_version_string node"
+      ]
+    },
+    {
+      "entries": [
+        "go Engine go go=1.22",
+        "go Runtime require github.com/x/y=v1.4.0"
+      ],
+      "file": "go.mod",
+      "refusals": []
+    }
+  ]
+}
