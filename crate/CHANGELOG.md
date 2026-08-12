@@ -72,7 +72,11 @@ three refusal reasons, and both surfaces.
   every disk prefix collapses to an upper-cased `C:`, a UNC prefix keeps
   its host and share as `//server/share`, and `\\?\C:\a` and `C:\a`
   produce the same label. Red on the Windows CI leg only, because no
-  other platform parses a path prefix at all.
+  other platform parses a path prefix at all — and now covered on all
+  three legs: the designator shapes are unit tested against literal
+  `Prefix` values, which are constructible everywhere, and the
+  reassembly and the end-to-end label are asserted where a prefix is
+  actually parsed.
 - The prefix decision is now an **exhaustive `match` on `Component`**,
   which compiles on every platform — so dropping the prefix arm is a
   build failure everywhere rather than a Windows-only test failure.

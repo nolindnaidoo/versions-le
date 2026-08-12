@@ -2,9 +2,10 @@
 //!
 //! A sibling crate was fifty times slower than the rest of the family
 //! for a whole release and nothing noticed, because nothing measured it.
-//! The ceiling here is deliberately loose — a shared runner is not a
-//! benchmark rig — and exists to catch an order of magnitude, not a
-//! percent.
+//! The ceiling here is loose — a shared runner is not a benchmark rig —
+//! and exists to catch a regression of several times over, not a
+//! percent. How much slack it actually carries is a measured number
+//! rather than a hoped-for one; see `BUDGET`.
 //!
 //! Two linearity assertions, because a repository grows in two
 //! directions and only one of them is the obvious one:
@@ -47,26 +48,41 @@ const SEED: u64 = 0x7e12_0a5e_0b1d_2026;
 const DOCUMENTS: usize = 500;
 const DEPENDENCIES: usize = 20;
 
-/// **~10× the local measurement**, recorded with the machine it came
-/// from: 75-80 ms for the 500-manifest corpus on an Apple M-series
-/// laptop, debug build, 2026-08.
+/// **Measured on the runner that enforces it**: 165 ms for the
+/// 500-manifest corpus on `ubuntu-24.04`, CI run of commit `f995c2a`,
+/// 2026-08-12. The same corpus takes 75–80 ms on an Apple M-series
+/// laptop, so a shared runner is about **twice** as slow at this work —
+/// not the three times an extrapolation from the unit suite had
+/// suggested, which is why the extrapolation is gone and the
+/// measurement is here.
 ///
-/// **The runner number is not in here yet, and that is stated rather
-/// than guessed.** This job had not run when the ceiling was set, so the
-/// only evidence available was the CI run of the unit suite on the same
-/// commit — `ubuntu-24.04` finished it in 0.03 s against 0.01 s here,
-/// so a shared runner is roughly three times slower at the pure-CPU work
-/// this test measures. That puts the expected runner figure near 240 ms,
-/// about three times under the ceiling: loose enough not to flake, tight
-/// enough that an order of magnitude cannot hide.
+/// That puts the 750 ms ceiling at **~4.5× the real figure**, and it
+/// stays there rather than moving out to restore a round 10×. Ten times
+/// was never the point: it was a stand-in for not knowing the runner,
+/// and that gap is closed. A ceiling calibrated against the machine that
+/// enforces it catches a 4.5× regression instead of only a 10× one, and
+/// widening a check that works so a comment can quote a tidier multiple
+/// is the wrong direction.
 ///
-/// Every run prints its own elapsed time, so the real number is the
-/// first line of the first `budget` job's log. **Whoever lands that run
-/// should replace this paragraph with it** — a ceiling calibrated only
-/// against a laptop is a ceiling nobody can defend when it goes red.
+/// The flake risk that buys is small and bounded: the number below is
+/// the fastest of three timed rounds after a warm-up, so a red run needs
+/// a slowdown sustained across all three rather than one noisy moment.
+/// If it ever does go red without a regression behind it, raise the
+/// ceiling **with the run that caused it quoted here** — never quietly,
+/// and never by deleting the measurement above.
 const BUDGET: Duration = Duration::from_millis(750);
 
 /// Four times the work, at most six times the clock.
+///
+/// Measured on `ubuntu-24.04` (commit `f995c2a`): 3.95× for the
+/// manifests and 4.19× for the dependencies. Repeated laptop runs land
+/// in the same 3.7–4.2 band on both — a ratio is a shape rather than a
+/// speed, so it travels between machines in a way the wall-clock
+/// ceiling above does not, which is why this constant needed no
+/// recalibrating when the real runner number arrived and `BUDGET` did.
+/// The band is also why the limit is 6 and not 4.5: four times the work
+/// costs a little over four times the clock on every machine tried, and
+/// a limit set against one run of it would fail on the next.
 const LINEARITY: f64 = 6.0;
 
 fn enabled(name: &str) -> bool {
