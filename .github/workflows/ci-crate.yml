@@ -73,7 +73,7 @@ jobs:
       - name: Forbid inline lint suppressions
         working-directory: .
         run: |
-          if grep -rnE '#!?\[[^]]*(allow|expect)\(' \
+          if grep -rnE '#!?\[[^]]*\b(allow|expect)\(' \
               crate/src crate/tests --include='*.rs'; then
             echo 'Inline #[allow]/#[expect] found — fix the lint, or add a commented'
             echo 'relaxation to [lints.clippy] or [lints.rust] in crate/Cargo.toml.'
