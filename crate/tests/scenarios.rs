@@ -107,6 +107,11 @@ fn a_manifest_with_many_dependencies_completes() {
 
 /// A tree where nothing is comparable. The refusals must not degrade
 /// into findings at scale, and the run must still be quick.
+///
+/// **And the merge has to hold at scale**, which is the half a small
+/// tree cannot show: 500 crates inheriting the same workspace dependency
+/// is one fact repeated 500 times, and 500 rows saying it is a report a
+/// reader skims past — which is a report that hid its own findings.
 #[test]
 fn a_tree_of_nothing_but_refusals_completes_and_finds_nothing() {
     if !enabled("a_tree_of_nothing_but_refusals_completes_and_finds_nothing") {
@@ -122,6 +127,16 @@ fn a_tree_of_nothing_but_refusals_completes_and_finds_nothing() {
 
     let (code, report) = run(&[&tree.0.to_string_lossy()]);
     assert_eq!(code, 0);
+    assert_eq!(report["summary"]["manifests"], 500);
     assert_eq!(report["summary"]["findings"], 0);
-    assert_eq!(report["summary"]["refusals"], 500);
+    assert_eq!(report["summary"]["refusals"], 1, "one fact, one row");
+    assert_eq!(report["refusals"][0]["reason"], "unknown_grammar");
+    assert_eq!(
+        report["refusals"][0]["sites"]
+            .as_array()
+            .expect("a list")
+            .len(),
+        500,
+        "the merged row lost the sites it merged"
+    );
 }
