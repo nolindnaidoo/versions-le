@@ -245,9 +245,27 @@ is never reported as a pass.
 
 Every tool in the family, one page: **[letools.dev](https://letools.dev)**
 
-The LE tools make data-prep for real AI fast *and* engineered, so the
-output can be trusted. They ship as VS Code extensions, MCP servers, npm
-packages and Rust crates.
+- **[Paths-LE](https://letools.dev/tools/paths-le)** — Extract file paths and report whether they still point at anything
+- **[URLs-LE](https://letools.dev/tools/urls-le)** — Extract every URL, with its protocol and exact position
+- **[Numbers-LE](https://letools.dev/tools/numbers-le)** — Find every hardcoded number so a person can check them
+- **[String-LE](https://letools.dev/tools/string-le)** — Get every string out where a person can read them
+- **[Secrets-LE](https://letools.dev/tools/secrets-le)** — Detect and sanitize credentials locally, before you commit
+- **[Regex-LE](https://letools.dev/tools/regex-le)** — Find, test and validate regular expressions with ReDoS screening
+- **[Colors-LE](https://letools.dev/tools/colors-le)** — Extract and analyze colors from CSS, SCSS, HTML, JS/TS and SVG
+- **[Dates-LE](https://letools.dev/tools/dates-le)** — Extract and analyze dates from logs, configs and code
+- **[EnvSync-LE](https://letools.dev/tools/envsync-le)** — Spot missing keys across your .env files
+- **[Scrape-LE](https://letools.dev/tools/scrape-le)** — See what will block your scraper before you write it
+
+Newer, and crate-first — published on GitHub, not yet listed on the site:
+
+- **[Units-LE](https://github.com/nolindnaidoo/units-le)** — Extract quantities — a number with its unit — and refuse the ambiguous ones
+- **[IDs-LE](https://github.com/nolindnaidoo/ids-le)** — Extract UUID, ULID, NanoID, ObjectId and Snowflake, with embedded timestamps decoded
+- **[IPs-LE](https://github.com/nolindnaidoo/ips-le)** — Extract IPv4, IPv6, CIDR and MAC addresses, classified and normalized
+- **[Unicode-LE](https://github.com/nolindnaidoo/unicode-le)** — Detect bidi controls, invisibles, homoglyphs and mixed scripts
+- **[i18n-LE](https://github.com/nolindnaidoo/i18n-le)** — Identify the i18n library a project uses, then audit its catalogues by that library's rules
+
+Each stands on its own: no shared crate, no published core. Where two of
+them agree it is because the same answer was right twice.
 
 ## Also by nolindnaidoo
 
