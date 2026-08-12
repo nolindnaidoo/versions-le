@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use crate::detect::heuristics::Ecosystem;
-use crate::scan::{self, FailOn, Report, ScanOptions};
+use crate::scan::{self, FailOn, Report, ScanOptions, Summary};
 
 const USAGE: &str = "usage: versions-le [options] <dir|file>...
        versions-le mcp
@@ -154,6 +154,11 @@ fn parse(args: &[String]) -> Result<Cli, String> {
 }
 
 /// The human half. Every line restates something already on stdout.
+///
+/// Write failures here are dropped on purpose, and only here: the report
+/// itself is on stdout and its failure is returned. A closed stderr — a
+/// `2>/dev/null`, a pipe the reader walked away from — must not change
+/// the exit code the manifests earned.
 fn summarise(report: &Report) {
     let mut stderr = std::io::stderr().lock();
 
@@ -185,27 +190,29 @@ fn summarise(report: &Report) {
         );
     }
 
-    let summary = &report.summary;
-    let _ = if summary.manifests == 0 {
-        writeln!(stderr, "no manifests found")
-    } else if summary.findings == 0 {
-        writeln!(
-            stderr,
+    let _ = writeln!(stderr, "{}", verdict(&report.summary));
+}
+
+/// The last line: what the run decided, in one sentence.
+fn verdict(summary: &Summary) -> String {
+    if summary.manifests == 0 {
+        return "no manifests found".to_string();
+    }
+    if summary.findings == 0 {
+        return format!(
             "consistent — {} across {}",
             plural(summary.entries, "constraint", "constraints"),
             plural(summary.manifests, "manifest", "manifests")
-        )
-    } else {
-        writeln!(
-            stderr,
-            "{} across {} — {} error, {} warning, {} info",
-            plural(summary.findings, "finding", "findings"),
-            plural(summary.manifests, "manifest", "manifests"),
-            summary.errors,
-            summary.warnings,
-            summary.infos
-        )
-    };
+        );
+    }
+    format!(
+        "{} across {} — {} error, {} warning, {} info",
+        plural(summary.findings, "finding", "findings"),
+        plural(summary.manifests, "manifest", "manifests"),
+        summary.errors,
+        summary.warnings,
+        summary.infos
+    )
 }
 
 /// The files a finding touches, each named once. The JSON keeps every
