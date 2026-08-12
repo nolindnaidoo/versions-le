@@ -81,6 +81,12 @@ three refusal reasons, and both surfaces.
   running the binary against a real repository — `pixelactions` went
   from exit 1 with a fabricated error to exit 0 with a refusal, and
   nothing else in its report moved.
+- **A Cargo dependency that is neither a version nor a table blamed the
+  tool.** `serde = 1` came back as `unknown_grammar`, "not a version
+  requirement" — the verdict for a syntax this tool declined to model.
+  Cargo itself rejects it, so the manifest is broken and
+  `malformed-constraint` is the honest verdict. The value is recorded as
+  written, so the finding shows what was there.
 - **Three readers dropped a value while reporting the manifest as
   read.** A non-string in `engines` was skipped without a word, though a
   non-string in `dependencies` beside it was an error. A go.mod

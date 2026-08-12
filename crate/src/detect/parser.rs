@@ -329,23 +329,23 @@ fn cargo_section(out: &mut Parsed, file: &str, table: Option<&Toml>, key: &str, 
         return;
     };
     for (alias, value) in table {
-        let (name, raw, unknown) = cargo_dependency(alias, value);
-        let raw = raw.unwrap_or_default();
+        let (name, raw, constraint) = cargo_dependency(alias, value);
+        let floats = matches!(constraint, Constraint::Range(_))
+            .then(|| cargo_floats(&raw))
+            .flatten();
         out.push(Entry {
             ecosystem: Ecosystem::Cargo,
             name,
             kind,
             site: site(file, format!("{key}.{alias}"), &raw, None),
-            constraint: match unknown {
-                Some(reason) => Constraint::Unknown(reason),
-                None => grammar::cargo(&raw),
-            },
-            floats: unknown.is_none().then(|| cargo_floats(&raw)).flatten(),
+            constraint,
+            floats,
         });
     }
 }
 
-/// The identity and the constraint of one `[dependencies]` entry.
+/// The identity of one `[dependencies]` entry, the text to record as its
+/// site, and how that text reads.
 ///
 /// A table entry is renamed by `package`, and its constraint is the
 /// `version` key. **A `path` or `git` source with a `version` keeps that
@@ -354,12 +354,22 @@ fn cargo_section(out: &mut Parsed, file: &str, table: Option<&Toml>, key: &str, 
 /// workspace uses to hold its own crates together. Only a table with no
 /// `version` at all — `workspace = true`, a bare path, a bare git
 /// dependency — has no constraint to compare.
-fn cargo_dependency(alias: &str, value: &Toml) -> (String, Option<String>, Option<&'static str>) {
+///
+/// **A value that is neither a string nor a table is `Malformed`, not
+/// `Unknown`.** `serde = 1` is not a grammar this tool declined to
+/// model; Cargo itself rejects it, so blaming the tool would hide a
+/// broken manifest behind a refusal. It is recorded as written so the
+/// finding can show what was there.
+fn cargo_dependency(alias: &str, value: &Toml) -> (String, String, Constraint) {
     if let Some(raw) = value.as_str() {
-        return (alias.to_string(), Some(raw.to_string()), None);
+        return (alias.to_string(), raw.to_string(), grammar::cargo(raw));
     }
     let Some(table) = value.as_table() else {
-        return (alias.to_string(), None, Some("not a version requirement"));
+        return (
+            alias.to_string(),
+            value.to_string(),
+            Constraint::Malformed("not a version string or a dependency table"),
+        );
     };
     let name = table
         .get("package")
@@ -367,9 +377,13 @@ fn cargo_dependency(alias: &str, value: &Toml) -> (String, Option<String>, Optio
         .unwrap_or(alias)
         .to_string();
     if let Some(raw) = table.get("version").and_then(Toml::as_str) {
-        return (name, Some(raw.to_string()), None);
+        return (name, raw.to_string(), grammar::cargo(raw));
     }
-    (name, None, Some(no_version_reason(table)))
+    (
+        name,
+        String::new(),
+        Constraint::Unknown(no_version_reason(table)),
+    )
 }
 
 /// Why a dependency table has nothing to compare — ranked, most specific
@@ -1095,12 +1109,27 @@ mod tests {
         );
         assert_eq!(python.errors.len(), 2, "{:?}", python.errors);
         assert!(python.errors[1].message.contains("names no distribution"));
+    }
 
-        // A Cargo value that is neither a string nor a table is not a
-        // grammar this tool models, so it is refused rather than blamed.
-        let cargo = read(ManifestKind::CargoToml, "[dependencies]\nserde = 1\n");
-        assert_eq!(cargo.refusals.len(), 1, "{:?}", cargo.refusals);
-        assert!(cargo.refusals[0].message.contains("not a version"));
+    /// **`Unknown` blames the tool, `Malformed` blames the manifest.**
+    /// `serde = 1` is not a grammar this tool declined to model — Cargo
+    /// itself rejects it — so calling it `Unknown` blamed the wrong
+    /// party and hid a broken manifest behind a refusal.
+    #[test]
+    fn a_cargo_dependency_that_is_not_a_version_or_a_table_is_malformed() {
+        let parsed = read(
+            ManifestKind::CargoToml,
+            "[dependencies]\nserde = 1\nregex = [\"1\"]\nok = \"1\"\n",
+        );
+        assert!(parsed.refusals.is_empty(), "{:?}", parsed.refusals);
+        let broken: Vec<(&str, &str)> = parsed
+            .entries
+            .iter()
+            .filter(|entry| matches!(entry.constraint, Constraint::Malformed(_)))
+            .map(|entry| (entry.name.as_str(), entry.site.constraint.as_str()))
+            .collect();
+        // The value is recorded as written, so the finding can show it.
+        assert_eq!(broken, [("regex", "[\"1\"]"), ("serde", "1")]);
     }
 
     /// **The same reader must not be loud about one key and silent about
