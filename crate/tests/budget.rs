@@ -47,11 +47,23 @@ const SEED: u64 = 0x7e12_0a5e_0b1d_2026;
 const DOCUMENTS: usize = 500;
 const DEPENDENCIES: usize = 20;
 
-/// **10× the local measurement**, recorded with the machine it came
-/// from: 75 ms for the 500-manifest corpus on an Apple M-series laptop,
-/// debug build, 2026-08. Ten times that leaves a shared runner room to be
-/// several times slower and still be right; it does not leave room for an
-/// order of magnitude, which is the thing worth catching.
+/// **~10× the local measurement**, recorded with the machine it came
+/// from: 75-80 ms for the 500-manifest corpus on an Apple M-series
+/// laptop, debug build, 2026-08.
+///
+/// **The runner number is not in here yet, and that is stated rather
+/// than guessed.** This job had not run when the ceiling was set, so the
+/// only evidence available was the CI run of the unit suite on the same
+/// commit — `ubuntu-24.04` finished it in 0.03 s against 0.01 s here,
+/// so a shared runner is roughly three times slower at the pure-CPU work
+/// this test measures. That puts the expected runner figure near 240 ms,
+/// about three times under the ceiling: loose enough not to flake, tight
+/// enough that an order of magnitude cannot hide.
+///
+/// Every run prints its own elapsed time, so the real number is the
+/// first line of the first `budget` job's log. **Whoever lands that run
+/// should replace this paragraph with it** — a ceiling calibrated only
+/// against a laptop is a ceiling nobody can defend when it goes red.
 const BUDGET: Duration = Duration::from_millis(750);
 
 /// Four times the work, at most six times the clock.
