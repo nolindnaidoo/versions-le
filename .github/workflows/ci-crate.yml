@@ -64,11 +64,19 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # `#[expect]` is `#[allow]` that complains when it stops being
+      # needed. It is still an inline suppression, and a gate that greps
+      # for one spelling and not the other is a gate that gets routed
+      # around by accident — ips-le carried an `#[expect(dead_code)]`
+      # under a green policy job. `tests/` is included: the rule is
+      # crate-wide, and a test is not an exemption.
       - name: Forbid inline lint suppressions
         working-directory: .
         run: |
-          if grep -rn '#\[allow(' crate/src --include='*.rs'; then
-            echo 'Inline #[allow] found — fix the lint or relax it in [lints.clippy] in crate/Cargo.toml.'
+          if grep -rnE '#!?\[[^]]*(allow|expect)\(' \
+              crate/src crate/tests --include='*.rs'; then
+            echo 'Inline #[allow]/#[expect] found — fix the lint, or add a commented'
+            echo 'relaxation to [lints.clippy] or [lints.rust] in crate/Cargo.toml.'
             exit 1
           fi
       # The two frontends share one MCP tool and nothing else. A doc that
