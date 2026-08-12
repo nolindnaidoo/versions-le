@@ -341,3 +341,34 @@ jobs:
             "$RUNNER_TEMP/coverage-matrix.txt"
           grep -q 'coverage-matrix: 6 finding codes and 3 refusal reasons reachable' \
             "$RUNNER_TEMP/coverage-matrix.txt"
+
+  # The commit convention was claimed by .githooks/commit-msg and by
+  # AGENTS.md, and enforced by neither: core.hooksPath is opt-in per
+  # clone, so `--no-verify` or a fresh checkout skipped it permanently
+  # rather than deferring it. Three separate audits flagged the same
+  # false claim. This is the gate that makes it true.
+  commits:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Every pushed commit is conventional
+        run: |
+          set -euo pipefail
+          base="${{ github.event.pull_request.base.sha || github.event.before }}"
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            base="$(git rev-list --max-parents=0 HEAD | tail -1)"
+          fi
+          pattern='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9._,/ -]+\))?!?: .+'
+          fail=0
+          while read -r sha subject; do
+            case "$subject" in "Merge "*|"Revert "*) continue ;; esac
+            if ! printf '%s' "$subject" | grep -Eq "$pattern"; then
+              echo "not conventional: $sha $subject"; fail=1
+            fi
+            if [ "${#subject}" -gt 72 ]; then
+              echo "subject is ${#subject} chars, limit 72: $sha $subject"; fail=1
+            fi
+          done < <(git log --no-merges --format='%h %s' "$base..HEAD")
+          exit $fail
