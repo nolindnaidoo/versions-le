@@ -75,6 +75,22 @@ crate/src/
   `msrv-mismatch`, relates two *named* keys — Cargo's `rust-version` and
   a workflow's Rust toolchain — and is not the generic comparator with
   its scoping relaxed. A second bridge is a spec change, not a patch.
+- **A CI tool version belongs to the job that installs it.** A
+  `<tool>-version:` input is excluded from comparison and reported as
+  `per_job_tool_version`. Testing on the oldest interpreter a project
+  supports and publishing on the newest is correct, and calling it
+  `disjoint-constraint` failed a real repository's build over the tool
+  being wrong. An action `uses:` pin, `packageManager` and `toolchain:`
+  are *not* per job and are still compared — the exemption is as narrow
+  as its reason.
+- **The MCP surface is no laxer than the terminal one.** A wrongly-typed
+  or unknown argument is a refusal naming it, because `"hidden": "true"`
+  is the same mistake as `--stict`. An absent argument and an explicit
+  `null` both take the declared default.
+- **A reader never drops a value it cannot read.** What it does not
+  model is skipped by design; what it cannot read is a diagnostic naming
+  it. The difference is whether the manifest is understood or merely
+  reported as read.
 - **Disjointness is interval arithmetic, not string comparison.** And
   prereleases widen a modelled range rather than narrow it, so the
   imprecision can only ever *hide* a disjointness. A change that made
@@ -375,9 +391,8 @@ git config core.hooksPath .githooks
 ```
 
 There is no JavaScript in this repository and therefore no `prepare`
-script to wire it on install, so a fresh clone has to run that line. CI
-does not check commit subjects here the way the extension siblings do —
-the hook is the whole gate, and an unwired hook is no gate at all.
+script to wire it on install, so a fresh clone has to run that line —
+an unwired hook is no gate at all.
 
 **CHANGELOG.md is written by hand**, not generated from subjects: an
 entry that explains why a bug mattered is worth more than a list of them.
