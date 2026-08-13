@@ -243,39 +243,48 @@ is never reported as a pass.
 
 ## More from the LE family
 
-Every tool in the family, one page: **[letools.dev](https://letools.dev)**
+Sixteen single-purpose tools for the work in front of every model. Each ships
+a Rust CLI and an MCP server. One page: **[letools.dev](https://letools.dev)**
 
-- **[Paths-LE](https://letools.dev/tools/paths-le)** — Extract file paths and report whether they still point at anything
-- **[URLs-LE](https://letools.dev/tools/urls-le)** — Extract every URL, with its protocol and exact position
-- **[Numbers-LE](https://letools.dev/tools/numbers-le)** — Find every hardcoded number so a person can check them
-- **[String-LE](https://letools.dev/tools/string-le)** — Get every string out where a person can read them
-- **[Secrets-LE](https://letools.dev/tools/secrets-le)** — Detect and sanitize credentials locally, before you commit
-- **[Regex-LE](https://letools.dev/tools/regex-le)** — Find, test and validate regular expressions with ReDoS screening
-- **[Colors-LE](https://letools.dev/tools/colors-le)** — Extract and analyze colors from CSS, SCSS, HTML, JS/TS and SVG
-- **[Dates-LE](https://letools.dev/tools/dates-le)** — Extract and analyze dates from logs, configs and code
-- **[EnvSync-LE](https://letools.dev/tools/envsync-le)** — Spot missing keys across your .env files
-- **[Scrape-LE](https://letools.dev/tools/scrape-le)** — See what will block your scraper before you write it
+**Get it out**
 
-Newer, and crate-first — published on GitHub, not yet listed on the site:
+- **[String-LE](https://letools.dev/tools/string-le)** — Extract every string in a codebase, with its position, so a person can read them
+- **[Numbers-LE](https://letools.dev/tools/numbers-le)** — Extract every hardcoded number in a codebase, so a person can check them
+- **[Units-LE](https://letools.dev/tools/units-le)** — Extract every quantity with its unit, normalized, and refuse the ambiguous ones by name
+- **[Dates-LE](https://letools.dev/tools/dates-le)** — Extract every date and timestamp, and the exact instant each one resolves to
+- **[IDs-LE](https://letools.dev/tools/ids-le)** — Extract every UUID, ULID, NanoID, ObjectId and Snowflake, and decode the time inside
+- **[IPs-LE](https://letools.dev/tools/ips-le)** — Extract every IP address, CIDR block and MAC, normalized and classified by scope
+- **[URLs-LE](https://letools.dev/tools/urls-le)** — Extract every URL in a codebase, with its protocol and exact position
+- **[Paths-LE](https://letools.dev/tools/paths-le)** — Extract every file path in a codebase, and say whether it still points at anything
+- **[Colors-LE](https://letools.dev/tools/colors-le)** — Extract every color in a codebase, and say which ones are not in your palette
 
-- **[Units-LE](https://github.com/nolindnaidoo/units-le)** — Extract quantities — a number with its unit — and refuse the ambiguous ones
-- **[IDs-LE](https://github.com/nolindnaidoo/ids-le)** — Extract UUID, ULID, NanoID, ObjectId and Snowflake, with embedded timestamps decoded
-- **[IPs-LE](https://github.com/nolindnaidoo/ips-le)** — Extract IPv4, IPv6, CIDR and MAC addresses, classified and normalized
-- **[Unicode-LE](https://github.com/nolindnaidoo/unicode-le)** — Detect bidi controls, invisibles, homoglyphs and mixed scripts
-- **[i18n-LE](https://github.com/nolindnaidoo/i18n-le)** — Identify the i18n library a project uses, then audit its catalogues by that library's rules
+**Check it**
 
-Each stands on its own: no shared crate, no published core. Where two of
-them agree it is because the same answer was right twice.
+- **[Regex-LE](https://letools.dev/tools/regex-le)** — Find every regex in a codebase, and report which can be driven into catastrophic backtracking
+- **[Versions-LE](https://letools.dev/tools/versions-le)** — Find where one dependency is constrained differently across a repository's manifests
+- **[i18n-LE](https://letools.dev/tools/i18n-le)** — Identify the i18n library a project uses, then audit its catalogs by that library's rules
+- **[Scrape-LE](https://letools.dev/tools/scrape-le)** — Check whether a page is scrapeable before the scraper is written, and say when it cannot tell
 
+**Guard it**
+
+- **[Secrets-LE](https://letools.dev/tools/secrets-le)** — Find hardcoded credentials in a codebase, and never print one into the report
+- **[EnvSync-LE](https://letools.dev/tools/envsync-le)** — Compare the dotenv files in a tree, and say which keys are missing from which
+- **[Unicode-LE](https://letools.dev/tools/unicode-le)** — Find the Unicode that hides meaning — bidi controls, invisibles, homoglyphs, mixed scripts
+
+Each stands on its own: no shared crate, no published core. Where two of them
+agree, it is because the same answer was right twice.
+
+**Contact** — [nolindnaidoo.com](https://nolindnaidoo.com) · [GitHub](https://github.com/nolindnaidoo) · [LinkedIn](https://www.linkedin.com/in/nolindnaidoo/)
 ## Also by nolindnaidoo
 
 **Rust** — pixelcoords and pixelactions are one loop: pixelcoords answers
-*where*, pixelactions *acts* there.
+*where*, pixelactions *acts* there. Their own tools, their own voice — not
+part of the LE family.
 
 - **[pixelcoords](https://github.com/nolindnaidoo/pixelcoords)** — Freeze your screen, mark regions, get pixel-exact coordinates and crops
+  [pixelcoords.dev](https://pixelcoords.dev) · [crates.io](https://crates.io/crates/pixelcoords) · [docs.rs](https://docs.rs/pixelcoords)
 - **[pixelactions](https://github.com/nolindnaidoo/pixelactions)** — Consume human-verified coordinates, perform the interaction, confirm it landed
-
-**Contact** — [nolindnaidoo.com](https://nolindnaidoo.com) · [GitHub](https://github.com/nolindnaidoo) · [LinkedIn](https://www.linkedin.com/in/nolindnaidoo/)
+  [pixelactions.dev](https://pixelactions.dev) · [crates.io](https://crates.io/crates/pixelactions) · [docs.rs](https://docs.rs/pixelactions)
 
 ## License
 

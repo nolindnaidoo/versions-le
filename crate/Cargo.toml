@@ -1,11 +1,11 @@
 [package]
 name = "versions-le"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 rust-version = "1.88"
 license = "MIT"
 readme = "README.md"
-description = "Find where the same dependency is constrained differently across a repository's manifests"
+description = "Find where one dependency is constrained differently across a repository's manifests"
 authors = ["Nolin D Naidoo"]
 homepage = "https://letools.dev/tools/versions-le"
 repository = "https://github.com/nolindnaidoo/versions-le"
