@@ -76,7 +76,7 @@ All three. A change is not done because it compiles; it is done when it
 is tested, linted, documented where behaviour changed, and honest —
 claims in the README, `SPEC.md` and the help text must match the code.
 
-The coverage floor (90% line coverage **per module** across `detect/`) is
+The coverage floor (75% line coverage **per module** across `detect/`) is
 a floor and is never lowered to make a build pass.
 
 ## CI

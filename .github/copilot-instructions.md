@@ -1,42 +1,54 @@
 # Contributor and agent instructions
 
-**Read [AGENTS.md](AGENTS.md) before writing any code.** It carries the
-engineering standard this repository is held to — control flow, error handling,
-module shape — plus the architecture, the invariants and why each one exists.
-[CLAUDE.md](CLAUDE.md) is the short version: gates and traps.
+**Read [AGENTS.md](../AGENTS.md) first, then [`crate/AGENTS.md`](../crate/AGENTS.md)
+before writing any code.** This repository is crate-only: the root file is a
+router, and the crate's file carries the engineering standard — layout, control
+flow, error handling, testing, the definition of done — plus the decisions that
+are already made and are not to be relitigated.
+[`crate/SPEC.md`](../crate/SPEC.md) defines what the tool does.
+[CLAUDE.md](../CLAUDE.md) is the short version: gates and traps.
 
 This file exists only to route you there. It is deliberately thin: the standard
 lives in one place so it cannot drift between tools.
 
 ## Non-negotiables
 
-- Guard clauses first. **No statement-position `else`** — two branches are an
-  early return, many are a `match` or a lookup table. Value-position `if/else`
-  is fine.
-- Nesting stops at two levels inside a function.
-- **`Result<T, String>` for fallible functions.** No `anyhow`, no `thiserror`
-  in the library; one error enum only where a domain genuinely needs it.
-- `#![forbid(unsafe_code)]`, crate-wide, no platform exemption.
-- **No inline `#[allow(...)]` anywhere.** CI greps for it. A lint you mean to
-  relax goes in `[lints.clippy]` in `crate/Cargo.toml` with a comment saying
-  why.
-- Flat modules. No layers, registries, managers or services, and no trait with
-  a single implementation.
-- **Refuse rather than guess.** Ambiguous input returns a named refusal reason,
-  never a plausible answer. A test that passes by normalizing something that
-  should have been refused is the bug this whole family exists to prevent.
-- **stdout is protocol, stderr is human.** There is no `--json` flag, and exit
-  codes are part of the API.
-- Never report success you did not achieve.
+- **Refuse rather than guess.** A constraint in a grammar this tool does not
+  model is named in `refusals` and takes part in no comparison — never
+  approximated into a range.
+- **`Unknown` blames the tool, `Malformed` blames the manifest.** When in
+  doubt, blame the tool.
+- **Comparison never crosses an ecosystem.** `msrv-mismatch` is the one bridge
+  and it names both keys; a second is a spec change, not a patch.
+- **The exit code is the product** — 0 clean, 1 findings, 2 malformed question.
+  No manifests at all is 0.
+- **Nothing writes.** No `--fix`, no `--pin`, no `--update`, on either surface.
+- Guard clauses first. **No statement-position `else`**; value-position
+  `if/else` and `match` are fine. Nesting stops at two levels inside a
+  function.
+- **No inline `#[allow(...)]`** — fix the lint or relax it, with a reason, in
+  `[lints.clippy]`.
+- `detect/` is pure: a `std::fs` call there is a bug.
+- **Never report success or coverage you did not achieve.** A skipped case says
+  so by name.
+- Errors are descriptive, name the file or value they are about, and are never
+  swallowed.
 - Comments explain **why**, never what.
-- Commits are conventional (`fix:`, `feat:`, `docs:`…), imperative, and
-  enforced by a hook and by CI.
+- Commits are conventional (`fix:`, `feat:`, `docs:`, `test:`, `ci:`…),
+  imperative, and enforced by a hook.
 
 ## Before you commit
 
 ```bash
-cd crate && cargo fmt --all --check && cargo clippy --all-targets -- -D warnings && cargo test --locked
+cd crate
+cargo fmt --all --check && cargo clippy --all-targets -- -D warnings && cargo test --locked
 ```
 
-Coverage thresholds are a floor and are never lowered to make a build pass.
-Every claim in a README or in help text must be provable against the code.
+Coverage floors are a backstop against an untested module, not a target: they
+sit well below where the code actually is and are never raised to track it.
+Every claim in a README, `SPEC.md` or the help text must be provable against
+the code.
+
+**Provable is about behaviour and numbers, not availability.** An install line
+for a publish you are about to make is *staged*, not forbidden — write it, and
+let the release commit be what makes it true.

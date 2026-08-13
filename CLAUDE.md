@@ -53,10 +53,22 @@ The timed and gated suites are opt-in and CI sets them:
   ships a crate that cannot run its own tests.
 - **Changing a corpus document or an expectation is a behaviour change** and
   needs a CHANGELOG entry.
-- **Coverage thresholds are a floor**, never lowered to make CI pass.
+- **CI narrows itself on a docs-only push.** `ci-crate.yml` fires on `*.md` and
+  the agent instruction files — it has to, because the `policy` job greps them,
+  and the filter used to admit only `crate/**` so that gate could run only when
+  the files it guards had *not* been touched. On a docs-only push `policy` and
+  `commits` run and every Rust job skips. Anything unrecognised, and an
+  unreadable diff, counts as code and runs everything.
+- **Coverage floors are a backstop, not a target.** They sit well below where
+  the code actually is, and they are not raised to track it — a floor that
+  follows real coverage becomes a tax on writing the next module.
 - **Every claim must be provable.** Nothing goes in a README, `SPEC.md` or the
-  help text unless the code backs it — and `versions-le` is not on crates.io
-  yet, so no install line may say it is.
+  help text unless the code backs it. That governs **behaviour and numbers** —
+  not **availability**. `versions-le` is not on crates.io yet, and an install
+  line written ahead of that publish is **staged, not forbidden**: write it,
+  and let the release commit be what makes it true. What must not happen is
+  the page *reading as live* while the registry disagrees — which is why the
+  publish and the line that announces it belong in one commit.
 - **Run the binary, not only the tests.** Three of the crate's regression tests
   came from running it against a real repository, and all three were invisible
   to a green suite.

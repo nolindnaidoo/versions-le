@@ -4,10 +4,19 @@ name: CodeQL
 
 on:
   workflow_dispatch:
+  # A prose commit cannot change what a code scanner finds. The weekly run
+  # below reaches the whole repository whether or not anything was pushed, so
+  # skipping a scan of unchanged code costs no coverage.
   push:
     branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
   schedule:
     # Weekly, so a query-pack update finds this repo without a push.
     - cron: '17 4 * * 1'

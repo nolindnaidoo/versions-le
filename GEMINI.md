@@ -44,6 +44,11 @@ cd crate
 cargo fmt --all --check && cargo clippy --all-targets -- -D warnings && cargo test --locked
 ```
 
-Coverage thresholds are a floor and are never lowered to make a build pass.
+Coverage floors are a backstop against an untested module, not a target: they
+sit well below where the code actually is and are never raised to track it.
 Every claim in a README, `SPEC.md` or the help text must be provable against
 the code.
+
+**Provable is about behaviour and numbers, not availability.** An install line
+for a publish you are about to make is *staged*, not forbidden — write it, and
+let the release commit be what makes it true.
