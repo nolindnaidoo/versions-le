@@ -44,9 +44,10 @@ One question, asked across every manifest in a tree rather than one file
 at a time: **do these manifests agree about what version of anything this
 repository depends on?**
 
-The build broke because `crates/api` asks for `serde = "1.0.200"` and
-`crates/web` asks for `serde = "2"`. Or it did not break, and will: CI
-has run on `1.80` since March while `rust-version` says `1.88`.
+The build broke because `api` asks for `regex = "1"` and `web` asks for
+`regex = "2"`, and no one version satisfies both. Or it did not break,
+and will: CI has run on `1.80` since March while `rust-version` says
+`1.88`.
 
 ```bash
 versions-le .
@@ -56,12 +57,13 @@ versions-le .
 error cargo: regex ("1" (api/Cargo.toml) and "2" (web/Cargo.toml) cannot both be satisfied by one version) [api/Cargo.toml, web/Cargo.toml]
 warning cargo: serde (constrained 2 different ways across 2 files: 1, 1.0.200) [api/Cargo.toml, web/Cargo.toml]
 warning ci: rust (CI builds on 1.80.0, below the declared minimum 1.88.0 in api/Cargo.toml) [.github/workflows/ci.yml, api/Cargo.toml]
+info ci: node (an unpinned tool version installs whatever is newest that day) [.github/workflows/ci.yml]
 info npm: left-pad (a dist tag resolves to whatever is newest at install time) [package.json]
-refused ambiguous_version_string node: not evidently a version; excluded from comparison [.github/workflows/ci.yml]
 refused cross_ecosystem regex: appears in cargo and npm; different ecosystems name different things, so these were not compared [api/Cargo.toml, package.json]
 refused unknown_grammar left-pad: a dist tag is a moving target, not a version range; excluded from comparison [package.json]
+refused unknown_grammar node: a channel name is a moving target, not a version; excluded from comparison [.github/workflows/ci.yml]
 refused unknown_grammar shared: an inherited workspace dependency carries its version elsewhere; excluded from comparison [web/Cargo.toml]
-4 findings across 4 manifests — 1 error, 2 warning, 1 info
+5 findings across 4 manifests — 1 error, 2 warning, 2 info
 ```
 
 Exit code 1. The build stops before the deploy does.
@@ -236,40 +238,15 @@ one.
 Refusals speak the caller's vocabulary: an MCP caller has no command
 line, and a test asserts no message on that surface names a flag.
 
-## Development
+## Documentation
 
-Everything lives in [`crate/`](crate/). The spec is
-[`crate/SPEC.md`](crate/SPEC.md); the engineering standard is
-[`crate/AGENTS.md`](crate/AGENTS.md).
-
-```bash
-cd crate
-cargo fmt --all --check
-cargo clippy --all-targets -- -D warnings
-cargo test --locked
-```
-
-All three, before every push — exactly what CI runs.
-
-## Testing
-
-The decision layer is pure and carries its own corpus, so most of the
-suite needs no filesystem at all. Around it:
-
-| Suite | What it holds |
+| What | Where |
 |---|---|
-| unit tests in `crate/src/` | the grammars, the readers, the checks, and the embedded corpus — `fixtures/` run as tests, including the `grammar-*` pairs pinned as **refusals** so a regression that started guessing fails the build |
-| `tests/contracts.rs` | the exit codes and the stdout contract, driven against the built binary |
-| `tests/hazards.rs` | byte-order marks, undecodable manifests, symlink loops, a FIFO, permission denied, a 260-character path, an empty file, a 50 MB manifest |
-| `tests/platform.rs` | one path separator on every OS — Windows path prefixes included — plus case-folding filesystems, reserved Windows names, CRLF manifests, and independence from `TZ` |
-| `tests/fuzz.rs` | generated constraint strings nobody would write, time-boxed — never panic, never hang, always a well-formed report, and **never a conflict fabricated out of a grammar it does not model** |
-| `tests/budget.rs` | a wall-clock ceiling and two linearity checks: four times the manifests, and four times the dependencies in one manifest |
-| `tests/scenarios.rs` | trees larger than an editor opens |
-
-CI enforces a **90% line-coverage floor per module** across `detect/` —
-per module, not on the total, because a total hides one module sliding
-while the others carry it. A skipped case always says so by name; a skip
-is never reported as a pass.
+| What the tool is allowed to say — the checks, the refusals, the exit codes, the output contract | [`crate/SPEC.md`](crate/SPEC.md) |
+| How the code is written and held together — architecture, invariants, the gates | [`crate/AGENTS.md`](crate/AGENTS.md) |
+| The crate's own front page | [`crate/README.md`](crate/README.md) |
+| What changed | [CHANGELOG.md](CHANGELOG.md) · [`crate/CHANGELOG.md`](crate/CHANGELOG.md) |
+| The tool's page, and the other fifteen | [letools.dev/tools/versions-le](https://letools.dev/tools/versions-le) |
 
 ## More from the LE family
 
@@ -305,6 +282,7 @@ Each stands on its own: no shared crate, no published core. Where two of them
 agree, it is because the same answer was right twice.
 
 **Contact** — [nolindnaidoo.com](https://nolindnaidoo.com) · [GitHub](https://github.com/nolindnaidoo) · [LinkedIn](https://www.linkedin.com/in/nolindnaidoo/)
+
 ## Also by nolindnaidoo
 
 **Rust** — pixelcoords and pixelactions are one loop: pixelcoords answers
