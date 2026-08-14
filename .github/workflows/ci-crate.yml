@@ -438,7 +438,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cargo test --bins coverage_matrix -- --nocapture 2>&1 \
+          # Serialised on purpose: --nocapture lets these tests interleave their
+          # output when run in parallel, so a prefix lands on another test's line
+          # and the greps below miss a line the run actually printed.
+          cargo test --bins coverage_matrix -- --nocapture --test-threads=1 2>&1 \
             | tee "$RUNNER_TEMP/coverage-matrix.txt"
           grep -q 'coverage-matrix: 5 ecosystems and 5 manifest kinds reachable' \
             "$RUNNER_TEMP/coverage-matrix.txt"
