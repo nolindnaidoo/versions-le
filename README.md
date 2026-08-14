@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/nolindnaidoo/versions-le/main/assets/icon.png" alt="Versions-LE logo" width="96" height="96"/>
+</p>
 <h1 align="center">versions-le</h1>
 
 <p align="center">
