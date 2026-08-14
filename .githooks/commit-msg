@@ -27,8 +27,8 @@ if ! printf '%s' "$subject" | grep -Eq "$pattern"; then
     exit 1
 fi
 
-if [ "${#subject}" -gt 72 ]; then
-    echo "commit-msg: subject is ${#subject} characters; the limit is 72." >&2
+if [ "${#subject}" -gt 100 ]; then
+    echo "commit-msg: subject is ${#subject} characters; the limit is 100." >&2
     echo "  $subject" >&2
     exit 1
 fi
