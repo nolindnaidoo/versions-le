@@ -12,6 +12,10 @@
 
 ---
 
+<p align="center">
+  <img src="assets/demo.gif" alt="Versions-LE demo — the real binary, recorded by assets/demo.tape" style="max-width: 100%; height: auto;" />
+</p>
+
 ## What it does
 
 One question, asked across every manifest in a tree rather than one file
