@@ -13,7 +13,7 @@
 ---
 
 <p align="center">
-  <img src="assets/demo.gif" alt="Versions-LE demo — the real binary, recorded by assets/demo.tape" style="max-width: 100%; height: auto;" />
+  <img src="https://raw.githubusercontent.com/nolindnaidoo/versions-le/main/assets/demo.gif" alt="Versions-LE demo — the real binary, recorded by assets/demo.tape" style="max-width: 100%; height: auto;" />
 </p>
 
 ## What it does
