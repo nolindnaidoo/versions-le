@@ -5,6 +5,16 @@ The Rust CLI and MCP server.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **One sentence describes this crate everywhere it is described.** The
+  `description` in `Cargo.toml`, the line under the title in
+  `README.md`, and the entry on letools.dev had drifted into three
+  paraphrases, so the crate a reader met on crates.io was not obviously
+  the one they met on the site. Nothing about the tool moved.
+
 ## [0.1.0] - 2026-08-12
 
 First release. Core functionality: five manifest readers, six checks,
@@ -198,3 +208,5 @@ off.
 **`node_modules`, `vendor` and `.git` are never walked**, whatever the
 ignore rules say: a `package.json` per installed package is the
 resolver's output, not this repository's constraints.
+
+[0.1.0]: https://crates.io/crates/versions-le/0.1.0
