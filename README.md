@@ -1,16 +1,22 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/nolindnaidoo/versions-le/main/assets/icon.png" alt="Versions-LE logo" width="96" height="96"/>
 </p>
-<h1 align="center">versions-le</h1>
-
+<h1 align="center">Versions-LE</h1>
 <p align="center">
   <b>Find where the same dependency is constrained differently across a repository's manifests</b><br/>
   <i>and refuse, loudly, on any grammar it cannot model</i>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/rustc-1.88+-93450a.svg" alt="MSRV: Rust 1.88+" />
-  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
+  <a href="https://crates.io/crates/versions-le">
+    <img src="https://img.shields.io/crates/v/versions-le?style=for-the-badge&label=Rust%20CLI&color=blue&logo=rust" alt="versions-le on crates.io" />
+  </a>
+  <a href="https://letools.dev/tools/versions-le">
+    <img src="https://img.shields.io/badge/LE%20Tools-letools.dev-blue?style=for-the-badge" alt="LE Tools" />
+  </a>
+  <a href="https://github.com/nolindnaidoo/versions-le/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="MIT licensed" />
+  </a>
 </p>
 
 ---
@@ -18,6 +24,10 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/nolindnaidoo/versions-le/main/assets/demo.gif" alt="Versions-LE demo — the real binary, recorded by assets/demo.tape" style="max-width: 100%; height: auto;" />
 </p>
+
+> **Useful?** A star is how other developers find it —
+> [★ GitHub](https://github.com/nolindnaidoo/versions-le) ·
+> [letools.dev/tools/versions-le](https://letools.dev/tools/versions-le)
 
 ## What it does
 

@@ -6,9 +6,27 @@
 </p>
 
 <p align="center">
+  <a href="https://crates.io/crates/versions-le">
+    <img src="https://img.shields.io/crates/v/versions-le.svg" alt="versions-le on crates.io" />
+  </a>
+  <a href="https://crates.io/crates/versions-le">
+    <img src="https://img.shields.io/crates/d/versions-le.svg" alt="crates.io downloads" />
+  </a>
+  <a href="https://github.com/nolindnaidoo/versions-le/actions/workflows/ci-crate.yml">
+    <img src="https://github.com/nolindnaidoo/versions-le/actions/workflows/ci-crate.yml/badge.svg" alt="Build Status" />
+  </a>
   <img src="https://img.shields.io/badge/rustc-1.88+-93450a.svg" alt="MSRV: Rust 1.88+" />
-  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
+  <a href="https://github.com/nolindnaidoo/versions-le/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" />
+  </a>
+  <a href="https://letools.dev/tools/versions-le">
+    <img src="https://img.shields.io/badge/web-letools.dev-00A0FF.svg" alt="letools.dev" />
+  </a>
 </p>
+
+> **Useful?** A star is how other developers find it —
+> [★ GitHub](https://github.com/nolindnaidoo/versions-le) ·
+> [letools.dev/tools/versions-le](https://letools.dev/tools/versions-le)
 
 The build broke because `crates/api` asks for `serde = "1.0.200"` and
 `crates/worker` asks for `serde = "2"`. Or it did not break, and will:
