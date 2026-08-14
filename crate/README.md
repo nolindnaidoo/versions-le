@@ -111,11 +111,10 @@ is** — a workflow lives in a hidden directory by definition, so
 
 ## Install
 
-**Not on crates.io yet**, so there is one route:
-
 | Route | Command | Worth knowing |
 |---|---|---|
-| **From source** | `cd versions-le/crate && cargo install --path .` | Any platform, needs **Rust 1.88+**. `cargo build --release` is the same build CI runs. |
+| **crates.io** | `cargo install versions-le` | Any platform, needs **Rust 1.88+**. |
+| **From source** | `cd versions-le/crate && cargo install --path .` | `cargo build --release` is the same build CI runs. |
 
 No runtime, no network, nothing written.
 

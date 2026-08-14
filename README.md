@@ -59,7 +59,11 @@ still answer.
 
 ## Install
 
-**Not on crates.io yet.** Until it is, build it from source:
+```bash
+cargo install versions-le
+```
+
+Or build it from source:
 
 ```bash
 git clone https://github.com/nolindnaidoo/versions-le

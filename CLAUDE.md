@@ -64,9 +64,9 @@ The timed and gated suites are opt-in and CI sets them:
   follows real coverage becomes a tax on writing the next module.
 - **Every claim must be provable.** Nothing goes in a README, `SPEC.md` or the
   help text unless the code backs it. That governs **behaviour and numbers** —
-  not **availability**. `versions-le` is not on crates.io yet, and an install
-  line written ahead of that publish is **staged, not forbidden**: write it,
-  and let the release commit be what makes it true. What must not happen is
+  not **availability**. An install line written ahead of the publish it
+  describes is **staged, not forbidden**: write it, and let the release commit
+  be what makes it true. What must not happen is
   the page *reading as live* while the registry disagrees — which is why the
   publish and the line that announces it belong in one commit.
 - **Run the binary, not only the tests.** Three of the crate's regression tests

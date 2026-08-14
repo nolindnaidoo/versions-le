@@ -12,7 +12,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 First release. The Rust CLI and MCP server in [`crate/`](crate/): five
 manifest readers, six checks, four refusal reasons, and both surfaces.
-Not published to crates.io yet — build from source.
+`cargo install versions-le`, or build from source.
 
 ### Added
 
