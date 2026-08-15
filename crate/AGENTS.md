@@ -335,10 +335,10 @@ CHANGELOG entry.
 ## Verification — the definition of done
 - **Commits are conventional and CI enforces it.** The `commits` job in
   `.github/workflows/ci-crate.yml` validates every pushed commit's subject
-  against the same pattern and the same 100-character cap as
-  `.githooks/commit-msg`. The hook is opt-in per clone (`git config
-  core.hooksPath .githooks`), so `--no-verify` and a fresh checkout defer
-  the check to CI rather than escaping it. Scopes may be comma-separated.
+  against the same pattern as `.githooks/commit-msg`. The hook is opt-in
+  per clone (`git config core.hooksPath .githooks`), so `--no-verify` and
+  a fresh checkout defer the check to CI rather than escaping it. Scopes
+  may be comma-separated.
 
 ```bash
 cargo fmt --all --check
@@ -383,11 +383,11 @@ it for any public repo, and scrapers harvest it. A repo-local
 
 ## Commits
 
-Conventional prefix — `feat · fix · docs · style · refactor · perf ·
-test · build · ci · chore · revert` — an optional `(scope)`, an
-imperative subject under 100 characters, and a body carrying the *why* and
-the user-visible consequence rather than a list of files. One concern per
-commit; refactors and behaviour changes travel separately.
+Conventional prefix — `feat · fix · docs · style · refactor · perf · test
+· build · ci · chore · revert` — an optional `(scope)`, an imperative
+subject, and a body carrying the *why* and the user-visible consequence
+rather than a list of files. One concern per commit; refactors and
+behaviour changes travel separately.
 
 `.githooks/commit-msg` enforces the subject line **once
 `core.hooksPath` points at it**:

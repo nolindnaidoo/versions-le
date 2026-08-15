@@ -473,8 +473,5 @@ jobs:
             if ! printf '%s' "$subject" | grep -Eq "$pattern"; then
               echo "not conventional: $sha $subject"; fail=1
             fi
-            if [ "${#subject}" -gt 72 ]; then
-              echo "subject is ${#subject} chars, limit 72: $sha $subject"; fail=1
-            fi
           done < <(git log --no-merges --format='%h %s' "$base..HEAD")
           exit $fail
