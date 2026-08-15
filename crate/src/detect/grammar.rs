@@ -283,7 +283,8 @@ pub(crate) fn npm(raw: &str) -> Constraint {
 /// One `||` alternative: whitespace-separated simples, intersected, or a
 /// hyphen range.
 fn npm_set(text: &str) -> Result<Option<Interval>, Constraint> {
-    let tokens: Vec<&str> = text.split_whitespace().collect();
+    let tokens = npm_tokens(text);
+    let tokens: Vec<&str> = tokens.iter().map(String::as_str).collect();
     if tokens.is_empty() {
         return Ok(Some(Interval::default()));
     }
@@ -309,6 +310,45 @@ fn hyphen(low: &str, high: &str) -> Result<Interval, Constraint> {
         lower: at_least(&low).lower,
         upper: at_most(&high).upper,
     })
+}
+
+/// Whitespace-separated simples, with a bare operator joined to the
+/// version after it.
+///
+/// **npm allows a space between a comparator and its version**, and
+/// splitting on whitespace alone made `">= 20"` two tokens: the first an
+/// operator with nothing to apply to. That is an ordinary
+/// `engines.node`, and it was reported `malformed-constraint` at
+/// severity error — a red build blamed on a correct manifest, and the
+/// message said "an operator with no version" while the version sat
+/// beside it. `new Range(">= 20")` in node-semver is `>=20.0.0`.
+///
+/// The operator must be a whole token to be joined, so `>=1.0.0` and
+/// `>= 1.0.0` agree while `>=1.0.0 <2.0.0` still parses as two.
+fn npm_tokens(text: &str) -> Vec<String> {
+    const OPERATORS: [&str; 6] = [">=", "<=", ">", "<", "=", "~"];
+    let mut out: Vec<String> = Vec::new();
+    let mut pending: Option<&str> = None;
+    for token in text.split_whitespace() {
+        if let Some(operator) = pending.take() {
+            out.push(format!("{operator}{token}"));
+            continue;
+        }
+        // `^` and `-` are deliberately absent: a lone `-` is the hyphen
+        // range's own token, and `^` is handled beside the rest below
+        // only when it stands alone.
+        if OPERATORS.contains(&token) || token == "^" {
+            pending = Some(token);
+            continue;
+        }
+        out.push(token.to_string());
+    }
+    // A trailing operator with nothing after it stays as it was, so it
+    // still earns `an operator with no version`.
+    if let Some(operator) = pending {
+        out.push(operator.to_string());
+    }
+    out
 }
 
 fn npm_simple(token: &str) -> Result<Interval, Constraint> {
@@ -776,6 +816,52 @@ fn bounded(lower: Version, upper: Version) -> Interval {
             version: upper,
             inclusive: false,
         }),
+    }
+}
+
+#[cfg(test)]
+mod npm_spacing_tests {
+    use super::{Constraint, npm_tokens};
+
+    /// **npm allows a space between a comparator and its version.**
+    /// Every row here was reported `malformed-constraint` at severity
+    /// error — a red build blamed on a correct manifest — and every one
+    /// is accepted by node-semver, the npm reference implementation.
+    /// `>= 20` in `engines.node` is the ordinary case.
+    #[test]
+    fn a_spaced_comparator_is_one_token() {
+        for (text, expected) in [
+            (">= 1.0.0", vec![">=1.0.0"]),
+            ("> 1.0.0", vec![">1.0.0"]),
+            ("< 2.0.0", vec!["<2.0.0"]),
+            ("<= 2.0.0", vec!["<=2.0.0"]),
+            ("^ 1.0.0", vec!["^1.0.0"]),
+            ("~ 1.2.3", vec!["~1.2.3"]),
+            ("= 1.0.0", vec!["=1.0.0"]),
+            (">= 1.0.0 <2.0.0", vec![">=1.0.0", "<2.0.0"]),
+            (">=1.0.0 < 2.0.0", vec![">=1.0.0", "<2.0.0"]),
+        ] {
+            assert_eq!(npm_tokens(text), expected, "{text}");
+        }
+    }
+
+    /// The forms that already worked keep working, and a hyphen range's
+    /// lone `-` must stay its own token or the range stops parsing.
+    #[test]
+    fn the_unspaced_and_hyphen_forms_are_unchanged() {
+        assert_eq!(npm_tokens(">=1.0.0"), [">=1.0.0"]);
+        assert_eq!(npm_tokens("^1.0.0"), ["^1.0.0"]);
+        assert_eq!(npm_tokens("1.0.0 - 2.0.0"), ["1.0.0", "-", "2.0.0"]);
+        assert_eq!(npm_tokens(""), Vec::<String>::new());
+    }
+
+    /// An operator with genuinely nothing after it still earns its
+    /// refusal — the fix must not swallow the case the message names.
+    #[test]
+    fn a_trailing_operator_is_still_malformed() {
+        assert_eq!(npm_tokens(">="), [">="]);
+        let error = super::npm_simple(">=").expect_err("a refusal");
+        assert!(matches!(error, Constraint::Malformed(_)));
     }
 }
 

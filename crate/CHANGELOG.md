@@ -5,6 +5,28 @@ The Rust CLI and MCP server.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-08-15
+
+### Fixed
+
+- **A space between an npm comparator and its version is not a
+  malformed constraint.** `"engines": { "node": ">= 20" }` — an ordinary
+  manifest — was reported `malformed-constraint` at severity **error**
+  with the message "an operator with no version", while the version sat
+  beside it, and the run exited 1. A red build blamed on a correct file.
+
+  node-semver, the npm reference implementation, parses `">= 20"` as
+  `>=20.0.0`. Every spaced form did it: `>=`, `>`, `<`, `<=`, `^`, `~`,
+  `=`, and either half of `>= 1.0.0 <2.0.0`.
+
+  It also inverted this crate's own rule, stated three times — SPEC.md's
+  "the tool blames the manifest only when it is sure", and AGENTS.md and
+  CLAUDE.md's "when in doubt, blame the tool".
+
+  Only the npm reader was affected; Cargo and Python already accepted
+  the spacing. A hyphen range's lone `-` still tokenises on its own, and
+  an operator with genuinely nothing after it still earns its refusal.
+
 ## [0.1.2] - 2026-08-15
 
 ### Fixed
@@ -224,3 +246,4 @@ resolver's output, not this repository's constraints.
 [0.1.0]: https://crates.io/crates/versions-le/0.1.0
 [0.1.1]: https://crates.io/crates/versions-le/0.1.1
 [0.1.2]: https://crates.io/crates/versions-le/0.1.2
+[0.1.3]: https://crates.io/crates/versions-le/0.1.3
