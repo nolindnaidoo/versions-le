@@ -5,6 +5,18 @@ The Rust CLI and MCP server.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-08-15
+
+### Fixed
+
+- **The crates.io page shows the icon and the demo.** Both lived only in
+  the repository README, and that file is not the one `cargo publish`
+  ships — the published README is this directory's. A relative path
+  would not have fixed it: the crate is published from `crate/`, so
+  crates.io resolves a relative link against `path_in_vcs` and looks for
+  the assets below the crate directory rather than beside it. Both are
+  absolute URLs, which every surface renders.
+
 ## [0.1.1] - 2026-08-14
 
 ### Changed
@@ -211,3 +223,4 @@ resolver's output, not this repository's constraints.
 
 [0.1.0]: https://crates.io/crates/versions-le/0.1.0
 [0.1.1]: https://crates.io/crates/versions-le/0.1.1
+[0.1.2]: https://crates.io/crates/versions-le/0.1.2

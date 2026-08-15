@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/nolindnaidoo/versions-le/main/assets/icon.png" alt="versions-le logo" width="96" height="96"/>
+</p>
+
 <h1 align="center">versions-le</h1>
 
 <p align="center">
@@ -22,6 +26,10 @@
   <a href="https://letools.dev/tools/versions-le">
     <img src="https://img.shields.io/badge/web-letools.dev-00A0FF.svg" alt="letools.dev" />
   </a>
+</p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/nolindnaidoo/versions-le/main/assets/demo.gif" alt="versions-le demo — the real binary, recorded by assets/demo.tape" width="100%"/>
 </p>
 
 > **Useful?** A star is how other developers find it —
