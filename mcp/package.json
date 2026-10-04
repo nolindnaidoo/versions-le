@@ -1,6 +1,6 @@
 {
 	"name": "versions-le-mcp",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"mcpName": "io.github.nolindnaidoo/versions-le",
 	"description": "Find where one dependency is constrained differently across a repository's manifests.",
 	"keywords": [
