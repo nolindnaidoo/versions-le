@@ -10,6 +10,14 @@ separate product on its own cadence and keeps its own
 [CHANGELOG](crate/CHANGELOG.md). The entries below 1.0.0 describe this
 repository while it held the CLI alone.
 
+## [1.0.1] - 2026-10-04
+
+### Fixed
+
+- The Open VSX links and the Open VSX downloads badge in the README and the
+  npm README pointed at a namespace the listing has left, so they led nowhere.
+  The listing is under `nolindnaidoo` now, and so are they.
+
 ## [1.0.0] - 2026-10-04
 
 ### Added

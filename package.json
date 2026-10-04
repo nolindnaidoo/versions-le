@@ -3,7 +3,7 @@
 	"publisher": "nolindnaidoo",
 	"displayName": "Versions-LE",
 	"description": "Find where one dependency is constrained differently across a repository's manifests",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"license": "MIT",
 	"author": {
 		"name": "nolindnaidoo",
