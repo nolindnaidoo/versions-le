@@ -1,5 +1,9 @@
 {
 	"Could not be read ({0})": "Could not be read ({0})",
+	"Enjoying {0}? A rating helps other developers find it.": "Enjoying {0}? A rating helps other developers find it.",
+	"Rate": "Rate",
+	"Later": "Later",
+	"Don't Ask Again": "Don't Ask Again",
 	"Could not copy to clipboard": "Could not copy to clipboard",
 	"Could not open results": "Could not open results",
 	"Errors": "Errors",

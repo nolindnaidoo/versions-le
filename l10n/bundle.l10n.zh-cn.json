@@ -1,5 +1,9 @@
 {
 	"Could not be read ({0})": "无法读取的文件({0})",
+	"Enjoying {0}? A rating helps other developers find it.": "喜欢 {0} 吗？评分可以帮助其他开发者发现它。",
+	"Rate": "评分",
+	"Later": "稍后",
+	"Don't Ask Again": "不再询问",
 	"Could not copy to clipboard": "无法复制到剪贴板",
 	"Could not open results": "无法打开结果",
 	"Errors": "错误",

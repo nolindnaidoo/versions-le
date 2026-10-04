@@ -1,5 +1,9 @@
 {
 	"Could not be read ({0})": "읽을 수 없는 파일 ({0})",
+	"Enjoying {0}? A rating helps other developers find it.": "{0}이(가) 마음에 드시나요? 평점을 남기면 다른 개발자가 찾는 데 도움이 됩니다.",
+	"Rate": "평가하기",
+	"Later": "나중에",
+	"Don't Ask Again": "다시 묻지 않기",
 	"Could not copy to clipboard": "클립보드에 복사할 수 없습니다",
 	"Could not open results": "결과를 열 수 없습니다",
 	"Errors": "오류",

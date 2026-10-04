@@ -1,5 +1,9 @@
 {
 	"Could not be read ({0})": "Không đọc được ({0})",
+	"Enjoying {0}? A rating helps other developers find it.": "Bạn thích {0}? Một lượt đánh giá giúp các nhà phát triển khác tìm thấy tiện ích này.",
+	"Rate": "Đánh giá",
+	"Later": "Để sau",
+	"Don't Ask Again": "Không hỏi lại",
 	"Could not copy to clipboard": "Không thể sao chép vào khay nhớ tạm",
 	"Could not open results": "Không thể mở kết quả",
 	"Errors": "Lỗi",

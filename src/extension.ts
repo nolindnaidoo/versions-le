@@ -5,6 +5,7 @@ import { registerOpenSettingsCommand } from './config/settings';
 import { registerMcpProvider } from './mcp/provider';
 import { createTelemetry } from './telemetry/telemetry';
 import { createNotifier } from './ui/notifier';
+import { createRatingPromptFor } from './ui/ratingPrompt';
 import { createStatusBar } from './ui/statusBar';
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -20,6 +21,7 @@ export function activate(context: vscode.ExtensionContext): void {
 		telemetry,
 		notifier,
 		statusBar,
+		ratingPrompt: createRatingPromptFor(context, telemetry.event),
 	});
 
 	// Register settings and help commands

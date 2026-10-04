@@ -1,11 +1,13 @@
 import * as vscode from 'vscode';
 import type { Telemetry } from '../telemetry/telemetry';
 import type { Notifier } from '../ui/notifier';
+import type { RatingPrompt } from '../ui/ratingPrompt';
 import type { StatusBar } from '../ui/statusBar';
 import { compareWorkspace } from './compare';
 
 export interface CommandDependencies {
 	notifier: Notifier;
+	ratingPrompt: RatingPrompt;
 	statusBar: StatusBar;
 	telemetry: Telemetry;
 }

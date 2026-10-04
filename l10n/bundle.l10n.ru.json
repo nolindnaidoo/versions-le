@@ -1,5 +1,9 @@
 {
 	"Could not be read ({0})": "Не удалось прочитать ({0})",
+	"Enjoying {0}? A rating helps other developers find it.": "Нравится {0}? Оценка помогает другим разработчикам найти это расширение.",
+	"Rate": "Оценить",
+	"Later": "Позже",
+	"Don't Ask Again": "Больше не спрашивать",
 	"Could not copy to clipboard": "Не удалось скопировать в буфер обмена",
 	"Could not open results": "Не удалось открыть результаты",
 	"Errors": "Ошибки",
