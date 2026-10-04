@@ -1,0 +1,19 @@
+{
+	"Could not be read ({0})": "Tidak dapat dibaca ({0})",
+	"Could not copy to clipboard": "Tidak dapat menyalin ke papan klip",
+	"Could not open results": "Tidak dapat membuka hasil",
+	"Errors": "Kesalahan",
+	"Info": "Informasi",
+	"Manifests": "Berkas manifes",
+	"No manifests found": "Tidak ada manifes yang ditemukan",
+	"No manifests found.": "Tidak ada manifes yang ditemukan.",
+	"No version problems found.": "Tidak ada masalah versi yang ditemukan.",
+	"Not compared ({0})": "Tidak dibandingkan ({0})",
+	"Open a folder or workspace to compare its manifests": "Buka folder atau ruang kerja untuk membandingkan manifesnya",
+	"Run Versions-LE: Compare Versions": "Jalankan Versions-LE: Bandingkan Versi",
+	"Versions-LE report": "Laporan Versions-LE",
+	"Warnings": "Peringatan",
+	"{0} finding(s)": "{0} temuan",
+	"{0} version problem(s) across {1} manifest(s)": "{0} masalah versi di {1} manifes",
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "{0} manifes, {1} batasan: {2} kesalahan, {3} peringatan, {4} informasi, {5} tidak dibandingkan"
+}

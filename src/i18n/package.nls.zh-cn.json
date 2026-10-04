@@ -1,0 +1,18 @@
+{
+	"manifest.command.category": "Versions-LE",
+	"manifest.command.compare.title": "比较版本",
+	"manifest.command.settings.title": "打开设置",
+	"manifest.command.help.title": "帮助与故障排除",
+	"manifest.settings.title": "Versions-LE 设置",
+	"manifest.settings.copy.clipboard.desc": "打开每份报告的同时将其复制到剪贴板",
+	"manifest.settings.exclude.desc": "不参与比较的清单文件的 glob 模式。node_modules、.git 和 vendor 始终不参与。",
+	"manifest.settings.notifications.level.desc": "控制通知的详细程度",
+	"manifest.settings.notifications.level.option.all": "显示所有通知",
+	"manifest.settings.notifications.level.option.important": "仅显示重要通知",
+	"manifest.settings.notifications.level.option.silent": "隐藏所有通知",
+	"manifest.settings.open.side-by-side.desc": "在旁边的新编辑器中打开报告",
+	"manifest.settings.statusbar.enabled.desc": "在状态栏中显示 Versions-LE 条目以便快速访问",
+	"manifest.settings.telemetry.desc": "启用仅限本地的遥测日志,输出到“输出”面板",
+	"manifest.capability.untrusted-workspaces.desc": "在不受信任的工作区中功能受限",
+	"manifest.mcp.label": "面向智能体模式的 Versions-LE 版本约束比较"
+}

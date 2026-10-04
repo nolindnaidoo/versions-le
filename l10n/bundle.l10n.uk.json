@@ -1,0 +1,19 @@
+{
+	"Could not be read ({0})": "Не вдалося прочитати ({0})",
+	"Could not copy to clipboard": "Не вдалося скопіювати в буфер обміну",
+	"Could not open results": "Не вдалося відкрити результати",
+	"Errors": "Помилки",
+	"Info": "Відомості",
+	"Manifests": "Маніфести",
+	"No manifests found": "Маніфестів не знайдено",
+	"No manifests found.": "Маніфестів не знайдено.",
+	"No version problems found.": "Проблем із версіями не знайдено.",
+	"Not compared ({0})": "Не порівнювалося ({0})",
+	"Open a folder or workspace to compare its manifests": "Відкрийте папку або робочу область, щоб порівняти її маніфести",
+	"Run Versions-LE: Compare Versions": "Запустити Versions-LE: порівняти версії",
+	"Versions-LE report": "Звіт Versions-LE",
+	"Warnings": "Попередження",
+	"{0} finding(s)": "знахідок: {0}",
+	"{0} version problem(s) across {1} manifest(s)": "проблем із версіями: {0}, маніфестів: {1}",
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "маніфестів: {0}, обмежень: {1}; помилок: {2}, попереджень: {3}, відомостей: {4}, не порівнювалося: {5}"
+}

@@ -1,0 +1,218 @@
+{
+	"name": "versions-le",
+	"publisher": "nolindnaidoo",
+	"displayName": "Versions-LE",
+	"description": "Find where one dependency is constrained differently across a repository's manifests",
+	"version": "1.0.0",
+	"license": "MIT",
+	"author": {
+		"name": "nolindnaidoo",
+		"url": "https://nolindnaidoo.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/nolindnaidoo/versions-le.git"
+	},
+	"bugs": {
+		"url": "https://github.com/nolindnaidoo/versions-le/issues"
+	},
+	"homepage": "https://letools.dev/tools/versions-le",
+	"engines": {
+		"vscode": "^1.101.0",
+		"node": ">=20.0.0"
+	},
+	"categories": [
+		"Linters",
+		"Other"
+	],
+	"keywords": [
+		"versions",
+		"version",
+		"dependencies",
+		"dependency",
+		"semver",
+		"constraint",
+		"conflict",
+		"drift",
+		"monorepo",
+		"package-json",
+		"cargo",
+		"pyproject",
+		"go-mod",
+		"workflow",
+		"msrv",
+		"mcp",
+		"model-context-protocol"
+	],
+	"icon": "src/assets/images/icon.png",
+	"l10n": "./l10n",
+	"main": "./dist/extension.js",
+	"activationEvents": [
+		"workspaceContains:**/package.json",
+		"workspaceContains:**/Cargo.toml",
+		"workspaceContains:**/pyproject.toml",
+		"workspaceContains:**/go.mod",
+		"workspaceContains:.github/workflows/*.yml",
+		"workspaceContains:.github/workflows/*.yaml"
+	],
+	"capabilities": {
+		"virtualWorkspaces": {
+			"supported": "limited",
+			"description": "%manifest.capability.untrusted-workspaces.desc%"
+		},
+		"untrustedWorkspaces": {
+			"supported": "limited",
+			"description": "%manifest.capability.untrusted-workspaces.desc%"
+		}
+	},
+	"contributes": {
+		"commands": [
+			{
+				"command": "versions-le.compare",
+				"title": "%manifest.command.compare.title%",
+				"category": "%manifest.command.category%"
+			},
+			{
+				"command": "versions-le.openSettings",
+				"title": "%manifest.command.settings.title%",
+				"category": "%manifest.command.category%"
+			},
+			{
+				"command": "versions-le.help",
+				"title": "%manifest.command.help.title%",
+				"category": "%manifest.command.category%"
+			}
+		],
+		"menus": {
+			"explorer/context": [
+				{
+					"command": "versions-le.compare",
+					"group": "7_modification@1",
+					"when": "explorerResourceIsFolder"
+				}
+			],
+			"commandPalette": [
+				{
+					"command": "versions-le.compare"
+				},
+				{
+					"command": "versions-le.openSettings"
+				},
+				{
+					"command": "versions-le.help"
+				}
+			]
+		},
+		"keybindings": [
+			{
+				"command": "versions-le.compare",
+				"key": "ctrl+alt+v",
+				"mac": "cmd+alt+v"
+			}
+		],
+		"configuration": {
+			"title": "%manifest.settings.title%",
+			"properties": {
+				"versions-le.copyToClipboardEnabled": {
+					"type": "boolean",
+					"default": false,
+					"description": "%manifest.settings.copy.clipboard.desc%"
+				},
+				"versions-le.exclude": {
+					"type": "array",
+					"default": [],
+					"items": {
+						"type": "string"
+					},
+					"description": "%manifest.settings.exclude.desc%"
+				},
+				"versions-le.notificationsLevel": {
+					"type": "string",
+					"default": "silent",
+					"enum": [
+						"all",
+						"important",
+						"silent"
+					],
+					"enumDescriptions": [
+						"%manifest.settings.notifications.level.option.all%",
+						"%manifest.settings.notifications.level.option.important%",
+						"%manifest.settings.notifications.level.option.silent%"
+					],
+					"description": "%manifest.settings.notifications.level.desc%"
+				},
+				"versions-le.openResultsSideBySide": {
+					"type": "boolean",
+					"default": true,
+					"description": "%manifest.settings.open.side-by-side.desc%"
+				},
+				"versions-le.statusBar.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "%manifest.settings.statusbar.enabled.desc%"
+				},
+				"versions-le.telemetryEnabled": {
+					"type": "boolean",
+					"default": false,
+					"description": "%manifest.settings.telemetry.desc%"
+				}
+			}
+		},
+		"mcpServerDefinitionProviders": [
+			{
+				"id": "versions-le",
+				"label": "%manifest.mcp.label%"
+			}
+		]
+	},
+	"scripts": {
+		"clean": "node -e \"const fs=require('fs');['dist','coverage','release'].forEach(d=>fs.rmSync(d,{recursive:true,force:true}))\"",
+		"clean:i18n": "node -e \"const fs=require('fs');fs.readdirSync('.').filter(f=>f.startsWith('package.nls.')&&f.endsWith('.json')&&f!=='package.nls.json').forEach(f=>fs.unlinkSync(f))\"",
+		"copy:i18n": "node -e \"const fs=require('fs');fs.readdirSync('src/i18n').filter(f=>f.startsWith('package.nls.')&&f.endsWith('.json')).forEach(f=>fs.copyFileSync('src/i18n/'+f,f))\"",
+		"build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node20 --main-fields=module,main --sourcemap",
+		"build:prod": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node20 --main-fields=module,main --minify --sourcemap=external",
+		"watch": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node20 --main-fields=module,main --sourcemap --watch",
+		"typecheck": "tsc --noEmit",
+		"check:bundle": "node scripts/check-bundle.js",
+		"build:mcp": "node scripts/build-mcp.js",
+		"build:mcp:prod": "node scripts/build-mcp.js --prod",
+		"check:mcp-bundle": "node scripts/check-mcp-bundle.js",
+		"build:npm": "node scripts/build-npm.js",
+		"check:npm-package": "node scripts/check-npm-package.js",
+		"test": "vitest run --pool=threads",
+		"test:watch": "vitest --pool=threads",
+		"test:coverage": "vitest run --coverage --pool=threads --reporter=default --reporter=json --outputFile.json=coverage/test-results.json",
+		"benchmark": "bun scripts/benchmark.ts",
+		"perf:readme": "node scripts/perf-readme.js",
+		"coverage:readme": "node scripts/coverage-readme.js",
+		"coverage:readme:check": "node scripts/coverage-readme.js --check",
+		"readme": "bun run test:coverage && bun run coverage:readme",
+		"test:integration": "npm run build && tsc -p tsconfig.it.json && vscode-test",
+		"test:e2e-vsix": "node scripts/e2e-vsix.js",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
+		"vscode:prepublish": "npm run typecheck && npm run build:prod && npm run build:mcp:prod && npm run check:bundle && npm run check:mcp-bundle && npm run copy:i18n",
+		"package": "node -e \"require('fs').mkdirSync('release',{recursive:true})\" && vsce package --no-dependencies --out release/ && npm run clean:i18n",
+		"publish": "vsce publish",
+		"hooks:install": "node scripts/install-hooks.js",
+		"lint:commits": "node scripts/commit-lint.js --range origin/main..HEAD",
+		"prepare": "node scripts/install-hooks.js"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.15",
+		"@types/ini": "^4.1.1",
+		"@types/js-yaml": "^4.0.9",
+		"@types/mocha": "^10.0.10",
+		"@types/node": "^26.6.3",
+		"@types/vscode": "1.101.0",
+		"@vitest/coverage-v8": "^4.1.11",
+		"@vscode/test-cli": "^0.0.15",
+		"@vscode/test-electron": "^3.1.0",
+		"@vscode/vsce": "^4.0.0",
+		"esbuild": "^0.28.2",
+		"mocha": "^12.0.2",
+		"ovsx": "^1.2.0",
+		"typescript": "^7.0.2",
+		"vitest": "^4.1.11"
+	}
+}

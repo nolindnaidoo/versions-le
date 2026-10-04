@@ -1,12 +1,15 @@
-# CodeQL against the Rust source. `cargo audit` in ci-crate.yml covers known
-# advisories in dependencies; this covers the code in this repository.
+# CodeQL, advanced setup. Identical in every *-le repo.
+#
+# Advanced rather than GitHub's default setup because default setup cannot
+# exclude paths, and scanning test fixtures produces findings that exist only
+# to be dismissed — see .github/codeql-config.yml.
 name: CodeQL
 
 on:
-  workflow_dispatch:
-  # A prose commit cannot change what a code scanner finds. The weekly run
-  # below reaches the whole repository whether or not anything was pushed, so
-  # skipping a scan of unchanged code costs no coverage.
+  # A prose commit cannot change what a code scanner finds, and this workflow
+  # is four jobs. The weekly run below is what keeps coverage honest — it
+  # reaches the whole repository whether or not anything was pushed — so
+  # skipping a scan of unchanged code costs nothing.
   push:
     branches: [main]
     paths-ignore:
@@ -18,25 +21,39 @@ on:
       - '**/*.md'
       - 'LICENSE'
   schedule:
-    # Weekly, so a query-pack update finds this repo without a push.
-    - cron: '17 4 * * 1'
+    # Weekly, so new queries reach existing code without waiting for a commit.
+    - cron: "27 4 * * 1"
 
 permissions:
   contents: read
 
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   analyze:
-    runs-on: ubuntu-24.04
+    name: Analyze ${{ matrix.language }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       security-events: write
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, actions]
+
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
         with:
-          toolchain: stable
-      - uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.31.2
-        with:
-          languages: rust
+          languages: ${{ matrix.language }}
           config-file: ./.github/codeql-config.yml
-      - uses: github/codeql-action/autobuild@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.31.2
-      - uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.31.2
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
+        with:
+          category: "/language:${{ matrix.language }}"

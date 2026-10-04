@@ -1,0 +1,18 @@
+{
+	"manifest.command.category": "Versions-LE",
+	"manifest.command.compare.title": "버전 비교",
+	"manifest.command.settings.title": "설정 열기",
+	"manifest.command.help.title": "도움말 및 문제 해결",
+	"manifest.settings.title": "Versions-LE 설정",
+	"manifest.settings.copy.clipboard.desc": "각 보고서를 여는 것과 함께 클립보드에도 복사",
+	"manifest.settings.exclude.desc": "비교에서 제외할 매니페스트의 glob 패턴입니다. node_modules, .git, vendor는 항상 제외됩니다.",
+	"manifest.settings.notifications.level.desc": "알림의 상세 수준을 제어합니다",
+	"manifest.settings.notifications.level.option.all": "모든 알림 표시",
+	"manifest.settings.notifications.level.option.important": "중요한 알림만 표시",
+	"manifest.settings.notifications.level.option.silent": "모든 알림 숨기기",
+	"manifest.settings.open.side-by-side.desc": "보고서를 옆의 새 편집기에서 열기",
+	"manifest.settings.statusbar.enabled.desc": "빠른 접근을 위해 상태 표시줄에 Versions-LE 항목 표시",
+	"manifest.settings.telemetry.desc": "출력 패널에 로컬 전용 원격 분석 로그 사용",
+	"manifest.capability.untrusted-workspaces.desc": "신뢰할 수 없는 작업 영역에서는 기능이 제한됩니다",
+	"manifest.mcp.label": "에이전트 모드용 Versions-LE 버전 제약 비교"
+}

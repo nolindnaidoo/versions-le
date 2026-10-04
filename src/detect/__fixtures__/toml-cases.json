@@ -1,0 +1,145 @@
+{
+ "source": "toml 1.1.6 (`toml::from_str::<toml::Value>` and its Display), read back from the crate itself",
+ "cases": [
+  {
+   "document": "a = \"tab\\there\" # comment",
+   "display": "{ a = \"tab\\there\" }"
+  },
+  {
+   "document": "b = 'literal \\\\ no escape'",
+   "display": "{ b = 'literal \\\\ no escape' }"
+  },
+  {
+   "document": "c = \"\"\"\nfirst\nsecond\"\"\"",
+   "display": "{ c = \"\"\"\nfirst\nsecond\"\"\" }"
+  },
+  {
+   "document": "d = \"\"\"one \\\n    two\"\"\"",
+   "display": "{ d = \"one two\" }"
+  },
+  {
+   "document": "e = '''\nraw\\n'''",
+   "display": "{ e = 'raw\\n' }"
+  },
+  {
+   "document": "f = \"\\u00e9\\U0001F600\\x41\\e\"",
+   "display": "{ f = \"\u00e9\ud83d\ude00A\\u001B\" }"
+  },
+  {
+   "document": "g = \"bad \\q\"",
+   "display": null
+  },
+  {
+   "document": "h = \"unterminated",
+   "display": null
+  },
+  {
+   "document": "i = \"\"\"a\"\"b\"\"\"",
+   "display": "{ i = 'a\"\"b' }"
+  },
+  {
+   "document": "j = 'x'\n'j' = 1",
+   "display": null
+  },
+  {
+   "document": "k = 0o17",
+   "display": "{ k = 15 }"
+  },
+  {
+   "document": "l = 0b11",
+   "display": "{ l = 3 }"
+  },
+  {
+   "document": "m = 0xDEAD_beef",
+   "display": "{ m = 3735928559 }"
+  },
+  {
+   "document": "n = 1_000_000",
+   "display": "{ n = 1000000 }"
+  },
+  {
+   "document": "o = 01",
+   "display": null
+  },
+  {
+   "document": "p = 1__0",
+   "display": null
+  },
+  {
+   "document": "q = +inf",
+   "display": "{ q = inf }"
+  },
+  {
+   "document": "r = -nan",
+   "display": "{ r = nan }"
+  },
+  {
+   "document": "s = 3.14e-2",
+   "display": "{ s = 0.0314 }"
+  },
+  {
+   "document": "t = 1979-05-27T07:32:00.5-07:00",
+   "display": "{ t = 1979-05-27T07:32:00.5-07:00 }"
+  },
+  {
+   "document": "u = 1979-02-30",
+   "display": null
+  },
+  {
+   "document": "v = 23:59:60",
+   "display": "{ v = 23:59:60 }"
+  },
+  {
+   "document": "w = [\n  1, # one\n  2,\n]",
+   "display": "{ w = [1, 2] }"
+  },
+  {
+   "document": "x = [1,,2]",
+   "display": null
+  },
+  {
+   "document": "y = { a.b = 1, a.c = 2 }",
+   "display": "{ y = { a = { b = 1, c = 2 } } }"
+  },
+  {
+   "document": "z = { a = 1 }\nz.b = 2",
+   "display": null
+  },
+  {
+   "document": "[t]\n[t]",
+   "display": null
+  },
+  {
+   "document": "[[aot]]\nk = 1\n[[aot]]\nk = 2",
+   "display": "{ aot = [{ k = 1 }, { k = 2 }] }"
+  },
+  {
+   "document": "arr = []\n[[arr]]",
+   "display": null
+  },
+  {
+   "document": "# only a comment\n",
+   "display": "{}"
+  },
+  {
+   "document": "\ufeffbom = true",
+   "display": "{ bom = true }"
+  },
+  {
+   "document": "cr = 1\r",
+   "display": null
+  },
+  {
+   "document": "key with space = 1",
+   "display": null
+  },
+  {
+   "document": "\"\" = 1",
+   "display": "{ \"\" = 1 }"
+  },
+  {
+   "document": "a.b.c = 1\na.b = 2",
+   "display": null
+  }
+ ]
+}

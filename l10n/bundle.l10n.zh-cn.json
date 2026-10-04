@@ -1,0 +1,19 @@
+{
+	"Could not be read ({0})": "无法读取的文件({0})",
+	"Could not copy to clipboard": "无法复制到剪贴板",
+	"Could not open results": "无法打开结果",
+	"Errors": "错误",
+	"Info": "提示",
+	"Manifests": "清单文件",
+	"No manifests found": "未找到清单文件",
+	"No manifests found.": "未找到清单文件。",
+	"No version problems found.": "未发现版本问题。",
+	"Not compared ({0})": "未比较({0})",
+	"Open a folder or workspace to compare its manifests": "请打开文件夹或工作区以比较其中的清单文件",
+	"Run Versions-LE: Compare Versions": "运行 Versions-LE:比较版本",
+	"Versions-LE report": "Versions-LE 报告",
+	"Warnings": "警告项",
+	"{0} finding(s)": "{0} 项发现",
+	"{0} version problem(s) across {1} manifest(s)": "{1} 个清单文件中有 {0} 个版本问题",
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "{0} 个清单文件,{1} 个约束:{2} 个错误,{3} 个警告,{4} 个提示,{5} 个未比较"
+}

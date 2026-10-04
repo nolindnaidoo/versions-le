@@ -1,0 +1,18 @@
+{
+	"manifest.command.category": "Versions-LE",
+	"manifest.command.compare.title": "Bandingkan Versi",
+	"manifest.command.settings.title": "Buka Pengaturan",
+	"manifest.command.help.title": "Bantuan & Pemecahan Masalah",
+	"manifest.settings.title": "Pengaturan Versions-LE",
+	"manifest.settings.copy.clipboard.desc": "Salin setiap laporan ke papan klip selain membukanya",
+	"manifest.settings.exclude.desc": "Pola glob untuk manifes yang dikecualikan dari perbandingan. node_modules, .git, dan vendor selalu dikecualikan.",
+	"manifest.settings.notifications.level.desc": "Mengatur tingkat detail notifikasi",
+	"manifest.settings.notifications.level.option.all": "Tampilkan semua notifikasi",
+	"manifest.settings.notifications.level.option.important": "Tampilkan hanya notifikasi penting",
+	"manifest.settings.notifications.level.option.silent": "Sembunyikan semua notifikasi",
+	"manifest.settings.open.side-by-side.desc": "Buka laporan di editor baru di sampingnya",
+	"manifest.settings.statusbar.enabled.desc": "Tampilkan entri Versions-LE di bilah status untuk akses cepat",
+	"manifest.settings.telemetry.desc": "Aktifkan log telemetri yang hanya lokal di panel Output",
+	"manifest.capability.untrusted-workspaces.desc": "Fungsionalitas terbatas di ruang kerja yang tidak tepercaya",
+	"manifest.mcp.label": "Perbandingan batasan versi Versions-LE untuk mode agen"
+}

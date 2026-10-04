@@ -1,0 +1,81 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.5.7/schema.json",
+	"vcs": {
+		"enabled": false,
+		"clientKind": "git",
+		"useIgnoreFile": false
+	},
+	"files": {
+		"ignoreUnknown": false,
+		"includes": [
+			"src/**/*.ts",
+			"vitest.config.ts",
+			"!src/**/__performance__",
+			"!src/**/__data__",
+			"!src/**/__mocks__",
+			"!src/**/sample",
+			"!src/**/test-fixtures",
+			"!src/**/*.bench.ts",
+			"!src/**/*.bench.js",
+			"!src/**/scripts"
+		]
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab"
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"suspicious": {
+				"noExplicitAny": "warn",
+				"noImplicitAnyLet": "off",
+				"noAssignInExpressions": "off"
+			},
+			"style": {
+				"noNonNullAssertion": "off"
+			}
+		}
+	},
+	"overrides": [
+		{
+			"includes": [
+				"**/__performance__/**",
+				"**/__data__/**",
+				"**/__fixtures__/**",
+				"**/__snapshots__/**"
+			],
+			"linter": {
+				"enabled": false
+			},
+			"formatter": {
+				"enabled": false
+			},
+			"assist": {
+				"enabled": false
+			}
+		},
+		{
+			"includes": ["**/*.test.ts", "**/__mocks__/**"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noExplicitAny": "off",
+						"noImplicitAnyLet": "off",
+						"noAssignInExpressions": "off"
+					},
+					"correctness": {
+						"noUnusedFunctionParameters": "off"
+					}
+				}
+			}
+		}
+	],
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "single",
+			"semicolons": "always"
+		}
+	}
+}
