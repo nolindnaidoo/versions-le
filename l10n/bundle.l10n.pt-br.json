@@ -1,5 +1,9 @@
 {
 	"Could not be read ({0})": "Não lidos ({0})",
+	"Enjoying {0}? A rating helps other developers find it.": "Gostando do {0}? Uma avaliação ajuda outros desenvolvedores a encontrá-lo.",
+	"Rate": "Avaliar",
+	"Later": "Mais tarde",
+	"Don't Ask Again": "Não perguntar novamente",
 	"Could not copy to clipboard": "Não foi possível copiar para a área de transferência",
 	"Could not open results": "Não foi possível abrir os resultados",
 	"Errors": "Falhas",

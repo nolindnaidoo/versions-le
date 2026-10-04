@@ -26,7 +26,12 @@ function makeDeps() {
 	const telemetry: Telemetry = { event: () => {}, dispose: () => {} };
 	const statusBar: StatusBar = { flash: (text) => flashes.push(text) };
 	return {
-		deps: { notifier: createNotifier(), statusBar, telemetry },
+		deps: {
+			notifier: createNotifier(),
+			statusBar,
+			telemetry,
+			ratingPrompt: { recordSuccess: async () => {} },
+		},
 		flashes,
 	};
 }

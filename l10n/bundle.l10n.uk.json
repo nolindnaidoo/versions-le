@@ -1,5 +1,9 @@
 {
 	"Could not be read ({0})": "Не вдалося прочитати ({0})",
+	"Enjoying {0}? A rating helps other developers find it.": "Подобається {0}? Оцінка допомагає іншим розробникам знайти це розширення.",
+	"Rate": "Оцінити",
+	"Later": "Пізніше",
+	"Don't Ask Again": "Більше не питати",
 	"Could not copy to clipboard": "Не вдалося скопіювати в буфер обміну",
 	"Could not open results": "Не вдалося відкрити результати",
 	"Errors": "Помилки",

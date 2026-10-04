@@ -21,6 +21,9 @@ export async function showReport(
 				? { viewColumn: vscode.ViewColumn.Beside }
 				: {}),
 		});
+		// Not awaited: it resolves when the toast is answered, and a command that
+		// waited on that would stay pending for as long as the toast is ignored.
+		void deps.ratingPrompt.recordSuccess();
 	} catch {
 		deps.notifier.error(vscode.l10n.t('Could not open results'));
 	}
