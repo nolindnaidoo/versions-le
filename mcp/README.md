@@ -4,8 +4,8 @@
   <a href="https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.versions-le">
     <img src="https://img.shields.io/badge/Install%20from-VS%20Code-blue?style=for-the-badge&logo=visualstudiocode" alt="Install from VS Code Marketplace" />
   </a>
-  <a href="https://open-vsx.org/extension/OffensiveEdge/versions-le">
-    <img src="https://img.shields.io/open-vsx/dt/OffensiveEdge/versions-le?style=for-the-badge&label=Open%20VSX&color=blue" alt="Open VSX downloads" />
+  <a href="https://open-vsx.org/extension/nolindnaidoo/versions-le">
+    <img src="https://img.shields.io/open-vsx/dt/nolindnaidoo/versions-le?style=for-the-badge&label=Open%20VSX&color=blue" alt="Open VSX downloads" />
   </a>
   <a href="https://www.npmjs.com/package/versions-le-mcp">
     <img src="https://img.shields.io/npm/v/versions-le-mcp?style=for-the-badge&label=MCP%20server&color=blue&logo=npm" alt="versions-le-mcp on npm" />
@@ -61,7 +61,7 @@ claude mcp add versions-le -- npx -y versions-le-mcp
 **VS Code and Zed** need nothing here. Install the extension instead — it
 carries this server and registers it for you:
 [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.versions-le)
-· [Open VSX](https://open-vsx.org/extension/OffensiveEdge/versions-le)
+· [Open VSX](https://open-vsx.org/extension/nolindnaidoo/versions-le)
 · [Zed](https://zed.dev/docs/ai/mcp) *(no listing yet — add it by hand)*
 
 **No Node?** The same `compare_versions` tool ships in a static Rust binary:
