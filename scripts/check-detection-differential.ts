@@ -63,7 +63,7 @@ function manifest(random: () => number, pick: <T>(l: readonly T[]) => T): { path
 			body[section] = { ...(body[section] ?? {}), [pick(NAMES)]: random() < 0.07 ? pick([1, null, ['^1'], { v: 1 }]) : pick(NPM) };
 		}
 		let content = JSON.stringify({ name: 'x', ...body, ...(random() < 0.3 ? { packageManager: pick(['bun@1.1.0', 'pnpm@9.0.0+sha512.abc', 'yarn', 'npm@latest']) } : {}) }, null, 2);
-		if (random() < 0.08) content = pick([content.slice(0, -2), `${content},`, content.replace('{', '{"a":1,"a":2,'), '{"dependencies": {"x": "1"}} trailing', '{"a": 1e400}', '{"a": "\u0000"}', '[1, 2]', '"str"']);
+		if (random() < 0.08) content = pick([content.slice(0, -2), `${content},`, `{"a":1,"a":2,${content.slice(1)}`, '{"dependencies": {"x": "1"}} trailing', '{"a": 1e400}', '{"a": "\u0000"}', '[1, 2]', '"str"']);
 		return { path: `${dir}package.json`, content };
 	}
 	if (kind === 'cargo') {
