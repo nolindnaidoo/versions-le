@@ -1,0 +1,19 @@
+{
+	"Could not be read ({0})": "읽을 수 없는 파일 ({0})",
+	"Could not copy to clipboard": "클립보드에 복사할 수 없습니다",
+	"Could not open results": "결과를 열 수 없습니다",
+	"Errors": "오류",
+	"Info": "정보",
+	"Manifests": "매니페스트",
+	"No manifests found": "매니페스트를 찾지 못했습니다",
+	"No manifests found.": "매니페스트를 찾지 못했습니다.",
+	"No version problems found.": "버전 문제를 찾지 못했습니다.",
+	"Not compared ({0})": "비교하지 않음 ({0})",
+	"Open a folder or workspace to compare its manifests": "매니페스트를 비교하려면 폴더나 작업 영역을 여세요",
+	"Run Versions-LE: Compare Versions": "Versions-LE 실행: 버전 비교",
+	"Versions-LE report": "Versions-LE 보고서",
+	"Warnings": "경고",
+	"{0} finding(s)": "발견 {0}개",
+	"{0} version problem(s) across {1} manifest(s)": "매니페스트 {1}개에서 버전 문제 {0}개",
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "매니페스트 {0}개, 제약 {1}개: 오류 {2}개, 경고 {3}개, 정보 {4}개, 비교하지 않음 {5}개"
+}

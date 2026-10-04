@@ -1,0 +1,991 @@
+{
+ "source": "the crate's own compare_versions server, one manifest per case",
+ "cases": [
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"^1.2.3\"}}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"~0.4.1\"}}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \">=1 <2\"}}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \">= 20\"}}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"1.2.3 - 2.0.0\"}}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"1.x\"}}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"*\"}}",
+   "diagnostics": [],
+   "findings": [
+    "floating-pin p: an unbounded range accepts any future major"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"\"}}",
+   "diagnostics": [],
+   "findings": [
+    "floating-pin p: an unbounded range accepts any future major"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"latest\"}}",
+   "diagnostics": [],
+   "findings": [
+    "floating-pin p: a dist tag resolves to whatever is newest at install time"
+   ],
+   "refusals": [
+    "unknown_grammar p: a dist tag is a moving target, not a version range; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"workspace:*\"}}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "unknown_grammar p: a protocol specifier resolves outside the registry; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"file:../x\"}}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "unknown_grammar p: a protocol specifier resolves outside the registry; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"git+https://x/y.git\"}}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "unknown_grammar p: a URL or git specifier resolves outside the registry; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"user/repo\"}}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "unknown_grammar p: a path or repository shorthand resolves outside the registry; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"^0.2.3\"}}",
+   "diagnostics": [],
+   "findings": [
+    "floating-pin p: a caret on a 0.x version, which promises no stability"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \">2 <1\"}}",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint p: a range no version can satisfy: >2 <1"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"<1.80 || >=1.90\"}}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"1.2.3-beta.1\"}}",
+   "diagnostics": [],
+   "findings": [
+    "prerelease-in-production p: a prerelease constraint outside dev dependencies: 1.2.3-beta.1"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \">=\"}}",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint p: an operator with no version: >="
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"^ 1.0.0\"}}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"1.2.3.4\"}}",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint p: not an npm version range: 1.2.3.4"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"v2\"}}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \">1.2\"}}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"<=1.2\"}}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"^0.0.3\"}}",
+   "diagnostics": [],
+   "findings": [
+    "floating-pin p: a caret on a 0.x version, which promises no stability"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"not-a-tag!\"}}",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint p: not an npm version range: not-a-tag!"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": \"1.0.0 - x\"}}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = \"1\"\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = \"^0.4\"\n",
+   "diagnostics": [],
+   "findings": [
+    "floating-pin p: a caret on a 0.x version, which promises no stability"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = \"~1.2.3\"\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = \">=1.0, <2\"\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = \"=0.3.1\"\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = \"*\"\n",
+   "diagnostics": [],
+   "findings": [
+    "floating-pin p: an unbounded range accepts any future major"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = \"0.4\"\n",
+   "diagnostics": [],
+   "findings": [
+    "floating-pin p: a caret on a 0.x version, which promises no stability"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = \"1.*\"\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = \">1, <1\"\n",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint p: a requirement no version can satisfy: >1, <1"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = \"\"\n",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint p: an empty version requirement: "
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = \" \"\n",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint p: an empty version requirement:  "
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = \"abc\"\n",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint p: not a Cargo version requirement: abc"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = \"1.2.3-alpha\"\n",
+   "diagnostics": [],
+   "findings": [
+    "prerelease-in-production p: a prerelease constraint outside dev dependencies: 1.2.3-alpha"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = \">=1.2.3-pre.01\"\n",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint p: not a Cargo version requirement: >=1.2.3-pre.01"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = \"x\"\n",
+   "diagnostics": [],
+   "findings": [
+    "floating-pin p: an unbounded range accepts any future major"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = \"^1, ^2\"\n",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint p: a requirement no version can satisfy: ^1, ^2"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = { workspace = true }\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "unknown_grammar p: an inherited workspace dependency carries its version elsewhere; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = { path = \"../x\" }\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "unknown_grammar p: a path dependency with no version has no registry requirement; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = { git = \"https://x\" }\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "unknown_grammar p: a git dependency resolves outside the registry; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = { path = \"../x\", version = \"1.2\" }\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = { optional = true }\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "unknown_grammar p: a dependency table with no version; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = 1\n",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint p: not a version string or a dependency table: 1"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = [1, \"a\"]\n",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint p: not a version string or a dependency table: [1, \"a\"]"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "Cargo.toml",
+   "content": "[dependencies]\np = { version = \"1\", package = \"real\" }\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"p>=3.10\"]\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"p>=1.0,<2.0\"]\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"p==1.2\"]\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"p~=1.4\"]\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "unknown_grammar p: PEP 440 compatible-release (~=); excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"p!=1.5\"]\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "unknown_grammar p: PEP 440 version exclusion (!=); excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"p==1.*\"]\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "unknown_grammar p: a PEP 440 wildcard release clause; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"p>2,<1\"]\n",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint p: a specifier no version can satisfy: >2,<1"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"p>=2.0.0rc1\"]\n",
+   "diagnostics": [],
+   "findings": [
+    "prerelease-in-production p: a prerelease constraint outside dev dependencies: >=2.0.0rc1"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"p1.0\"]\n",
+   "diagnostics": [],
+   "findings": [
+    "floating-pin p1.0: no version specifier at all"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"p\"]\n",
+   "diagnostics": [],
+   "findings": [
+    "floating-pin p: no version specifier at all"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"p>=1.0.post1\"]\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "unknown_grammar p: a PEP 440 version form this tool does not model; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"p==1!2.0\"]\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "unknown_grammar p: a PEP 440 version form this tool does not model; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"p,\"]\n",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint p: an empty version clause: ,"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"p<3.12\"]\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"p>=1.0b\"]\n",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint p: not a PEP 440 version: >=1.0b"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"p>=1.0rc1x\"]\n",
+   "diagnostics": [],
+   "findings": [
+    "prerelease-in-production p: a prerelease constraint outside dev dependencies: >=1.0rc1x"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"requests[security\"]\n",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint requests: an extras group with no closing bracket: [security"
+   ],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"urllib3; python_version < \\\"3.11\\\"\"]\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "unknown_grammar urllib3: an environment marker; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"pkg @ https://x/y.whl\"]\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "unknown_grammar pkg: a direct URL reference; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\">=1.0\"]\n",
+   "diagnostics": [
+    "pyproject.toml: project.dependencies: \">=1.0\" names no distribution"
+   ],
+   "findings": [],
+   "refusals": [],
+   "entries": 0
+  },
+  {
+   "path": "pyproject.toml",
+   "content": "[project]\ndependencies = [\"name (>=1.0)\"]\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "go.mod",
+   "content": "module x\n\ngo 1.22\n\nrequire example.com/p v1.2.3\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 2
+  },
+  {
+   "path": "go.mod",
+   "content": "module x\n\ngo 1.22\n\nrequire example.com/p v0.0.0-20230101000000-abcdef123456\n",
+   "diagnostics": [],
+   "findings": [
+    "prerelease-in-production example.com/p: a prerelease constraint outside dev dependencies: v0.0.0-20230101000000-abcdef123456"
+   ],
+   "refusals": [],
+   "entries": 2
+  },
+  {
+   "path": "go.mod",
+   "content": "module x\n\ngo 1.22\n\nrequire example.com/p 1.2.3\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 2
+  },
+  {
+   "path": "go.mod",
+   "content": "module x\n\ngo 1.22\n\nrequire example.com/p vv1.0.0\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 2
+  },
+  {
+   "path": "go.mod",
+   "content": "module x\n\ngo 1.22\n\nrequire example.com/p v1.2\n",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint example.com/p: not a go module version: v1.2"
+   ],
+   "refusals": [],
+   "entries": 2
+  },
+  {
+   "path": "go.mod",
+   "content": "module x\n\ngo 1.22\n\nrequire example.com/p v1.2.3+incompatible\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 2
+  },
+  {
+   "path": "go.mod",
+   "content": "module x\n\ngo 1.22\n\nrequire example.com/p garbage\n",
+   "diagnostics": [],
+   "findings": [
+    "malformed-constraint example.com/p: not a go module version: garbage"
+   ],
+   "refusals": [],
+   "entries": 2
+  },
+  {
+   "path": "go.mod",
+   "content": "module x\ngo 1.x\nrequire lonely\n",
+   "diagnostics": [
+    "go.mod: lonely is a require with no version"
+   ],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": ".github/workflows/ci.yml",
+   "content": "jobs:\n  t:\n    steps:\n      - uses: actions/checkout@v4\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": ".github/workflows/ci.yml",
+   "content": "jobs:\n  t:\n    steps:\n      - uses: actions/checkout@main\n",
+   "diagnostics": [],
+   "findings": [
+    "floating-pin actions/checkout: a branch or tag reference moves under the workflow"
+   ],
+   "refusals": [
+    "unknown_grammar actions/checkout: a branch or tag name is a moving reference, not a version; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": ".github/workflows/ci.yml",
+   "content": "jobs:\n  t:\n    steps:\n      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "unknown_grammar actions/checkout: a commit SHA is a pin, but not a version; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": ".github/workflows/ci.yml",
+   "content": "jobs:\n  t:\n    steps:\n      - uses: dtolnay/rust-toolchain@1.85\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": ".github/workflows/ci.yml",
+   "content": "jobs:\n  t:\n    steps:\n      - uses: ./local\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 0
+  },
+  {
+   "path": ".github/workflows/ci.yml",
+   "content": "jobs:\n  t:\n    steps:\n      node-version: 20\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": ".github/workflows/ci.yml",
+   "content": "jobs:\n  t:\n    steps:\n      node-version: \"18.x\"\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": ".github/workflows/ci.yml",
+   "content": "jobs:\n  t:\n    steps:\n      python-version: 'lts/*'\n",
+   "diagnostics": [],
+   "findings": [
+    "floating-pin python: an unpinned tool version installs whatever is newest that day"
+   ],
+   "refusals": [
+    "unknown_grammar python: a channel name is a moving target, not a version; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": ".github/workflows/ci.yml",
+   "content": "jobs:\n  t:\n    steps:\n      node-version: ${{ matrix.node }}\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "ambiguous_version_string node: not evidently a version; excluded from comparison"
+   ],
+   "entries": 0
+  },
+  {
+   "path": ".github/workflows/ci.yml",
+   "content": "jobs:\n  t:\n    steps:\n      toolchain: stable\n",
+   "diagnostics": [],
+   "findings": [
+    "floating-pin rust: an unpinned tool version installs whatever is newest that day"
+   ],
+   "refusals": [
+    "unknown_grammar rust: a channel name is a moving target, not a version; excluded from comparison"
+   ],
+   "entries": 1
+  },
+  {
+   "path": ".github/workflows/ci.yml",
+   "content": "jobs:\n  t:\n    steps:\n      go-version: [1.21, 1.22]\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [
+    "ambiguous_version_string go: not evidently a version; excluded from comparison"
+   ],
+   "entries": 0
+  },
+  {
+   "path": ".github/workflows/ci.yml",
+   "content": "jobs:\n  t:\n    steps:\n      bun-version: v1.1 # pinned\n",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"a\": 1e400}",
+   "diagnostics": [
+    "package.json: not valid JSON"
+   ],
+   "findings": [],
+   "refusals": [],
+   "entries": 0
+  },
+  {
+   "path": "package.json",
+   "content": "{\"a\": \"\\u0000\"}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 0
+  },
+  {
+   "path": "package.json",
+   "content": "{\"a\": \"\\ud800\"}",
+   "diagnostics": [
+    "package.json: not valid JSON"
+   ],
+   "findings": [],
+   "refusals": [],
+   "entries": 0
+  },
+  {
+   "path": "package.json",
+   "content": "[1, 2]",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 0
+  },
+  {
+   "path": "package.json",
+   "content": "\"s\"",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 0
+  },
+  {
+   "path": "package.json",
+   "content": "{\"a\": 1,}",
+   "diagnostics": [
+    "package.json: not valid JSON"
+   ],
+   "findings": [],
+   "refusals": [],
+   "entries": 0
+  },
+  {
+   "path": "package.json",
+   "content": "{\"a\": 01}",
+   "diagnostics": [
+    "package.json: not valid JSON"
+   ],
+   "findings": [],
+   "refusals": [],
+   "entries": 0
+  },
+  {
+   "path": "package.json",
+   "content": "{\"a\": -0}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 0
+  },
+  {
+   "path": "package.json",
+   "content": "{\"a\": 1.5e308}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 0
+  },
+  {
+   "path": "package.json",
+   "content": "{\"a\":\"x\"} trailing",
+   "diagnostics": [
+    "package.json: not valid JSON"
+   ],
+   "findings": [],
+   "refusals": [],
+   "entries": 0
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": {\"p\": 1}}",
+   "diagnostics": [
+    "package.json: dependencies.p is not a version string"
+   ],
+   "findings": [],
+   "refusals": [],
+   "entries": 0
+  },
+  {
+   "path": "package.json",
+   "content": "{\"engines\": {\"node\": true}}",
+   "diagnostics": [
+    "package.json: engines.node is not a version string"
+   ],
+   "findings": [],
+   "refusals": [],
+   "entries": 0
+  },
+  {
+   "path": "package.json",
+   "content": "{\"packageManager\": \"yarn\"}",
+   "diagnostics": [
+    "package.json: packageManager is not <name>@<version>"
+   ],
+   "findings": [],
+   "refusals": [],
+   "entries": 0
+  },
+  {
+   "path": "package.json",
+   "content": "{\"packageManager\": \"pnpm@9.0.0+sha512.abc\"}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 1
+  },
+  {
+   "path": "package.json",
+   "content": "{\"dependencies\": \"x\"}",
+   "diagnostics": [],
+   "findings": [],
+   "refusals": [],
+   "entries": 0
+  }
+ ]
+}

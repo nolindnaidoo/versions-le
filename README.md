@@ -1,27 +1,24 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/nolindnaidoo/versions-le/main/assets/icon.png" alt="Versions-LE logo" width="96" height="96"/>
+  <img src="src/assets/images/icon.png" alt="Versions-LE Logo" width="96" height="96"/>
 </p>
-<h1 align="center">Versions-LE</h1>
+<h1 align="center">Versions-LE: Two Pins, One Dependency</h1>
 <p align="center">
-  <b>Find where the same dependency is constrained differently across a repository's manifests</b><br/>
-  <i>and refuse, loudly, on any grammar it cannot model</i>
+  <b>Find where one dependency is constrained differently across a repository's manifests — and where no version can satisfy both</b><br/>
+  <i>package.json · Cargo.toml · pyproject.toml · go.mod · GitHub workflows</i>
 </p>
 
 <p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.versions-le">
+    <img src="https://img.shields.io/badge/Install%20from-VS%20Code-blue?style=for-the-badge&logo=visualstudiocode" alt="Install from VS Code Marketplace" />
+  </a>
+  <a href="https://open-vsx.org/extension/OffensiveEdge/versions-le">
+    <img src="https://img.shields.io/open-vsx/dt/OffensiveEdge/versions-le?style=for-the-badge&label=Open%20VSX&color=blue" alt="Open VSX downloads" />
+  </a>
+  <a href="https://www.npmjs.com/package/versions-le-mcp">
+    <img src="https://img.shields.io/npm/v/versions-le-mcp?style=for-the-badge&label=MCP%20server&color=blue&logo=npm" alt="versions-le-mcp on npm" />
+  </a>
   <a href="https://crates.io/crates/versions-le">
     <img src="https://img.shields.io/crates/v/versions-le?style=for-the-badge&label=Rust%20CLI&color=blue&logo=rust" alt="versions-le on crates.io" />
-  </a>
-  <a href="https://crates.io/crates/versions-le">
-    <img src="https://img.shields.io/crates/d/versions-le?style=for-the-badge&label=Downloads&color=blue" alt="crates.io downloads" />
-  </a>
-  <a href="https://github.com/nolindnaidoo/versions-le/actions/workflows/ci-crate.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/nolindnaidoo/versions-le/ci-crate.yml?branch=main&style=for-the-badge&label=CI&color=blue&logo=githubactions&logoColor=white" alt="CI" />
-  </a>
-  <a href="https://github.com/nolindnaidoo/versions-le/blob/main/crate/Cargo.toml">
-    <img src="https://img.shields.io/badge/rustc-1.88+-blue?style=for-the-badge&logo=rust" alt="MSRV: Rust 1.88+" />
-  </a>
-  <a href="https://github.com/nolindnaidoo/versions-le/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="MIT licensed" />
   </a>
   <a href="https://letools.dev/tools/versions-le">
     <img src="https://img.shields.io/badge/LE%20Tools-letools.dev-blue?style=for-the-badge" alt="LE Tools" />
@@ -30,81 +27,32 @@
 
 ---
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/nolindnaidoo/versions-le/main/assets/demo.gif" alt="Versions-LE demo — the real binary, recorded by assets/demo.tape" style="max-width: 100%; height: auto;" />
-</p>
-
-> **Useful?** A star is how other developers find it —
+> **Useful?** A star or rating is how other developers find it —
 > [★ GitHub](https://github.com/nolindnaidoo/versions-le) ·
-> [letools.dev/tools/versions-le](https://letools.dev/tools/versions-le)
+> [★ Open VSX](https://open-vsx.org/extension/OffensiveEdge/versions-le/reviews) ·
+> [★ Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.versions-le&ssr=false#review-details)
 
 ## What it does
 
-One question, asked across every manifest in a tree rather than one file
-at a time: **do these manifests agree about what version of anything this
-repository depends on?**
+The build broke because `api` asks for `regex = "1"` and `web` asks for `regex = "2"`, and no one version satisfies both. Or it did not break, and will: CI has built on Rust `1.80` since March while `rust-version` says `1.88`.
 
-The build broke because `api` asks for `regex = "1"` and `web` asks for
-`regex = "2"`, and no one version satisfies both. Or it did not break,
-and will: CI has run on `1.80` since March while `rust-version` says
-`1.88`.
+Press `Ctrl+Alt+V` (`Cmd+Alt+V` on Mac) and every manifest in the workspace is compared as one set — or every manifest under a folder, from the Explorer. The report opens beside the editor: each problem by severity with every file, key and constraint that produced it, then what was deliberately not compared and why. Works in VS Code and in VS Code–based editors like Cursor and VSCodium (installable from Open VSX).
 
-```bash
-versions-le .
-```
+- **In a monorepo** — the crate pinned to `serde 0.9` while the rest moved to `1.0`
+- **Before a release** — CI testing on a toolchain older than the minimum you publish
+- **Reviewing a dependency bump** — the one package that did not move with the others
 
-```
-error cargo: regex ("1" (api/Cargo.toml) and "2" (web/Cargo.toml) cannot both be satisfied by one version) [api/Cargo.toml, web/Cargo.toml]
-warning cargo: serde (constrained 2 different ways across 2 files: 1, 1.0.200) [api/Cargo.toml, web/Cargo.toml]
-warning ci: rust (CI builds on 1.80.0, below the declared minimum 1.88.0 in api/Cargo.toml) [.github/workflows/ci.yml, api/Cargo.toml]
-info ci: node (an unpinned tool version installs whatever is newest that day) [.github/workflows/ci.yml]
-info npm: left-pad (a dist tag resolves to whatever is newest at install time) [package.json]
-refused cross_ecosystem regex: appears in cargo and npm; different ecosystems name different things, so these were not compared [api/Cargo.toml, package.json]
-refused unknown_grammar left-pad: a dist tag is a moving target, not a version range; excluded from comparison [package.json]
-refused unknown_grammar node: a channel name is a moving target, not a version; excluded from comparison [.github/workflows/ci.yml]
-refused unknown_grammar shared: an inherited workspace dependency carries its version elsewhere; excluded from comparison [web/Cargo.toml]
-5 findings across 4 manifests — 1 error, 2 warning, 2 info
-```
-
-Exit code 1. The build stops before the deploy does.
-
-That is stderr — the human half. stdout carries one JSON report for the
-whole run, and **there is no `--json` flag**: one mode, nothing to
-misremember, and the human summary is a projection of the same report so
-the two cannot drift.
-
-## The exit code is the product
-
-| Code | Means |
-|---|---|
-| **0** | Nothing above `info`. Also 0 when there are **no manifests at all** — nothing can be in conflict with nothing, and failing a build over that would be the tool inventing a problem. |
-| **1** | Findings. |
-| **2** | The question was malformed — an unknown flag, an unknown ecosystem, a path that does not exist — or `--strict` and part of the tree went unanalysed. |
-
-One unreadable manifest in fifty is **not** exit 2. It is named on stderr,
-carried in the report's `diagnostics`, and the manifests that did parse
-still answer.
+**It never edits a manifest, and never guesses**: a constraint it does not model is named and left out of every comparison.
 
 ## Install
 
-```bash
-cargo install versions-le
-```
-
-Or build it from source:
-
-```bash
-git clone https://github.com/nolindnaidoo/versions-le
-cd versions-le/crate
-cargo build --release      # ./target/release/versions-le
-```
-
-```bash
-cargo install --path crate # or put it on your PATH
-```
-
-Needs **Rust 1.88+**, and nothing else. No runtime, no network, nothing
-written.
+| Where | What you get | Install |
+|---|---|---|
+| **VS Code** | The comparison, in your editor, on a keystroke | [Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.versions-le) |
+| **Cursor, VSCodium, Windsurf** | The same extension | [Open VSX](https://open-vsx.org/extension/OffensiveEdge/versions-le) |
+| **A terminal or a CI step** | A whole tree, with an exit code | `cargo install versions-le` · [crates.io](https://crates.io/crates/versions-le) |
+| **Any MCP agent, via Node** | `compare_versions` over stdio | `npx versions-le-mcp` · [npm](https://www.npmjs.com/package/versions-le-mcp) |
+| **Zed** | The MCP server as a context server | [add it by hand](https://zed.dev/docs/ai/mcp) *(no listing yet)* |
 
 ## The six checks
 
@@ -170,39 +118,8 @@ That last row is why this exists as much as the first: a CI toolchain
 drifting away from the floor a manifest declares is exactly the failure
 nobody notices until a release.
 
-`node_modules`, `vendor` and `.git` are never walked, whatever the ignore
-rules say. **`.github` always is** — a workflow lives in a hidden
-directory by definition, so `--hidden` controls the *other* hidden
-directories.
-
-## Options
-
-```
-usage: versions-le [options] <dir|file>...
-       versions-le mcp
-       versions-le --version | --help
-
-  --ecosystem <name>   only npm, cargo, python, go or ci; repeatable
-  --fail-on <what>     conflict (default) or any
-  --strict             a refusal or an unreadable manifest exits 2
-  --exclude <glob>     skip manifests matching this pattern; repeatable
-  --hidden             descend hidden directories too
-  --no-ignore          walk files that .gitignore excludes
-```
-
-Several roots are allowed, because the question spans trees. When more
-than one is named the labels are qualified with their root.
-
-`--fail-on any` includes the `info` findings, for a repository that has
-decided it wants no floating pins at all. `--strict` is for a pipeline
-that wants no unanalysed corners: it turns `unknown_grammar` and
-`ambiguous_version_string` into exit 2. `cross_ecosystem` never trips it
-— that refusal is not a failure to answer, it *is* the answer.
-
-**The report carries no timestamp.** Two runs over an unchanged tree
-produce byte-identical stdout, so a report can be diffed against a
-baseline in review. It carries `schema: 1` from the first release, so
-there is never a report a reader has to sniff.
+`node_modules`, `vendor` and `.git` are never read. **`.github` always
+is** — a workflow lives in a hidden directory by definition.
 
 ## What it will not do
 
@@ -218,35 +135,144 @@ there is never a report a reader has to sniff.
 - **It does not lint style.** Ordering, quoting and formatting of a
   manifest are somebody else's job.
 
-## As an MCP server
+## Use it from an AI agent
 
-```bash
-versions-le mcp
+The same engine runs as an [MCP](https://modelcontextprotocol.io) server, so an agent can call it directly instead of diffing manifests by eye.
+
+| Editor | How |
+|---|---|
+| **VS Code** 1.101+ | Nothing to install — the extension registers `compare_versions` with agent mode |
+| **Zed** | No listing yet — [add the MCP server by hand](https://zed.dev/docs/ai/mcp) |
+| **Claude Code** | `claude mcp add versions-le -- npx -y versions-le-mcp` |
+| **Cursor, Windsurf, anything else** | point it at `npx versions-le-mcp` |
+
+```
+compare_versions(files: [{ path, content }], maxResults?)
 ```
 
-Two tools, both returning `{ ok, data, diagnostics, meta }`:
+It returns the report the editor renders, as data — findings capped at 500 by default with `meta.truncated`. It reads no files and makes no network requests. Published as [`versions-le-mcp`](https://www.npmjs.com/package/versions-le-mcp) on npm and as `io.github.nolindnaidoo/versions-le` in the [MCP registry](https://registry.modelcontextprotocol.io). It answers exactly as the Rust CLI's server does: one corpus runs against both, and a differential test feeds both thousands of generated manifest sets — broken JSON and TOML included — and compares every answer.
 
-- **`compare_versions`** — manifest contents in, findings out. Touches no
-  filesystem, so an agent can call it anywhere.
-- **`versions_le_check`** — a directory in, the discovery and the same
-  report the CLI writes.
+<details>
+<summary><b>Configuring it by hand</b> — any host with an MCP config file</summary>
 
-`ok` reports whether the check **ran**, never whether the answer was yes.
-A tree full of conflicting pins is the answer, not a failure to produce
-one.
+```json
+{
+  "mcpServers": {
+    "versions-le": {
+      "command": "npx",
+      "args": ["-y", "versions-le-mcp"]
+    }
+  }
+}
+```
 
-Refusals speak the caller's vocabulary: an MCP caller has no command
-line, and a test asserts no message on that surface names a flag.
+Or install it once with `npm install -g versions-le-mcp` and point at `versions-le-mcp`. It needs no environment variables, no API key and no configuration of its own. To check it:
+
+```bash
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | npx -y versions-le-mcp
+```
+
+</details>
+
+## The CLI
+
+The same comparison runs over a tree from a terminal or a CI step: a Rust CLI in [`crate/`](crate/README.md), sharing one corpus with the extension — [`crate/fixtures/`](crate/fixtures/) — so the two can never read a constraint differently.
+
+<p align="center">
+  <img src="assets/demo.gif" alt="versions-le in a terminal" style="max-width: 100%; height: auto;" />
+</p>
+
+```bash
+versions-le .                          # every manifest in the tree, as one JSON report
+versions-le --ecosystem cargo .        # one ecosystem
+versions-le --fail-on any .            # floating pins fail the build too
+versions-le --strict .                 # an unanalysed corner exits 2
+versions-le mcp                        # compare_versions and versions_le_check over MCP on stdio
+```
+
+**The exit code is the product** — 0 nothing above `info`, 1 findings, 2 the question was malformed. No manifests at all is 0: nothing can conflict with nothing.
+
+## Commands
+
+| Command | Description |
+|---|---|
+| `Versions-LE: Compare Versions` (`Ctrl+Alt+V` / `Cmd+Alt+V`) | Compare every manifest in the workspace, or under the folder picked in the Explorer |
+| `Versions-LE: Open Settings` | Open Versions-LE settings |
+| `Versions-LE: Help & Troubleshooting` | Built-in documentation |
+
+## Settings
+
+| Setting | Default | Description |
+|---|---|---|
+| `versions-le.exclude` | `[]` | Glob patterns for manifests to leave out; `node_modules`, `.git` and `vendor` are always left out |
+| `versions-le.openResultsSideBySide` | `true` | Open the report beside the current editor |
+| `versions-le.copyToClipboardEnabled` | `false` | Also copy the report to the clipboard |
+| `versions-le.notificationsLevel` | `silent` | `all` = every notification, `important` = warnings + errors, `silent` = errors only |
+| `versions-le.statusBar.enabled` | `true` | Show the status bar item |
+| `versions-le.telemetryEnabled` | `false` | Local-only event log (see Privacy) |
+
+## Languages
+
+Twelve languages besides English:
+
+German · Spanish · French · Indonesian · Italian · Japanese · Korean ·
+Portuguese (Brazil) · Russian · Ukrainian · Vietnamese · Chinese (Simplified)
+
+Both halves are covered — the manifest (command titles, setting names and descriptions) and everything shown while the extension runs (notifications, the status bar and the report's headings). A finding's message is the engine's English, identical to the CLI's.
+
+## Privacy & security
+
+- **No network access.** The extension never sends data anywhere; it does not know which versions exist, only whether two stated requirements can be met at once. The `telemetryEnabled` setting only writes events to a local Output Channel you can inspect (`Versions-LE`).
+- **It reads manifests and nothing else**, and never writes to one.
+- **The MCP server holds the same line.** It takes content as an argument and returns data: no filesystem access, no network calls, no telemetry.
+- Error notifications redact home directories and credential-shaped fragments.
 
 ## Documentation
 
 | What | Where |
 |---|---|
-| What the tool is allowed to say — the checks, the refusals, the exit codes, the output contract | [`crate/SPEC.md`](crate/SPEC.md) |
-| How the code is written and held together — architecture, invariants, the gates | [`crate/AGENTS.md`](crate/AGENTS.md) |
-| The crate's own front page | [`crate/README.md`](crate/README.md) |
+| What the tool is allowed to say — checks, refusals, the output contract, non-goals | [`crate/SPEC.md`](crate/SPEC.md) |
+| How the extension is built and held together — architecture, invariants, toolchain, release | [AGENTS.md](AGENTS.md) |
+| How the CLI is built and held together | [`crate/AGENTS.md`](crate/AGENTS.md) |
 | What changed | [CHANGELOG.md](CHANGELOG.md) · [`crate/CHANGELOG.md`](crate/CHANGELOG.md) |
 | The tool's page, and the other fifteen | [letools.dev/tools/versions-le](https://letools.dev/tools/versions-le) |
+
+## Performance
+
+<!-- performance:start -->
+| Input | Size | Found | Time | Rate | Scan speed |
+| --- | --- | --- | --- | --- | --- |
+| 50 crates, 50 packages | 0.01 MB | 450 | 2.37 ms | 189,660/sec | 6.1 MB/s |
+| 500 crates, 500 packages | 0.15 MB | 4,500 | 19.25 ms | 233,818/sec | 7.6 MB/s |
+| 2,000 crates, 2,000 packages | 0.58 MB | 18,000 | 197.84 ms | 90,983/sec | 3 MB/s |
+
+Median of 7 runs after warmup, on Apple M5 Pro, 24 GB RAM, Node 24.3.0. Inputs are generated
+by `scripts/benchmark.ts` rather than checked in, so the sizes above are
+exactly what was measured. Reproduce with `bun run benchmark`.
+
+These are machine-specific and are not asserted in CI — a benchmark that gates
+a build only tells you how busy the runner was.
+<!-- performance:end -->
+
+## Testing
+
+<!-- coverage:start -->
+| Metric | Coverage |
+| --- | --- |
+| Statements | 86.91% |
+| Branches | 79.62% |
+| Functions | 94.44% |
+| Lines | 90.66% |
+
+265 test cases across 13 files, plus an integration suite that runs
+in a real VS Code extension host and an end-to-end test that installs the
+built `.vsix` into a clean profile.
+
+Generated from a real run — `coverage/coverage-summary.json` and
+`coverage/test-results.json` — by `scripts/coverage-readme.js`; CI fails if
+this section drifts. Reproduce with `bun run test:coverage`, and the case
+count is the one vitest prints.
+<!-- coverage:end -->
 
 ## More from the LE family
 
@@ -296,4 +322,4 @@ part of the LE family.
 
 ## License
 
-MIT © [nolindnaidoo](https://github.com/nolindnaidoo) — see [LICENSE](LICENSE).
+MIT © [nolindnaidoo](https://github.com/nolindnaidoo)

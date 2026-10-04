@@ -1,0 +1,19 @@
+{
+	"Could not be read ({0})": "No se pudieron leer ({0})",
+	"Could not copy to clipboard": "No se pudo copiar al portapapeles",
+	"Could not open results": "No se pudieron abrir los resultados",
+	"Errors": "Errores",
+	"Info": "Información",
+	"Manifests": "Manifiestos",
+	"No manifests found": "No se encontraron manifiestos",
+	"No manifests found.": "No se encontraron manifiestos.",
+	"No version problems found.": "No se encontraron problemas de versión.",
+	"Not compared ({0})": "Sin comparar ({0})",
+	"Open a folder or workspace to compare its manifests": "Abra una carpeta o un área de trabajo para comparar sus manifiestos",
+	"Run Versions-LE: Compare Versions": "Ejecutar Versions-LE: comparar versiones",
+	"Versions-LE report": "Informe de Versions-LE",
+	"Warnings": "Advertencias",
+	"{0} finding(s)": "{0} hallazgo(s)",
+	"{0} version problem(s) across {1} manifest(s)": "{0} problema(s) de versión en {1} manifiesto(s)",
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "{0} manifiesto(s), {1} restricción(es): {2} error(es), {3} advertencia(s), {4} de información, {5} sin comparar"
+}

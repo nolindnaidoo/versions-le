@@ -1,0 +1,19 @@
+{
+	"Could not be read ({0})": "Could not be read ({0})",
+	"Could not copy to clipboard": "Could not copy to clipboard",
+	"Could not open results": "Could not open results",
+	"Errors": "Errors",
+	"Info": "Info",
+	"Manifests": "Manifests",
+	"No manifests found": "No manifests found",
+	"No manifests found.": "No manifests found.",
+	"No version problems found.": "No version problems found.",
+	"Not compared ({0})": "Not compared ({0})",
+	"Open a folder or workspace to compare its manifests": "Open a folder or workspace to compare its manifests",
+	"Run Versions-LE: Compare Versions": "Run Versions-LE: Compare Versions",
+	"Versions-LE report": "Versions-LE report",
+	"Warnings": "Warnings",
+	"{0} finding(s)": "{0} finding(s)",
+	"{0} version problem(s) across {1} manifest(s)": "{0} version problem(s) across {1} manifest(s)",
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared"
+}

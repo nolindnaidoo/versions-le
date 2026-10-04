@@ -1,0 +1,19 @@
+{
+	"Could not be read ({0})": "Không đọc được ({0})",
+	"Could not copy to clipboard": "Không thể sao chép vào khay nhớ tạm",
+	"Could not open results": "Không thể mở kết quả",
+	"Errors": "Lỗi",
+	"Info": "Thông tin",
+	"Manifests": "Tệp manifest",
+	"No manifests found": "Không tìm thấy tệp manifest nào",
+	"No manifests found.": "Không tìm thấy tệp manifest nào.",
+	"No version problems found.": "Không tìm thấy vấn đề phiên bản nào.",
+	"Not compared ({0})": "Không so sánh ({0})",
+	"Open a folder or workspace to compare its manifests": "Hãy mở một thư mục hoặc không gian làm việc để so sánh các tệp manifest của nó",
+	"Run Versions-LE: Compare Versions": "Chạy Versions-LE: So sánh phiên bản",
+	"Versions-LE report": "Báo cáo Versions-LE",
+	"Warnings": "Cảnh báo",
+	"{0} finding(s)": "{0} phát hiện",
+	"{0} version problem(s) across {1} manifest(s)": "{0} vấn đề phiên bản trong {1} tệp manifest",
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "{0} tệp manifest, {1} ràng buộc: {2} lỗi, {3} cảnh báo, {4} thông tin, {5} không so sánh"
+}

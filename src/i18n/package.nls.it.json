@@ -1,0 +1,18 @@
+{
+	"manifest.command.category": "Versions-LE",
+	"manifest.command.compare.title": "Confronta versioni",
+	"manifest.command.settings.title": "Apri impostazioni",
+	"manifest.command.help.title": "Guida e risoluzione dei problemi",
+	"manifest.settings.title": "Impostazioni di Versions-LE",
+	"manifest.settings.copy.clipboard.desc": "Copia ogni rapporto negli appunti oltre ad aprirlo",
+	"manifest.settings.exclude.desc": "Pattern glob dei manifest da escludere dal confronto. node_modules, .git e vendor sono sempre esclusi.",
+	"manifest.settings.notifications.level.desc": "Controlla il livello di dettaglio delle notifiche",
+	"manifest.settings.notifications.level.option.all": "Mostra tutte le notifiche",
+	"manifest.settings.notifications.level.option.important": "Mostra solo le notifiche importanti",
+	"manifest.settings.notifications.level.option.silent": "Nascondi tutte le notifiche",
+	"manifest.settings.open.side-by-side.desc": "Apri il rapporto in un nuovo editor affiancato",
+	"manifest.settings.statusbar.enabled.desc": "Mostra la voce di Versions-LE nella barra di stato per un accesso rapido",
+	"manifest.settings.telemetry.desc": "Abilita i log di telemetria solo locali nel pannello Output",
+	"manifest.capability.untrusted-workspaces.desc": "Funzionalità limitate nelle aree di lavoro non attendibili",
+	"manifest.mcp.label": "Confronto dei vincoli di versione di Versions-LE per la modalità agente"
+}

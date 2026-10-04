@@ -1,0 +1,20 @@
+# Allow-list packaging: everything is excluded except what the extension
+# needs at runtime. dist/extension.js is a self-contained esbuild bundle
+# (node_modules must NOT be needed — enforced by scripts/check-bundle.js).
+**
+
+!dist/extension.js
+# The MCP server, launched over stdio by the provider registered in
+# activate(). Not the .map — that is for local debugging only.
+!dist/mcp-server.js
+!package.nls.json
+!package.nls.*.json
+# Runtime strings for vscode.l10n.t(), loaded via the "l10n" field in
+# package.json. Only the translated bundles ship — the English source bundle
+# (l10n/bundle.l10n.json) is the translation input, and at runtime l10n.t()
+# already falls back to the literal in the code, so shipping it is dead weight.
+!l10n/bundle.l10n.*.json
+!src/assets/images/icon.png
+!README.md
+!CHANGELOG.md
+!LICENSE

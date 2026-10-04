@@ -1,0 +1,19 @@
+{
+	"Could not be read ({0})": "読み取れなかったファイル ({0})",
+	"Could not copy to clipboard": "クリップボードにコピーできませんでした",
+	"Could not open results": "結果を開けませんでした",
+	"Errors": "エラー",
+	"Info": "情報",
+	"Manifests": "マニフェスト",
+	"No manifests found": "マニフェストが見つかりません",
+	"No manifests found.": "マニフェストは見つかりませんでした。",
+	"No version problems found.": "バージョンの問題は見つかりませんでした。",
+	"Not compared ({0})": "比較しなかったもの ({0})",
+	"Open a folder or workspace to compare its manifests": "マニフェストを比較するにはフォルダーかワークスペースを開いてください",
+	"Run Versions-LE: Compare Versions": "Versions-LE を実行: バージョンを比較",
+	"Versions-LE report": "Versions-LE レポート",
+	"Warnings": "警告",
+	"{0} finding(s)": "{0} 件の検出",
+	"{0} version problem(s) across {1} manifest(s)": "{1} 個のマニフェストに {0} 件のバージョンの問題",
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "マニフェスト {0} 個、制約 {1} 件: エラー {2} 件、警告 {3} 件、情報 {4} 件、比較なし {5} 件"
+}

@@ -1,0 +1,18 @@
+{
+	"manifest.command.category": "Versions-LE",
+	"manifest.command.compare.title": "Versionen vergleichen",
+	"manifest.command.settings.title": "Einstellungen öffnen",
+	"manifest.command.help.title": "Hilfe & Fehlerbehebung",
+	"manifest.settings.title": "Versions-LE-Einstellungen",
+	"manifest.settings.copy.clipboard.desc": "Jeden Bericht zusätzlich zum Öffnen in die Zwischenablage kopieren",
+	"manifest.settings.exclude.desc": "Glob-Muster für Manifeste, die vom Vergleich ausgenommen werden. node_modules, .git und vendor werden immer ausgenommen.",
+	"manifest.settings.notifications.level.desc": "Steuert die Ausführlichkeit der Benachrichtigungen",
+	"manifest.settings.notifications.level.option.all": "Alle Benachrichtigungen anzeigen",
+	"manifest.settings.notifications.level.option.important": "Nur wichtige Benachrichtigungen anzeigen",
+	"manifest.settings.notifications.level.option.silent": "Alle Benachrichtigungen unterdrücken",
+	"manifest.settings.open.side-by-side.desc": "Den Bericht in einem neuen Editor daneben öffnen",
+	"manifest.settings.statusbar.enabled.desc": "Den Versions-LE-Eintrag in der Statusleiste für schnellen Zugriff anzeigen",
+	"manifest.settings.telemetry.desc": "Rein lokale Telemetrieprotokolle im Ausgabebereich aktivieren",
+	"manifest.capability.untrusted-workspaces.desc": "Eingeschränkte Funktionalität in nicht vertrauenswürdigen Arbeitsbereichen",
+	"manifest.mcp.label": "Versions-LE-Vergleich von Versionsangaben für den Agentenmodus"
+}

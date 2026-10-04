@@ -1,0 +1,19 @@
+{
+	"Could not be read ({0})": "Illeggibili ({0})",
+	"Could not copy to clipboard": "Impossibile copiare negli appunti",
+	"Could not open results": "Impossibile aprire i risultati",
+	"Errors": "Errori",
+	"Info": "Informazioni utili",
+	"Manifests": "File manifest",
+	"No manifests found": "Nessun manifest trovato",
+	"No manifests found.": "Nessun manifest trovato.",
+	"No version problems found.": "Nessun problema di versione trovato.",
+	"Not compared ({0})": "Non confrontati ({0})",
+	"Open a folder or workspace to compare its manifests": "Apri una cartella o un’area di lavoro per confrontarne i manifest",
+	"Run Versions-LE: Compare Versions": "Esegui Versions-LE: confronta versioni",
+	"Versions-LE report": "Rapporto di Versions-LE",
+	"Warnings": "Avvisi",
+	"{0} finding(s)": "{0} rilievo/i",
+	"{0} version problem(s) across {1} manifest(s)": "{0} problema/i di versione in {1} manifest",
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "{0} manifest, {1} vincolo/i: {2} errore/i, {3} avviso/i, {4} informativi, {5} non confrontati"
+}

@@ -1,12 +1,35 @@
 # Changelog
 
-All notable changes to versions-le are documented here. This repository
-is crate-only, so this file tracks the repository as a whole;
-[`crate/CHANGELOG.md`](crate/CHANGELOG.md) is the one that ships with the
-package and describes the tool's behaviour.
+All notable changes to Versions-LE will be documented here.
 
-Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+This file covers the **VS Code extension**. The Rust CLI in `crate/` is a
+separate product on its own cadence and keeps its own
+[CHANGELOG](crate/CHANGELOG.md). The entries below 1.0.0 describe this
+repository while it held the CLI alone.
+
+## [Unreleased]
+
+### Added
+
+- **The VS Code extension.** `Versions-LE: Compare Versions` compares every
+  manifest in the workspace — or under a folder picked in the Explorer — and
+  reports each dependency constrained more than one way, each pair no version
+  can satisfy, CI toolchains below the declared `rust-version`, prereleases in
+  production and floating pins, with every site that produced them, then what
+  was deliberately not compared and why. `versions-le.exclude` leaves
+  manifests out.
+- **The MCP server in the VSIX and on npm** as `versions-le-mcp`: the same
+  `compare_versions` tool the Rust CLI serves, answering identically.
+- **The engine is a port of the crate's**, with serde_json, the toml crate
+  (TOML 1.1) and semver transcribed, held to the crate by the shared corpus, a
+  differential that feeds both servers thousands of generated manifest sets —
+  broken JSON and TOML included — and a check that both servers define the
+  tool identically.
+- Localized into twelve languages: the manifest and every runtime string.
+- A Zed extension that runs the MCP server as a context server.
 
 ## [0.1.1] - 2026-08-14
 

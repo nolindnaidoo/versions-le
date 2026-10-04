@@ -1,0 +1,19 @@
+{
+	"Could not be read ({0})": "Не удалось прочитать ({0})",
+	"Could not copy to clipboard": "Не удалось скопировать в буфер обмена",
+	"Could not open results": "Не удалось открыть результаты",
+	"Errors": "Ошибки",
+	"Info": "Сведения",
+	"Manifests": "Манифесты",
+	"No manifests found": "Манифесты не найдены",
+	"No manifests found.": "Манифесты не найдены.",
+	"No version problems found.": "Проблем с версиями не найдено.",
+	"Not compared ({0})": "Не сравнивалось ({0})",
+	"Open a folder or workspace to compare its manifests": "Откройте папку или рабочую область, чтобы сравнить её манифесты",
+	"Run Versions-LE: Compare Versions": "Запустить Versions-LE: сравнить версии",
+	"Versions-LE report": "Отчёт Versions-LE",
+	"Warnings": "Предупреждения",
+	"{0} finding(s)": "находок: {0}",
+	"{0} version problem(s) across {1} manifest(s)": "проблем с версиями: {0}, манифестов: {1}",
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "манифестов: {0}, ограничений: {1}; ошибок: {2}, предупреждений: {3}, сведений: {4}, не сравнивалось: {5}"
+}

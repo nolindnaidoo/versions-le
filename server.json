@@ -1,0 +1,33 @@
+{
+	"$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+	"name": "io.github.nolindnaidoo/versions-le",
+	"title": "Versions-LE",
+	"description": "Find where one dependency is constrained differently across a repository's manifests.",
+	"websiteUrl": "https://letools.dev/tools/versions-le",
+	"icons": [
+		{
+			"src": "https://raw.githubusercontent.com/nolindnaidoo/versions-le/main/src/assets/images/icon.png",
+			"mimeType": "image/png",
+			"sizes": [
+				"128x128"
+			]
+		}
+	],
+	"repository": {
+		"url": "https://github.com/nolindnaidoo/versions-le",
+		"source": "github"
+	},
+	"version": "1.0.0",
+	"packages": [
+		{
+			"registryType": "npm",
+			"registryBaseUrl": "https://registry.npmjs.org",
+			"identifier": "versions-le-mcp",
+			"version": "1.0.0",
+			"runtimeHint": "npx",
+			"transport": {
+				"type": "stdio"
+			}
+		}
+	]
+}

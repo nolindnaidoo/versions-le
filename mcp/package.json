@@ -1,0 +1,56 @@
+{
+	"name": "versions-le-mcp",
+	"version": "1.0.0",
+	"mcpName": "io.github.nolindnaidoo/versions-le",
+	"description": "Find where one dependency is constrained differently across a repository's manifests.",
+	"keywords": [
+		"mcp",
+		"modelcontextprotocol",
+		"model-context-protocol",
+		"mcp-server",
+		"ai-agent",
+		"claude",
+		"cursor",
+		"zed",
+		"vscode",
+		"llm-tools",
+		"versions-le",
+		"versions-le-mcp",
+		"nolindnaidoo",
+		"letools",
+		"versions",
+		"dependencies",
+		"semver",
+		"monorepo"
+	],
+	"license": "MIT",
+	"author": {
+		"name": "Nolin Naidoo",
+		"url": "https://nolindnaidoo.com"
+	},
+	"homepage": "https://letools.dev/tools/versions-le",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/nolindnaidoo/versions-le.git",
+		"directory": "mcp"
+	},
+	"bugs": {
+		"url": "https://github.com/nolindnaidoo/versions-le/issues"
+	},
+	"type": "commonjs",
+	"bin": {
+		"versions-le-mcp": "server.js"
+	},
+	"files": [
+		"server.js",
+		"README.md",
+		"LICENSE"
+	],
+	"engines": {
+		"node": ">=20"
+	},
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
+	}
+}
