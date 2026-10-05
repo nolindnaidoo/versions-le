@@ -143,6 +143,30 @@ describe('versions-le.compare', () => {
 		await runCommand('versions-le.compare');
 		expect(_clipboardText()).toBe(report());
 	});
+
+	it('names the file without its line when positions are off', async () => {
+		useWorkspace(TREE);
+		await runCommand('versions-le.compare');
+		const lines = (report().match(/`[^`]+`:\d+ · /g) ?? []).length;
+		expect(lines).toBeGreaterThan(0);
+
+		_setConfig('versions-le.showPositions', false);
+		await runCommand('versions-le.compare');
+		expect(report()).not.toMatch(/`[^`]+`:\d+ · /);
+		// Only the line number goes: every site is still listed, by file and key.
+		expect((report().match(/^ {2}- `/gm) ?? []).length).toBeGreaterThanOrEqual(
+			lines,
+		);
+	});
+
+	it('decides positions for the clipboard separately from the report', async () => {
+		_setConfig('versions-le.copyToClipboardEnabled', true);
+		_setConfig('versions-le.clipboardIncludesPositions', false);
+		useWorkspace(TREE);
+		await runCommand('versions-le.compare');
+		expect(report()).toMatch(/`[^`]+`:\d+ · /);
+		expect(_clipboardText()).not.toMatch(/`[^`]+`:\d+ · /);
+	});
 });
 
 describe('settings and help', () => {

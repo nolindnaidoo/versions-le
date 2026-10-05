@@ -206,7 +206,9 @@ No command is bound to a key by default. Give any of them one under **Keyboard S
 |---|---|---|
 | `versions-le.exclude` | `[]` | Glob patterns for manifests to leave out; `node_modules`, `.git` and `vendor` are always left out |
 | `versions-le.openResultsSideBySide` | `true` | Open the report beside the current editor |
+| `versions-le.showPositions` | `true` | Show the line each constraint is written on |
 | `versions-le.copyToClipboardEnabled` | `false` | Also copy the report to the clipboard |
+| `versions-le.clipboardIncludesPositions` | `true` | Include the line number in that copy |
 | `versions-le.notificationsLevel` | `silent` | `all` = every notification, `important` = warnings + errors, `silent` = errors only |
 | `versions-le.statusBar.enabled` | `true` | Show the status bar item |
 | `versions-le.telemetryEnabled` | `false` | Local-only event log (see Privacy) |
@@ -260,11 +262,11 @@ a build only tells you how busy the runner was.
 | Metric | Coverage |
 | --- | --- |
 | Statements | 86.91% |
-| Branches | 79.62% |
+| Branches | 79.67% |
 | Functions | 94.44% |
-| Lines | 90.66% |
+| Lines | 90.67% |
 
-265 test cases across 13 files, plus an integration suite that runs
+269 test cases across 13 files, plus an integration suite that runs
 in a real VS Code extension host and an end-to-end test that installs the
 built `.vsix` into a clean profile.
 

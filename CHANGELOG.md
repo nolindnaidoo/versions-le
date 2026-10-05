@@ -12,6 +12,13 @@ repository while it held the CLI alone.
 
 ## [Unreleased]
 
+### Added
+
+- Positions are now a setting. `versions-le.showPositions` decides whether the
+  output gives the line each constraint is written on, and
+  `versions-le.clipboardIncludesPositions` decides the same for the copy on
+  the clipboard. Both are on by default, so the output is what it was.
+
 ### Changed
 
 - No command is bound to a key by default any more. The one default this
