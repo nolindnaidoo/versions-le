@@ -103,13 +103,6 @@
 				}
 			]
 		},
-		"keybindings": [
-			{
-				"command": "versions-le.compare",
-				"key": "ctrl+alt+v",
-				"mac": "cmd+alt+v"
-			}
-		],
 		"configuration": {
 			"title": "%manifest.settings.title%",
 			"properties": {

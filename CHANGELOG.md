@@ -10,6 +10,15 @@ separate product on its own cadence and keeps its own
 [CHANGELOG](crate/CHANGELOG.md). The entries below 1.0.0 describe this
 repository while it held the CLI alone.
 
+## [Unreleased]
+
+### Changed
+
+- No command is bound to a key by default any more. The one default this
+  extension shipped sat on a key the editor, the system or another LE
+  extension already used. Every command can still be given a key under
+  Keyboard Shortcuts.
+
 ## [1.0.1] - 2026-10-04
 
 ### Fixed

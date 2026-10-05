@@ -36,7 +36,7 @@
 
 The build broke because `api` asks for `regex = "1"` and `web` asks for `regex = "2"`, and no one version satisfies both. Or it did not break, and will: CI has built on Rust `1.80` since March while `rust-version` says `1.88`.
 
-Press `Ctrl+Alt+V` (`Cmd+Alt+V` on Mac) and every manifest in the workspace is compared as one set — or every manifest under a folder, from the Explorer. The report opens beside the editor: each problem by severity with every file, key and constraint that produced it, then what was deliberately not compared and why. Works in VS Code and in VS Code–based editors like Cursor and VSCodium (installable from Open VSX).
+Run `Versions-LE: Compare Versions` and every manifest in the workspace is compared as one set — or every manifest under a folder, from the Explorer. The report opens beside the editor: each problem by severity with every file, key and constraint that produced it, then what was deliberately not compared and why. Works in VS Code and in VS Code–based editors like Cursor and VSCodium (installable from Open VSX).
 
 - **In a monorepo** — the crate pinned to `serde 0.9` while the rest moved to `1.0`
 - **Before a release** — CI testing on a toolchain older than the minimum you publish
@@ -194,9 +194,11 @@ versions-le mcp                        # compare_versions and versions_le_check 
 
 | Command | Description |
 |---|---|
-| `Versions-LE: Compare Versions` (`Ctrl+Alt+V` / `Cmd+Alt+V`) | Compare every manifest in the workspace, or under the folder picked in the Explorer |
+| `Versions-LE: Compare Versions` | Compare every manifest in the workspace, or under the folder picked in the Explorer |
 | `Versions-LE: Open Settings` | Open Versions-LE settings |
 | `Versions-LE: Help & Troubleshooting` | Built-in documentation |
+
+No command is bound to a key by default. Give any of them one under **Keyboard Shortcuts** in the editor.
 
 ## Settings
 
