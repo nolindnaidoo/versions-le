@@ -38,7 +38,7 @@ export function generateHelpContent(): string {
 		'',
 		'## Commands',
 		'',
-		'- **Compare Versions** (`Ctrl+Alt+V`, Mac `Cmd+Alt+V`): every manifest in the workspace, or under the folder picked in the Explorer.',
+		'- **Compare Versions**: every manifest in the workspace, or under the folder picked in the Explorer.',
 		'',
 		'## What it reads',
 		'',
