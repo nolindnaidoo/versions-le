@@ -94,7 +94,12 @@ export async function compareWorkspace(
 		},
 	};
 
-	await showReport(formatReport(report), config, deps);
+	await showReport(
+		formatReport(report, config.showPositions),
+		config,
+		deps,
+		formatReport(report, config.clipboardIncludesPositions),
+	);
 	deps.telemetry.event('compared', {
 		manifests: String(report.summary.manifests),
 		findings: String(report.summary.findings),

@@ -7,7 +7,7 @@ import type { Report } from '../detect/report';
  * site that produced it, then what was deliberately not compared and why, then
  * the manifests that could not be read.
  */
-export function formatReport(report: Report): string {
+export function formatReport(report: Report, positions = true): string {
 	const { summary } = report;
 	const lines: string[] = [`# ${vscode.l10n.t('Versions-LE report')}`, ''];
 	lines.push(
@@ -37,7 +37,8 @@ export function formatReport(report: Report): string {
 			lines.push(
 				`- **${finding.code}** · ${finding.ecosystem} · ${code(finding.name)}: ${finding.message}`,
 			);
-			for (const one of finding.sites) lines.push(`  - ${site(one)}`);
+			for (const one of finding.sites)
+				lines.push(`  - ${site(one, positions)}`);
 		}
 		lines.push('');
 	}
@@ -53,7 +54,8 @@ export function formatReport(report: Report): string {
 			lines.push(
 				`- **${refusal.reason}** · ${refusal.ecosystem ?? '—'} · ${code(refusal.name)}: ${refusal.message}`,
 			);
-			for (const one of refusal.sites) lines.push(`  - ${site(one)}`);
+			for (const one of refusal.sites)
+				lines.push(`  - ${site(one, positions)}`);
 		}
 		lines.push('');
 	}
@@ -83,10 +85,12 @@ function heading(severity: 'error' | 'warning' | 'info'): string {
 	return vscode.l10n.t('Info');
 }
 
-/** Where a constraint was written: file, key, the constraint itself, and a line where the reader knows it. */
-function site(one: Site): string {
+/** Where a constraint was written: file, key, the constraint itself, and a line where the reader knows it and it is asked for. */
+function site(one: Site, positions: boolean): string {
 	const where =
-		one.line === undefined ? code(one.file) : `${code(one.file)}:${one.line}`;
+		one.line === undefined || !positions
+			? code(one.file)
+			: `${code(one.file)}:${one.line}`;
 	const constraint = one.constraint === '' ? '' : ` = ${code(one.constraint)}`;
 	return `${where} · ${code(one.key)}${constraint}`;
 }
