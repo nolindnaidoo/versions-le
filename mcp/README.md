@@ -58,11 +58,10 @@ claude mcp add versions-le -- npx -y versions-le-mcp
 }
 ```
 
-**VS Code and Zed** need nothing here. Install the extension instead — it
+**VS Code** needs nothing here. Install the extension instead — it
 carries this server and registers it for you:
 [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.versions-le)
 · [Open VSX](https://open-vsx.org/extension/nolindnaidoo/versions-le)
-· [Zed](https://zed.dev/docs/ai/mcp) *(no listing yet — add it by hand)*
 
 **No Node?** The same `compare_versions` tool ships in a static Rust binary:
 `cargo install versions-le`, then `versions-le mcp`
