@@ -18,6 +18,11 @@ repository while it held the CLI alone.
   npm README pointed at a namespace the listing has left, so they led nowhere.
   The listing is under `nolindnaidoo` now, and so are they.
 
+### Removed
+
+- The Zed extension in `zed/`, with the CI job that built it and the workflow
+  that synced it. It was never listed in Zed's registry.
+
 ## [1.0.0] - 2026-10-04
 
 ### Added

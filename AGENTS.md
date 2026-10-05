@@ -238,7 +238,7 @@ A sibling's README once carried hand-written test counts and throughput figures 
 ## Security & automation
 
 - **CodeQL** runs on push, PR and weekly (`javascript-typescript` + `actions`), configured in `.github/codeql-config.yml`. Test files and fixtures are excluded on purpose: they contain inputs that are supposed to look dangerous, and scanning them produces findings that can only ever be dismissed.
-- **Dependabot** (`bun` ecosystem, not `npm` — the npm updater rewrites `package.json` without regenerating `bun.lock`, so its PRs can never pass the frozen-lockfile gate) opens grouped weekly PRs. `cargo` covers `crate/` and `zed/`.
+- **Dependabot** (`bun` ecosystem, not `npm` — the npm updater rewrites `package.json` without regenerating `bun.lock`, so its PRs can never pass the frozen-lockfile gate) opens grouped weekly PRs. `cargo` covers `crate/`.
 - **Auto-merge** is workflow-driven, not GitHub-native: `main` has no required status checks, so native auto-merge would land a PR before CI started. `dependabot-auto-merge.yml` waits for every other check on the head commit to pass, then merges any update but a major, runtime dependencies included: a merge publishes nothing, and the VSIX only ships from a manual release. Majors need a human. After a merge it dispatches CI on `main`, because a merge made with `GITHUB_TOKEN` starts no push run and each PR was only tested against its own base. The workflow is byte-identical across all sixteen tool repos.
 - **Actions are pinned to commit SHAs.** A tag is mutable and this repo holds a publish token. The trailing `# vX.Y.Z` comment is what Dependabot reads and rewrites.
 - **Branch safety:** a `main-safety` ruleset blocks deletion and force-push. Pushes to `main` are otherwise unrestricted by design.
@@ -305,20 +305,16 @@ push are checked, so history predating the gate is left alone.
 
 ## Release
 
-**Five files carry the extension version, and CI fails unless all five agree.**
-`package.json`, `mcp/package.json`, `server.json` (**both** `.version` and
-`.packages[0].version`), `zed/extension.toml`, and `zed/Cargo.toml` — and
-regenerate `zed/Cargo.lock` with it, or `cargo test --locked` in `zed/` breaks.
-The same CI step pins registry identity: `server.json.name` must equal
-`mcp/package.json.mcpName`, `server.json.packages[0].identifier` must equal
-`mcp/package.json.name`, and `zed/src/lib.rs` must install that npm name.
+**Three files carry the extension version, and CI fails unless all three agree.**
+`package.json`, `mcp/package.json` and `server.json` (**both** `.version` and
+`.packages[0].version`). The same CI step pins registry identity:
+`server.json.name` must equal `mcp/package.json.mcpName`, and
+`server.json.packages[0].identifier` must equal `mcp/package.json.name`.
 
 **This gate is not relaxable.** The MCP registry verifies ownership by reading
 `mcpName` out of the *published* npm package, so a mismatch is only discoverable
 after the version is spent — and a version can never be republished. That is why
-this is a gate rather than a convention. A release that bumps only
-`package.json`, `mcp/package.json` and `server.json` leaves both Zed manifests
-behind and reds the tree; that happened to four repos in one release round.
+this is a gate rather than a convention.
 
 The crate version is deliberately **outside** this gate — `crate/Cargo.toml`
 moves on its own cadence, and the crate sitting at 0.x while the extension starts at 1.0 is intended.
@@ -332,8 +328,6 @@ moves on its own cadence, and the crate sitting at 0.x while the extension start
 **Open VSX defaults off deliberately.** `ovsx publish` takes no namespace argument; it derives the namespace from `publisher` in the VSIX. Enabling it publishes to whatever `package.json` currently names, with no confirmation.
 
 **The npm package ships from the same tag**, as a third opt-in on the `Release` workflow. It publishes by **trusted publishing** — GitHub mints a short-lived OIDC identity token and npm verifies it against the publisher configured on the package — so there is no npm credential in this repo, in Doppler, or in CI. That is why `id-token: write` is scoped to that job alone, and why it cannot run from a laptop. `bun run publish:npm` exists for a bootstrap publish only (a package must exist before a trusted publisher can be attached to it) and needs a token.
-
-Order matters beyond this repo: npm must be published *before* any Zed registry PR merges, because Zed's shim resolves the package at runtime — a merged extension pointing at an unpublished version is broken for everyone who installs it.
 
 ## Known limitations (documented, not bugs)
 

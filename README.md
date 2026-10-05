@@ -52,7 +52,6 @@ Press `Ctrl+Alt+V` (`Cmd+Alt+V` on Mac) and every manifest in the workspace is c
 | **Cursor, VSCodium, Windsurf** | The same extension | [Open VSX](https://open-vsx.org/extension/nolindnaidoo/versions-le) |
 | **A terminal or a CI step** | A whole tree, with an exit code | `cargo install versions-le` · [crates.io](https://crates.io/crates/versions-le) |
 | **Any MCP agent, via Node** | `compare_versions` over stdio | `npx versions-le-mcp` · [npm](https://www.npmjs.com/package/versions-le-mcp) |
-| **Zed** | The MCP server as a context server | [add it by hand](https://zed.dev/docs/ai/mcp) *(no listing yet)* |
 
 ## The six checks
 
@@ -142,7 +141,6 @@ The same engine runs as an [MCP](https://modelcontextprotocol.io) server, so an 
 | Editor | How |
 |---|---|
 | **VS Code** 1.101+ | Nothing to install — the extension registers `compare_versions` with agent mode |
-| **Zed** | No listing yet — [add the MCP server by hand](https://zed.dev/docs/ai/mcp) |
 | **Claude Code** | `claude mcp add versions-le -- npx -y versions-le-mcp` |
 | **Cursor, Windsurf, anything else** | point it at `npx versions-le-mcp` |
 
