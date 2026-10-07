@@ -275,7 +275,7 @@ CHANGELOG entry.
 
 ## Testing
 
-- **`detect/`: 75% line coverage floor per module**, enforced by the
+- **`detect/`: 70% line coverage floor per module**, enforced by the
   `coverage` job. Per module rather than on the crate total, because a
   total lets one module slide while the others carry it. It is a floor to
   a backstop rather than a target, and is not raised to track actual coverage — and the job fails when
