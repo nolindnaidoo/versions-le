@@ -14,6 +14,14 @@ repository while it held the CLI alone.
 
 ### Added
 
+- A rating prompt. After 10 successful uses across 3 separate days, one
+  notification asks whether you would rate the extension, with *Rate*,
+  *Later* and *Don't Ask Again*. *Rate* opens the registry your copy was
+  installed from: the VS Code Marketplace or Open VSX. *Later*, or dismissing
+  it, asks once more 30 uses on; that second ask is the last. It never appears
+  on activation or after a failed run, and it is never shown if you have set
+  `notificationsLevel` to `important` or `silent` yourself. The answer follows
+  you through Settings Sync. Translated into all 12 locales.
 - Positions are now a setting. `versions-le.showPositions` decides whether the
   output gives the line each constraint is written on, and
   `versions-le.clipboardIncludesPositions` decides the same for the copy on
