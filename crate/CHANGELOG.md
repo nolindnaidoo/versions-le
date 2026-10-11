@@ -5,6 +5,13 @@ The Rust CLI and MCP server.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-10-11
+
+### Fixed
+
+- The family list's String-LE line no longer promises a position for every
+  string.
+
 ## [0.1.3] - 2026-08-15
 
 ### Fixed
@@ -247,3 +254,4 @@ resolver's output, not this repository's constraints.
 [0.1.1]: https://crates.io/crates/versions-le/0.1.1
 [0.1.2]: https://crates.io/crates/versions-le/0.1.2
 [0.1.3]: https://crates.io/crates/versions-le/0.1.3
+[0.1.4]: https://crates.io/crates/versions-le/0.1.4
