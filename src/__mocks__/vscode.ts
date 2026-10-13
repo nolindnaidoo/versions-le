@@ -532,6 +532,8 @@ export const executedBuiltins: Array<{ id: string; args: unknown[] }> = [];
 const clipboard = { value: '' };
 
 export const env = {
+	/** What `vscode.env.appName` reports; `_setAppName` makes it another host. */
+	appName: 'Visual Studio Code',
 	clipboard: {
 		writeText: async (text: string) => {
 			clipboard.value = text;
@@ -581,6 +583,7 @@ export const FileType = {
 
 /** Reset all mutable mock state between tests. */
 export function _resetMockState(): void {
+	env.appName = 'Visual Studio Code';
 	inputBoxRejections.length = 0;
 	configStore.clear();
 	configUpdates.length = 0;
@@ -615,3 +618,7 @@ export const l10n = {
 		});
 	},
 };
+
+export function _setAppName(name: string): void {
+	env.appName = name;
+}
