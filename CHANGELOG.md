@@ -10,6 +10,16 @@ separate product on its own cadence and keeps its own
 [CHANGELOG](crate/CHANGELOG.md). The entries below 1.0.0 describe this
 repository while it held the CLI alone.
 
+## [Unreleased]
+
+### Fixed
+
+- The rating prompt's Rate button opened the Marketplace review page for
+  every install, including one from Open VSX in VSCodium, Cursor or
+  Windsurf, because it told the registries apart by a publisher name the
+  Open VSX listing does not carry. It reads the editor's name instead, and
+  an Open VSX install rates on Open VSX.
+
 ## [1.1.0] - 2026-10-07
 
 ### Added
