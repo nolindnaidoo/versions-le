@@ -1,0 +1,18 @@
+{
+  "files": [
+    "package.json",
+    "Cargo.toml",
+    ".github/workflows/ci.yml"
+  ],
+  "steps": [
+    {
+      "wait": 1500
+    },
+    {
+      "command": "Versions-LE: Compare Versions"
+    },
+    {
+      "wait": 5000
+    }
+  ]
+}
