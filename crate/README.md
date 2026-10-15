@@ -175,7 +175,9 @@ that wants no unanalysed corners: it turns `unknown_grammar` and
 — that refusal is not a failure to answer, it *is* the answer.
 
 **stdout is protocol, stderr is human, and there is no `--json` flag.**
-One mode, nothing to misremember. The report carries `schema: 1` and no
+One mode, nothing to misremember. stdout carries the report when it is
+piped or redirected and stays silent at a terminal, where the stderr
+listing says the same thing. The report carries `schema: 1` and no
 timestamp, so two runs over an unchanged tree are byte-identical and the
 report can be diffed against a baseline.
 

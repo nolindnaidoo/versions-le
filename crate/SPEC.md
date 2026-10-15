@@ -179,7 +179,9 @@ mode, nothing to misremember, and the human summary is a projection of
 the same report so the two cannot drift.
 
 One JSON report for the whole run, because the answer is about the
-*set* of manifests.
+*set* of manifests. stdout carries it when it is piped or redirected and
+stays silent when it is a terminal, where the stderr listing already says
+the same thing.
 
 ```json
 {
