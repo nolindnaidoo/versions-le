@@ -15,6 +15,8 @@
   </a>
 </p>
 
+![An agent in Claude Code calling the versions-le MCP server](https://raw.githubusercontent.com/nolindnaidoo/versions-le/main/assets/demos/mcp.gif)
+
 An [MCP](https://modelcontextprotocol.io) server that compares the version
 constraints in a set of manifests — `package.json`, `Cargo.toml`,
 `pyproject.toml`, `go.mod` and GitHub workflows — and reports where one
