@@ -1,10 +1,11 @@
 //! The terminal surface.
 //!
 //! stdout is protocol — **one JSON report for the whole run**, not one
-//! line per manifest, because the answer is about the set of them.
-//! stderr is for the human and is a projection of the same report.
+//! line per manifest, because the answer is about the set of them — and
+//! it is silent when it is a terminal. stderr is for the human and is a
+//! projection of the same report.
 
-use std::io::Write;
+use std::io::{IsTerminal, Write};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -18,6 +19,9 @@ const USAGE: &str = "usage: versions-le [options] <dir|file>...
 Finds the version constraints in a repository's manifests — package.json,
 Cargo.toml, pyproject.toml, go.mod and .github/workflows — and reports
 where the same dependency is constrained inconsistently.
+
+One JSON report on stdout when it is piped or redirected, human summary
+on stderr. At a terminal stdout stays silent.
 
 Options:
   --ecosystem <name>   only npm, cargo, python, go or ci; repeatable
@@ -89,12 +93,26 @@ fn execute(args: &[String]) -> Result<u8, String> {
     let options = parse(args)?;
     let report = scan::scan(&options.roots, &options.scan)?;
 
-    let line = serde_json::to_string(&report).expect("a report serializes");
-    writeln!(std::io::stdout().lock(), "{line}")
+    let stdout = std::io::stdout();
+    let terminal = stdout.is_terminal();
+    write_report(&mut stdout.lock(), &report, terminal)
         .map_err(|error| format!("could not write the report: {error}"))?;
 
     summarise(&report);
     Ok(scan::exit_code(&report, options.fail_on, options.strict))
+}
+
+/// A terminal gets nothing here. The stderr summary already says
+/// everything a person reads, and the JSON beside it on the same screen
+/// is the same answer a second time in a form nobody reads by eye.
+/// Anything that can parse — a pipe, a file, a subprocess — still gets
+/// the report, so no script sees a difference.
+fn write_report(out: &mut impl Write, report: &Report, terminal: bool) -> std::io::Result<()> {
+    if terminal {
+        return Ok(());
+    }
+    let line = serde_json::to_string(report).expect("a report serializes");
+    writeln!(out, "{line}")
 }
 
 fn parse(args: &[String]) -> Result<Cli, String> {
@@ -153,10 +171,10 @@ fn parse(args: &[String]) -> Result<Cli, String> {
     Ok(options)
 }
 
-/// The human half. Every line restates something already on stdout.
+/// The human half. Every line restates something already in the report.
 ///
 /// Write failures here are dropped on purpose, and only here: the report
-/// itself is on stdout and its failure is returned. A closed stderr — a
+/// itself is on stdout when anything reads it and its failure is returned. A closed stderr — a
 /// `2>/dev/null`, a pipe the reader walked away from — must not change
 /// the exit code the manifests earned.
 fn summarise(report: &Report) {
@@ -235,6 +253,27 @@ fn plural(count: usize, one: &str, many: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn sample_report() -> Report {
+        scan::scan(&[], &ScanOptions::default()).expect("an empty scan")
+    }
+
+    #[test]
+    fn a_pipe_gets_the_report() {
+        let mut out = Vec::new();
+        write_report(&mut out, &sample_report(), false).expect("a write");
+        let text = String::from_utf8(out).expect("utf-8");
+        assert_eq!(text.lines().count(), 1);
+        assert!(text.starts_with("{\"schema\":1"), "{text}");
+    }
+
+    /// The summary on stderr already covers a person at a terminal.
+    #[test]
+    fn a_terminal_gets_no_json() {
+        let mut out = Vec::new();
+        write_report(&mut out, &sample_report(), true).expect("a write");
+        assert!(out.is_empty());
+    }
 
     #[test]
     fn every_documented_flag_is_parsed_and_the_reverse() {

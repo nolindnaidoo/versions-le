@@ -189,7 +189,7 @@ The same comparison runs over a tree from a terminal or a CI step: a Rust CLI in
 </p>
 
 ```bash
-versions-le .                          # every manifest in the tree, as one JSON report
+versions-le .                          # every manifest in the tree; one JSON report on stdout when piped
 versions-le --ecosystem cargo .        # one ecosystem
 versions-le --fail-on any .            # floating pins fail the build too
 versions-le --strict .                 # an unanalysed corner exits 2

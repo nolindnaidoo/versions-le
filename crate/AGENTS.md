@@ -122,7 +122,9 @@ crate/src/
   tree are byte-identical. A report is a thing to diff.
 - **stdout is protocol, stderr is human, and there is no `--json`
   flag.** One mode, nothing to misremember, and the human summary is a
-  projection of the same report so the two cannot drift.
+  projection of the same report so the two cannot drift. stdout stays
+  silent when it is a terminal, because the stderr listing already covers
+  a person reading it. Anything that can parse gets the report.
 - **Nothing writes.** No `--fix`, no `--pin`, no `--update`, and no MCP
   argument that offers one. Tests assert the absence on both surfaces.
 - **One crate, self-contained.** No published `-core`, no shared crate
