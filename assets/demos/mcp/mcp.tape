@@ -28,7 +28,7 @@ Enter
 Sleep 5s
 Show
 Sleep 1s
-Type "Use versions-le to compare the versions this project pins. One short line each."
+Type "Use versions-le to compare the versions this project pins. One short line per finding, nothing else."
 Sleep 500ms
 Enter
 Sleep 24s
