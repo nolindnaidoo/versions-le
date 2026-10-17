@@ -35,6 +35,12 @@ repository while it held the CLI alone.
 
 ### Fixed
 
+- The npm MCP server read `"arguments": null` as an empty object, where
+  the crate's server refuses it as not being an object. The shared
+  `compare_versions` tool now answers both the same way.
+
+### Fixed
+
 - The rating prompt's Rate button opened the Marketplace review page for
   every install, including one from Open VSX in VSCodium, Cursor or
   Windsurf, because it told the registries apart by a publisher name the

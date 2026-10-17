@@ -178,6 +178,17 @@ describe('protocol', () => {
 		expect(reply?.error).toBeUndefined();
 		expect(reply?.result?.isError).toBe(true);
 	});
+
+	it('refuses null arguments as the crate does, not as an empty object', async () => {
+		const reply = await respond({
+			jsonrpc: '2.0',
+			id: 5,
+			method: 'tools/call',
+			params: { name: 'compare_versions', arguments: null },
+		});
+		const content = reply?.result?.content as { text: string }[] | undefined;
+		expect(content?.[0]?.text).toBe('this tool takes an object of arguments');
+	});
 });
 
 describe('serve: the stdio loop', () => {
