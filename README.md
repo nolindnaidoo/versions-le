@@ -17,6 +17,9 @@
   <a href="https://www.npmjs.com/package/versions-le-mcp">
     <img src="https://img.shields.io/npm/v/versions-le-mcp?style=for-the-badge&label=MCP%20server&color=blue&logo=npm" alt="versions-le-mcp on npm" />
   </a>
+  <a href="https://www.npmjs.com/package/versions-le">
+    <img src="https://img.shields.io/npm/v/versions-le?style=for-the-badge&label=npm%20CLI&color=blue&logo=npm" alt="versions-le on npm" />
+  </a>
   <a href="https://crates.io/crates/versions-le">
     <img src="https://img.shields.io/crates/v/versions-le?style=for-the-badge&label=Rust%20CLI&color=blue&logo=rust" alt="versions-le on crates.io" />
   </a>
@@ -188,6 +191,22 @@ The same comparison runs over a tree from a terminal or a CI step: a Rust CLI in
 <p align="center">
   <img src="assets/demos/cli.gif" alt="versions-le in a terminal" style="max-width: 100%; height: auto;" />
 </p>
+
+**Install it from npm** ([`versions-le`](https://www.npmjs.com/package/versions-le)) **or from crates.io** ([`versions-le`](https://crates.io/crates/versions-le)). Both install the same `versions-le` command.
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/versions-le">
+    <img src="https://img.shields.io/npm/v/versions-le?style=for-the-badge&label=npm%20CLI&color=blue&logo=npm" alt="versions-le on npm" />
+  </a>
+  <a href="https://crates.io/crates/versions-le">
+    <img src="https://img.shields.io/crates/v/versions-le?style=for-the-badge&label=Rust%20CLI&color=blue&logo=rust" alt="versions-le on crates.io" />
+  </a>
+</p>
+
+```bash
+npm install -g versions-le   # or run it once: npx versions-le
+cargo install versions-le
+```
 
 ```bash
 versions-le .                          # every manifest in the tree; one JSON report on stdout when piped
