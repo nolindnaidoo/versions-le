@@ -1,4 +1,7 @@
-# Publishing versions-le to crates.io.
+# Publishing versions-le to crates.io. The extension and the npm MCP server
+# publish from release.yml, and the npm command line from release-cli.yml.
+# All of them release one version from one tag, `v<version>`; ci-crate.yml's
+# `versions` job holds the manifests equal.
 #
 # Dispatch-only, never by pushing a tag: a crates.io version can never be
 # reused, so the irreversible step is one someone chooses on purpose. The

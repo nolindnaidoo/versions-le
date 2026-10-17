@@ -46,6 +46,12 @@ any conflict.
 - The gated suites are opt-in and CI sets them: `VERSIONS_LE_BUDGET=1`,
   `VERSIONS_LE_FUZZ_SECONDS=60`, `VERSIONS_LE_SCENARIOS=1`. A skipped
   case says so by name; a skip is never reported as a pass.
+- **The command line has a twin.** The npm package `versions-le`,
+  built from the extension's `src/cli/` over the ported engine, mirrors
+  `cli.rs`, `scan.rs`, `discover.rs`, `Excludes` and `mcp/` byte for
+  byte, and `bun ../scripts/check-cli-parity.ts` fails on any difference.
+  A change to a flag, a message, the walk, the glob matching, an exit
+  code or an MCP reply changes `src/cli/` in the same commit.
 - Write a regression test for every bug you fix. Three of the existing
   ones came from running the binary against a real repository, and all
   three were invisible to a green suite — so **run the binary, not only

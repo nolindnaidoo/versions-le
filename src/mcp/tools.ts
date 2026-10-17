@@ -26,7 +26,7 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 	typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /** `additionalProperties: false`, enforced: the first unknown key in sorted order is named. */
-function only(
+export function only(
 	value: unknown,
 	allowed: readonly string[],
 	what: string,

@@ -1,0 +1,46 @@
+{
+	"name": "versions-le",
+	"version": "1.2.0",
+	"description": "Find where one dependency is constrained inconsistently across a repository's package.json, Cargo.toml, pyproject.toml, go.mod and GitHub workflows. Never crosses an ecosystem.",
+	"keywords": [
+		"versions",
+		"dependencies",
+		"semver",
+		"monorepo",
+		"consistency",
+		"cli",
+		"versions-le",
+		"nolindnaidoo",
+		"letools"
+	],
+	"license": "MIT",
+	"author": {
+		"name": "Nolin Naidoo",
+		"url": "https://nolindnaidoo.com"
+	},
+	"homepage": "https://letools.dev/tools/versions-le",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/nolindnaidoo/versions-le.git",
+		"directory": "cli"
+	},
+	"bugs": {
+		"url": "https://github.com/nolindnaidoo/versions-le/issues"
+	},
+	"type": "commonjs",
+	"bin": {
+		"versions-le": "cli.js"
+	},
+	"files": [
+		"cli.js",
+		"README.md",
+		"LICENSE"
+	],
+	"engines": {
+		"node": ">=20"
+	},
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
+	}
+}

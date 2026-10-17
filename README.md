@@ -55,6 +55,7 @@ Run `Versions-LE: Compare Versions` and every manifest in the workspace is compa
 | **VS Code** | The comparison, in your editor, on a keystroke | [Marketplace](https://marketplace.visualstudio.com/items?itemName=nolindnaidoo.versions-le) |
 | **Cursor, VSCodium, Windsurf** | The same extension | [Open VSX](https://open-vsx.org/extension/nolindnaidoo/versions-le) |
 | **A terminal or a CI step** | A whole tree, with an exit code | `cargo install versions-le` · [crates.io](https://crates.io/crates/versions-le) |
+| **A terminal, via Node** | The same command line, held to the Rust one byte for byte | `npx versions-le` · [npm](https://www.npmjs.com/package/versions-le) |
 | **Any MCP agent, via Node** | `compare_versions` over stdio | `npx versions-le-mcp` · [npm](https://www.npmjs.com/package/versions-le-mcp) |
 
 ## The six checks
@@ -182,7 +183,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | npx -y versions-le-mcp
 
 ## The CLI
 
-The same comparison runs over a tree from a terminal or a CI step: a Rust CLI in [`crate/`](crate/README.md), sharing one corpus with the extension — [`crate/fixtures/`](crate/fixtures/) — so the two can never read a constraint differently.
+The same comparison runs over a tree from a terminal or a CI step: a Rust CLI in [`crate/`](crate/README.md), sharing one corpus with the extension — [`crate/fixtures/`](crate/fixtures/) — so the two can never read a constraint differently. The same command line also ships on npm as `versions-le`, for a machine with Node and no Rust, and CI holds it to the crate byte for byte on three operating systems.
 
 <p align="center">
   <img src="assets/demos/cli.gif" alt="versions-le in a terminal" style="max-width: 100%; height: auto;" />
@@ -270,12 +271,12 @@ a build only tells you how busy the runner was.
 <!-- coverage:start -->
 | Metric | Coverage |
 | --- | --- |
-| Statements | 87.78% |
-| Branches | 80.08% |
-| Functions | 95.25% |
-| Lines | 91.54% |
+| Statements | 78.12% |
+| Branches | 71.21% |
+| Functions | 81.36% |
+| Lines | 81.62% |
 
-304 test cases across 16 files, plus an integration suite that runs
+323 test cases across 18 files, plus an integration suite that runs
 in a real VS Code extension host and an end-to-end test that installs the
 built `.vsix` into a clean profile.
 
