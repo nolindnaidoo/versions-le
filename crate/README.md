@@ -147,9 +147,11 @@ is** — a workflow lives in a hidden directory by definition, so
 | Route | Command | Worth knowing |
 |---|---|---|
 | **crates.io** | `cargo install versions-le` | Any platform, needs **Rust 1.88+**. |
+| **npm** | `npm install -g versions-le` or `npx versions-le` | Needs **Node 20+**. The same `versions-le` command, held to this one byte for byte. |
 | **From source** | `cd versions-le/crate && cargo install --path .` | `cargo build --release` is the same build CI runs. |
 
-No runtime, no network, nothing written.
+The cargo build needs no runtime. Neither one touches the network or
+writes a file.
 
 ## Options
 

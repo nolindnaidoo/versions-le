@@ -270,6 +270,16 @@ than everything — a typo in a config must not silently hide the
 manifests this exists to compare — and the patterns beside it still
 work.
 
+**Held equal: this surface and the npm one.** The npm package
+`versions-le` installs a command named `versions-le`, built from the
+extension's `src/cli/` over the extension's port of this crate, and
+nobody running `versions-le` can tell which one they have. It is held to
+everything in this section byte for byte — flags, walk, exclusions,
+findings, refusals, exit codes, stdout, stderr, and every reply
+`versions-le mcp` writes — by `scripts/check-cli-parity.ts`. A change to
+this surface changes `src/cli/` in the same commit. That includes
+`--version`: every surface in the repository carries one version.
+
 ## The MCP surface
 
 - **`compare_versions`** — file contents in, findings out. Touches no

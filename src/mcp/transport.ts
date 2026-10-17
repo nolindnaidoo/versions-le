@@ -106,7 +106,11 @@ export function createResponder(
 			});
 		}
 
-		const args = (params?.arguments ?? {}) as Record<string, unknown>;
+		// Absent arguments are an empty object; present ones reach the tool as
+		// sent, so `null` is refused for not being an object, as the crate does.
+		const args = (
+			params?.arguments === undefined ? {} : params.arguments
+		) as Record<string, unknown>;
 
 		// A tool that throws is a tool-level failure, not a protocol failure: the
 		// client gets a result carrying isError so a model can read the reason,

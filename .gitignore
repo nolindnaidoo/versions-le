@@ -127,3 +127,7 @@ crate/target/
 # fails on a file that is present on every machine that wrote it.
 !crate/fixtures/
 !crate/fixtures/**
+
+# The npm command line, built by scripts/build-cli.js
+cli/cli.js
+cli/LICENSE

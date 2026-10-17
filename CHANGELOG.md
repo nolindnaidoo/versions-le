@@ -5,12 +5,39 @@ All notable changes to Versions-LE will be documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-This file covers the **VS Code extension**. The Rust CLI in `crate/` is a
-separate product on its own cadence and keeps its own
-[CHANGELOG](crate/CHANGELOG.md). The entries below 1.0.0 describe this
+This file covers the **VS Code extension**, the npm MCP server and the
+npm command line. The Rust CLI in `crate/` keeps its own
+[CHANGELOG](crate/CHANGELOG.md). From 1.2.0 every surface carries one
+version and releases from one tag. The entries below 1.0.0 describe this
 repository while it held the CLI alone.
 
-## [Unreleased]
+## [1.2.0] - 2026-10-17
+
+### Changed
+
+- **One version for every surface.** The extension, the MCP server on
+  npm, the new npm command line and the Rust crate all release as 1.2.0
+  from the tag `v1.2.0`. The crate jumps from 0.1.5 to join them, and CI
+  now fails a commit where any of them disagree.
+
+### Added
+
+- An npm command line, `versions-le`, built in `cli/` from `src/cli/`. It
+  is the Rust CLI's surface over this extension's detection engine: the
+  same flags, walk, `--exclude` globs, findings, refusals, exit codes and
+  JSON report, and `versions-le mcp` serves the same two tools with the
+  same bytes. The exclusions are globset's, transcribed and checked
+  against globset itself. `scripts/check-cli-parity.ts` runs both binaries
+  over one tree on three operating systems and fails on any byte of
+  difference, and `scripts/check-cli-pipes.ts` does the same with stdout
+  or stderr closed early. It is published as `versions-le` on npm, beside
+  `versions-le-mcp`.
+
+### Fixed
+
+- The npm MCP server read `"arguments": null` as an empty object, where
+  the crate's server refuses it as not being an object. The shared
+  `compare_versions` tool now answers both the same way.
 
 ### Fixed
 
