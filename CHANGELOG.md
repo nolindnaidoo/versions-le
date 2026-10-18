@@ -11,6 +11,18 @@ npm command line. The Rust CLI in `crate/` keeps its own
 version and releases from one tag. The entries below 1.0.0 describe this
 repository while it held the CLI alone.
 
+## [Unreleased]
+
+### Changed
+
+- **The listing carries the words people search for.** Open VSX ranks a
+  match in the name five times a match in the description, and "Versions-LE"
+  holds neither "dependency" nor "version", so a search for "version
+  mismatch" put it 69th on 2026-10-18. The name is "Versions-LE: Dependency
+  Version Checker", the description opens with "Dependency version checker",
+  where a card has room for about forty characters, and the keywords are cut
+  from 17 to 10 phrases someone would search for.
+
 ## [1.2.1] - 2026-10-17
 
 ### Fixed
