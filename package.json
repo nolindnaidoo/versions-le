@@ -1,8 +1,8 @@
 {
 	"name": "versions-le",
 	"publisher": "nolindnaidoo",
-	"displayName": "Versions-LE",
-	"description": "Find where one dependency is constrained differently across a repository's manifests",
+	"displayName": "Versions-LE: Dependency Version Checker",
+	"description": "Dependency version checker: find where one dependency's version is constrained differently across a repository's manifests",
 	"version": "1.2.1",
 	"license": "MIT",
 	"author": {
@@ -26,23 +26,16 @@
 		"Other"
 	],
 	"keywords": [
-		"versions",
 		"version",
-		"dependencies",
+		"versions",
 		"dependency",
+		"dependencies",
+		"dependency versions",
+		"version mismatch",
+		"version conflict",
 		"semver",
-		"constraint",
-		"conflict",
-		"drift",
 		"monorepo",
-		"package-json",
-		"cargo",
-		"pyproject",
-		"go-mod",
-		"workflow",
-		"msrv",
-		"mcp",
-		"model-context-protocol"
+		"package versions"
 	],
 	"icon": "src/assets/images/icon.png",
 	"l10n": "./l10n",
