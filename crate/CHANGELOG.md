@@ -8,6 +8,13 @@ in this repository carries one version and releases from one tag.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-10-18
+
+### Changed
+
+- No change to the crate. The version moves with the extension, whose
+  listing now carries the words people search for.
+
 ## [1.2.1] - 2026-10-17
 
 ### Fixed

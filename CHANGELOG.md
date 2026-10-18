@@ -11,7 +11,7 @@ npm command line. The Rust CLI in `crate/` keeps its own
 version and releases from one tag. The entries below 1.0.0 describe this
 repository while it held the CLI alone.
 
-## [Unreleased]
+## [1.2.2] - 2026-10-18
 
 ### Changed
 
