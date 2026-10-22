@@ -62,11 +62,27 @@ jobs:
           echo "Packaged files: $(wc -l < /tmp/packaged.txt)"
       - name: The version is not already on crates.io
         run: |
+          set -euo pipefail
           version="${{ steps.version.outputs.version }}"
-          published=$(curl -sS -H 'User-Agent: le-release-check' \
-            "https://crates.io/api/v1/crates/versions-le" \
-            | python3 -c "import json,sys; d=json.load(sys.stdin); print(' '.join(v['num'] for v in d.get('versions',[])))" \
-            2>/dev/null || echo "")
+          # An answer the probe cannot read must not read as "free".
+          # A failed request or a parse failure used to be silenced into an
+          # empty list, the same shape as a crate with no versions, so an HTML
+          # error page from the registry let the publish run. Each failure is
+          # its own exit now: curl's on the request, python's on a body that is
+          # not the version list. A crate that was never published answers
+          # with an `errors` body, and that alone is read as "no versions".
+          body=$(curl -sS -H 'User-Agent: le-release-check' "https://crates.io/api/v1/crates/versions-le")
+          published=$(printf '%s' "$body" | python3 -c '
+          import json, sys
+          answer = json.load(sys.stdin)
+          if "versions" in answer:
+              print(" ".join(v["num"] for v in answer["versions"]))
+          elif "errors" not in answer:
+              sys.exit("the body is JSON but not a version list")
+          ') || {
+            echo "::error::crates.io did not answer with a version list; refusing to publish without knowing"
+            exit 1
+          }
           for v in $published; do
             if [ "$v" = "$version" ]; then
               echo "versions-le $version is already published. A version cannot be reused."
