@@ -19,5 +19,6 @@
 	"Warnings": "Cảnh báo",
 	"{0} finding(s)": "{0} phát hiện",
 	"{0} version problem(s) across {1} manifest(s)": "{0} vấn đề phiên bản trong {1} tệp manifest",
-	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "{0} tệp manifest, {1} ràng buộc: {2} lỗi, {3} cảnh báo, {4} thông tin, {5} không so sánh"
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "{0} tệp manifest, {1} ràng buộc: {2} lỗi, {3} cảnh báo, {4} thông tin, {5} không so sánh",
+	"Versions-LE could not finish: {0}": "Versions-LE không thể hoàn thành: {0}"
 }

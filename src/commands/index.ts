@@ -4,6 +4,7 @@ import type { Notifier } from '../ui/notifier';
 import type { RatingPrompt } from '../ui/ratingPrompt';
 import type { StatusBar } from '../ui/statusBar';
 import { compareWorkspace } from './compare';
+import { guarded } from './guard';
 
 export interface CommandDependencies {
 	notifier: Notifier;
@@ -21,8 +22,9 @@ export function registerCommands(
 		// keybinding pass nothing, or an editor's own argument, which is not a folder.
 		vscode.commands.registerCommand(
 			'versions-le.compare',
-			async (picked?: unknown) =>
+			guarded(deps.notifier, async (picked?: unknown) =>
 				compareWorkspace(deps, isUri(picked) ? picked : undefined),
+			),
 		),
 	);
 }

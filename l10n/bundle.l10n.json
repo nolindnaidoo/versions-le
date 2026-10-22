@@ -19,5 +19,6 @@
 	"Warnings": "Warnings",
 	"{0} finding(s)": "{0} finding(s)",
 	"{0} version problem(s) across {1} manifest(s)": "{0} version problem(s) across {1} manifest(s)",
-	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared"
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared",
+	"Versions-LE could not finish: {0}": "Versions-LE could not finish: {0}"
 }

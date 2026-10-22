@@ -19,5 +19,6 @@
 	"Warnings": "Попередження",
 	"{0} finding(s)": "знахідок: {0}",
 	"{0} version problem(s) across {1} manifest(s)": "проблем із версіями: {0}, маніфестів: {1}",
-	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "маніфестів: {0}, обмежень: {1}; помилок: {2}, попереджень: {3}, відомостей: {4}, не порівнювалося: {5}"
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "маніфестів: {0}, обмежень: {1}; помилок: {2}, попереджень: {3}, відомостей: {4}, не порівнювалося: {5}",
+	"Versions-LE could not finish: {0}": "Versions-LE не вдалося завершити: {0}"
 }

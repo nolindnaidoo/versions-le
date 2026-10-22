@@ -19,5 +19,6 @@
 	"Warnings": "Peringatan",
 	"{0} finding(s)": "{0} temuan",
 	"{0} version problem(s) across {1} manifest(s)": "{0} masalah versi di {1} manifes",
-	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "{0} manifes, {1} batasan: {2} kesalahan, {3} peringatan, {4} informasi, {5} tidak dibandingkan"
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "{0} manifes, {1} batasan: {2} kesalahan, {3} peringatan, {4} informasi, {5} tidak dibandingkan",
+	"Versions-LE could not finish: {0}": "Versions-LE tidak dapat menyelesaikan: {0}"
 }

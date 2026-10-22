@@ -19,5 +19,6 @@
 	"Warnings": "Avisos",
 	"{0} finding(s)": "{0} constatação(ões)",
 	"{0} version problem(s) across {1} manifest(s)": "{0} problema(s) de versão em {1} manifesto(s)",
-	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "{0} manifesto(s), {1} restrição(ões): {2} falha(s), {3} aviso(s), {4} informativo(s), {5} não comparado(s)"
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "{0} manifesto(s), {1} restrição(ões): {2} falha(s), {3} aviso(s), {4} informativo(s), {5} não comparado(s)",
+	"Versions-LE could not finish: {0}": "O Versions-LE não pôde concluir: {0}"
 }
