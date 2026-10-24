@@ -29,6 +29,19 @@ const VENDORED = Object.freeze([
 
 const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
+const diagnostic = (file: string, message: string): Diagnostic => ({
+	severity: 'error',
+	code: 'unreadable',
+	file,
+	message,
+});
+
+/** The host's reason when it gives one: a `FileSystemError` carries a code such as `NoPermissions`. */
+function reason(error: unknown): string {
+	const code = (error as { code?: unknown } | null)?.code;
+	return typeof code === 'string' && code !== '' ? ` (${code})` : '';
+}
+
 /**
  * Compare every manifest under a folder: the one picked in the Explorer, or
  * every workspace folder. Each manifest is labelled by its path relative to
@@ -66,20 +79,20 @@ export async function compareWorkspace(
 				: relative;
 			const kind = manifestKind(relative);
 			if (kind === undefined) continue;
+			// Each failure is named for what happened, so the answer is never
+			// quietly narrower than it looks, and a file that went away between
+			// the listing and the read is never called "not UTF-8 text".
+			let bytes: Uint8Array;
 			try {
-				documents.push({
-					kind,
-					label,
-					content: decoder.decode(await vscode.workspace.fs.readFile(uri)),
-				});
+				bytes = await vscode.workspace.fs.readFile(uri);
+			} catch (error) {
+				unreadable.push(diagnostic(label, `could not be read${reason(error)}`));
+				continue;
+			}
+			try {
+				documents.push({ kind, label, content: decoder.decode(bytes) });
 			} catch {
-				// Named, so the answer is never quietly narrower than it looks.
-				unreadable.push({
-					severity: 'error',
-					code: 'unreadable',
-					file: label,
-					message: 'not readable as UTF-8 text',
-				});
+				unreadable.push(diagnostic(label, 'not UTF-8 text'));
 			}
 		}
 	}

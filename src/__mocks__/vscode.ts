@@ -241,6 +241,18 @@ export function _setWorkspaceFiles(files: Readonly<Record<string, string | Uint8
 	}
 }
 
+const readFileErrors = new Map<string, Error>();
+
+/**
+ * Make reading one listed file fail, as a file deleted or made unreadable
+ * between the listing and the read does. The error's `code` is what a
+ * `vscode.FileSystemError` carries: `NoPermissions`, `FileNotFound`, `Unavailable`.
+ */
+export function _setReadFileError(path: string, error: Error | undefined): void {
+	if (error) readFileErrors.set(path, error);
+	else readFileErrors.delete(path);
+}
+
 function isDirectory(path: string): boolean {
 	const prefix = path === '/' ? '/' : `${path}/`;
 	return [...workspaceFiles.keys()].some((file) => file.startsWith(prefix));
@@ -293,8 +305,15 @@ export const workspace = {
 	asRelativePath: (target: Uri | string, _includeFolder?: boolean) => (typeof target === 'string' ? target : target.path),
 	fs: {
 		readFile: async (uri: Uri) => {
+			const failure = readFileErrors.get(uri.path);
+			if (failure) throw failure;
 			const bytes = workspaceFiles.get(uri.path);
-			if (bytes === undefined) throw new Error(`no such file: ${uri.path}`);
+			if (bytes === undefined) {
+				// As vscode.FileSystemError.FileNotFound presents itself: a code, not a class.
+				throw Object.assign(new Error(`no such file: ${uri.path}`), {
+					code: 'FileNotFound',
+				});
+			}
 			return bytes;
 		},
 		writeFile: async (_uri: Uri, _content: Uint8Array) => {},
@@ -728,6 +747,7 @@ export function _resetMockState(): void {
 	clipboardError = undefined;
 	openDocumentError = undefined;
 	workspaceFiles.clear();
+	readFileErrors.clear();
 	workspace.workspaceFolders = undefined;
 }
 

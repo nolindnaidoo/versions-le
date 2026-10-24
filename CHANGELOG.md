@@ -15,6 +15,11 @@ repository while it held the CLI alone.
 
 ### Fixed
 
+- A manifest that could not be read, because it was deleted or made
+  unreadable between the listing and the read, was reported as "not readable
+  as UTF-8 text". The report says it could not be read, with the host's
+  reason, and says "not UTF-8 text", the CLI's words, only for a file that
+  was read and is not text.
 - When the editor refused to open the report, the command still flashed the
   finding count in the status bar and announced the version problems in a
   toast, describing a report nobody was handed. It announces the failure to

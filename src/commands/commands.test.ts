@@ -10,6 +10,7 @@ import {
 	_setClipboardError,
 	_setConfig,
 	_setOpenDocumentError,
+	_setReadFileError,
 	_setWorkspaceFiles,
 	_shownMessages,
 	executedBuiltins,
@@ -124,7 +125,25 @@ describe('versions-le.compare', () => {
 		const text = report();
 		expect(text).toContain('## Could not be read (2)');
 		expect(text).toContain('- `Cargo.toml`: not valid TOML');
-		expect(text).toContain('- `go.mod`: not readable as UTF-8 text');
+		expect(text).toContain('- `go.mod`: not UTF-8 text');
+	});
+
+	it('names a file that could not be read apart from one that is not text', async () => {
+		useWorkspace({
+			'/w/Cargo.toml': '[dependencies]\nserde = "1"\n',
+			'/w/go.mod': new Uint8Array([0xff, 0xfe]) as never,
+			'/w/package.json': '{"dependencies": {"a": "^1"}}',
+		});
+		_setReadFileError(
+			'/w/Cargo.toml',
+			Object.assign(new Error('EACCES'), { code: 'NoPermissions' }),
+		);
+		await runCommand('versions-le.compare');
+		const text = report();
+		expect(text).toContain('## Could not be read (2)');
+		expect(text).toContain('- `Cargo.toml`: could not be read (NoPermissions)');
+		expect(text).toContain('- `go.mod`: not UTF-8 text');
+		expect(text).not.toContain('Cargo.toml`: not');
 	});
 
 	it('leaves out what the exclude setting names', async () => {
