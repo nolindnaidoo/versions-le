@@ -49,6 +49,7 @@ Conventions: factory functions + `Object.freeze` (classes only inside the parser
 - **`toml::Value`'s Display reaches the report.** A Cargo dependency spelled as neither a string nor a table is recorded as written, through toml_writer: Rust's plain-decimal `f64`, the plainest string quoting the text allows, inline tables with sorted keys.
 - **Byte order wherever the crate sorts.** Every `BTreeMap` and `sort` in the crate orders strings by UTF-8 bytes, which differs from JavaScript's UTF-16 order past the BMP; `compareStrings` is code-point order, which is byte order.
 - **Sorted maps.** Without `preserve_order`, serde_json's and the toml crate's maps iterate keys in sorted order, so dependency sections are read in that order and the report follows it.
+- **The toml port carries the crate's recursion limit.** toml_parser's `RecursionGuard` refuses the 81st nested array or inline table and `parse_key` a dotted key with 80 segments before its last; `toml.ts` counts both the same way (`LIMIT`). The differential never generates a document that deep, so `toml-cases.json` holds ten documents at and past each bound, read back from the crate.
 
 ## Code style
 

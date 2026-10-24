@@ -15,6 +15,10 @@ repository while it held the CLI alone.
 
 ### Fixed
 
+- A `Cargo.toml` or `pyproject.toml` nested deeper than the toml crate
+  follows, 81 arrays or inline tables deep, or carrying a dotted key of 81
+  segments, was read by the extension and the npm server where the CLI
+  refused it as not valid TOML. The port carries the crate's limit.
 - An exclude pattern holding a comma excluded the wrong files: the
   patterns were spliced into one brace group beside the built-in ones, so
   `**/a,b/**` read as `**/a` and `b/**`, which left `a,b/Cargo.toml` in and
