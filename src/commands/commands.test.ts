@@ -12,9 +12,11 @@ import {
 	_setOpenDocumentError,
 	_setReadFileError,
 	_setWorkspaceFiles,
+	_shownDocumentOptions,
 	_shownMessages,
 	executedBuiltins,
 	Uri,
+	ViewColumn,
 	workspace,
 } from '../__mocks__/vscode';
 import { registerOpenSettingsCommand } from '../config/settings';
@@ -188,6 +190,24 @@ describe('versions-le.compare', () => {
 		const toasts = _shownMessages().map((m) => [m.kind, m.message]);
 		expect(toasts).toContainEqual(['error', '2 manifest(s) could not be read']);
 		expect(toasts).not.toContainEqual(['info', 'No manifests found']);
+	});
+
+	it('opens the report beside the editor, or in the active column when asked', async () => {
+		useWorkspace(TREE);
+		await runCommand('versions-le.compare');
+		expect(_shownDocumentOptions().at(-1)).toEqual({
+			preview: false,
+			viewColumn: ViewColumn.Beside,
+		});
+		_setConfig('versions-le.openResultsSideBySide', false);
+		await runCommand('versions-le.compare');
+		expect(_shownDocumentOptions().at(-1)).toEqual({ preview: false });
+	});
+
+	it('leaves the clipboard alone unless asked', async () => {
+		useWorkspace(TREE);
+		await runCommand('versions-le.compare');
+		expect(_clipboardText()).toBe('');
 	});
 
 	it('copies the report when asked to', async () => {
