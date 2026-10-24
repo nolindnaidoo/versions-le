@@ -25,6 +25,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   newline grew the process by its own size. A frame over 16 MiB is refused
   with a JSON-RPC parse error, in the npm server's words, and the server
   keeps serving.
+- The last line on stderr said "no manifests found" when manifests were
+  found and every one failed to read, after naming each failure. It says
+  "no manifests could be read". The exit code is unchanged: 0, or 2 under
+  `--strict`, as the usage text states.
 
 ## [1.2.2] - 2026-10-18
 

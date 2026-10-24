@@ -15,6 +15,9 @@ repository while it held the CLI alone.
 
 ### Fixed
 
+- `versions-le` on npm, like the crate, ended its stderr summary with "no
+  manifests found" when manifests were found and every one failed to read.
+  It says "no manifests could be read".
 - The extension's MCP server echoed the client's protocol version in its
   `initialize` answer, advertised `listChanged`, answered `initialize` sent
   with a null id, ignored `notifications/initialized` sent with an id, and

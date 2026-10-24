@@ -208,13 +208,23 @@ fn summarise(report: &Report) {
         );
     }
 
-    let _ = writeln!(stderr, "{}", verdict(&report.summary));
+    let _ = writeln!(
+        stderr,
+        "{}",
+        verdict(&report.summary, report.diagnostics.len())
+    );
 }
 
-/// The last line: what the run decided, in one sentence.
-fn verdict(summary: &Summary) -> String {
+/// The last line: what the run decided, in one sentence. A run in which
+/// every manifest failed to read is not a run that found none: the
+/// diagnostics above name them, and the verdict says so.
+fn verdict(summary: &Summary, unread: usize) -> String {
     if summary.manifests == 0 {
-        return "no manifests found".to_string();
+        return if unread > 0 {
+            "no manifests could be read".to_string()
+        } else {
+            "no manifests found".to_string()
+        };
     }
     if summary.findings == 0 {
         return format!(
@@ -256,6 +266,15 @@ mod tests {
 
     fn sample_report() -> Report {
         scan::scan(&[], &ScanOptions::default()).expect("an empty scan")
+    }
+
+    /// "no manifests found" was the verdict when every manifest found was
+    /// unreadable: a failed run read as an empty one.
+    #[test]
+    fn the_verdict_tells_nothing_found_from_nothing_readable() {
+        let empty = sample_report();
+        assert_eq!(verdict(&empty.summary, 0), "no manifests found");
+        assert_eq!(verdict(&empty.summary, 2), "no manifests could be read");
     }
 
     #[test]

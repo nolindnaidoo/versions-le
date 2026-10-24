@@ -98,12 +98,15 @@ export function summary(report: Report): string {
 			`refused ${refusal.reason} ${refusal.name}: ${refusal.message} [${files(refusal.sites)}]`,
 		);
 	}
-	lines.push(verdict(report.summary));
+	lines.push(verdict(report.summary, report.diagnostics.length));
 	return `${lines.join('\n')}\n`;
 }
 
-function verdict(summary: Report['summary']): string {
-	if (summary.manifests === 0) return 'no manifests found';
+/** The crate's last line: a run in which every manifest failed to read is not one that found none. */
+function verdict(summary: Report['summary'], unread: number): string {
+	if (summary.manifests === 0) {
+		return unread > 0 ? 'no manifests could be read' : 'no manifests found';
+	}
 	if (summary.findings === 0) {
 		return `consistent — ${plural(summary.entries, 'constraint', 'constraints')} across ${plural(summary.manifests, 'manifest', 'manifests')}`;
 	}
