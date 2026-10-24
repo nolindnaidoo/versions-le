@@ -222,6 +222,7 @@ most valuable line in the file, and it is what keeps the next person from
 - **The MCP server must never reference `vscode`**, and launching it needs `ELECTRON_RUN_AS_NODE=1`; `scripts/e2e-vsix.js` spawns the installed server exactly as `provider.ts` does.
 - **The MCP input buffer is bounded** at `MAX_FRAME_BYTES` in `mcp/transport.ts`. A frame past it is answered with a parse error and the rest of that line is dropped as it arrives, whether its newline comes late or in the same chunk. `mcp.test.ts` feeds a frame one byte over the limit and a ping after it, both ways. The file is one copy across the family, held by `letools-site`'s `check:fleet`.
 - **Every command body runs inside `commands/guard.ts`.** A rejection that escapes a command is reported by the editor in its own words, raw message and home directory included; through the guard it is one redacted, localized error after the command's own `finally` has run. `guard.test.ts` reads the source and fails on a `registerCommand` whose handler is not `guarded(...)`.
+- **`versions-le mcp` frames as the crate's server does.** `cli/frames.ts` reads a line with replacement characters, trims it as Rust's `str::trim` trims, answers a line that is not JSON or not a JSON-RPC 2.0 request with a parse error in the extension server's words, and drops a partial frame at close; `frames.test.ts` holds each, and `check:cli-pipes` feeds both command lines eighteen malformed frames.
 
 ## Toolchain
 

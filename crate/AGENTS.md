@@ -233,6 +233,14 @@ nowhere else to go.
 - **Refusals speak the caller's vocabulary.** An MCP caller has no
   command line; no message aimed at one mentions a flag, and a test
   asserts no MCP output contains `--`.
+- **The stdio loop answers a bad frame; it never drops one.** `mcp/mod.rs`
+  reads bytes, not `lines()`: a line that is not UTF-8 is decoded with
+  replacement characters as the npm server's decoder decodes it, a line that
+  is not JSON or not a JSON-RPC 2.0 request is answered with a parse error
+  in the npm server's words, a null id is a notification, and a partial
+  frame at close is dropped. `serve_streams` is the seam; the unit tests
+  under `mcp/mod.rs` drive it in 8 KiB chunks, and `check:cli-pipes` holds
+  the npm command line to every one of those answers.
 
 ## The corpus contract
 

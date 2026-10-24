@@ -15,6 +15,14 @@ repository while it held the CLI alone.
 
 ### Fixed
 
+- **`versions-le mcp` on npm answers a malformed frame as the extension's
+  server does.** It dropped a line that was not JSON, or not a JSON-RPC 2.0
+  request, without a word, read a last line with no newline as a frame,
+  answered a request whose id is null, and worded its unknown-method and
+  unknown-tool refusals its own way. Each now matches the extension's
+  server: a parse error for the first two, in the same words, nothing for
+  the next two, and the same refusal words. The crate's server moves with
+  it, and `check:cli-pipes` holds the two.
 - Three Simplified Chinese strings mixed ASCII commas and colons into
   Chinese sentences: the status bar tooltip, the report's summary line and
   the telemetry setting's description. They use the fullwidth marks the rest

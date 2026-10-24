@@ -8,10 +8,11 @@
 import { ECOSYSTEMS, type Ecosystem } from '../detect/heuristics';
 import { envelope, sortedKeys } from '../mcp/envelope';
 import { only, TOOLS } from '../mcp/tools';
-import { requests } from './frames';
+import { frames, type Request } from './frames';
 import { scan } from './scan';
 
 const PROTOCOL_VERSION = '2025-06-18';
+const PARSE_ERROR = -32700;
 const INVALID_PARAMS = -32602;
 const METHOD_NOT_FOUND = -32601;
 
@@ -70,18 +71,30 @@ function sharedTool(name: string) {
 
 /**
  * Serves until stdin closes, one request at a time, in order, over the
- * crate's framing in `frames.ts`.
+ * crate's framing in `frames.ts`. A frame the framing refuses is answered
+ * with a parse error, as the crate answers it.
  */
 export async function serve(
 	input: AsyncIterable<Uint8Array>,
 	write: (line: string) => void,
 	version: string,
 ): Promise<number> {
-	for await (const request of requests(input)) {
-		const response = await handle(request, version);
+	for await (const frame of frames(input)) {
+		if ('refusal' in frame) {
+			write(
+				`${reply({ id: null, error: { code: PARSE_ERROR, message: frame.refusal } })}\n`,
+			);
+			continue;
+		}
+		const response = await handle(frame.request, version);
 		if (response !== undefined) write(`${response}\n`);
 	}
 	return 0;
+}
+
+/** One reply as serde_json writes it: keys in byte order at every level. */
+function reply(body: Record<string, unknown>): string {
+	return JSON.stringify(sortedKeys({ jsonrpc: '2.0', ...body }));
 }
 
 function field(value: unknown, name: string): unknown {
@@ -94,17 +107,13 @@ function field(value: unknown, name: string): unknown {
 }
 
 async function handle(
-	request: unknown,
+	request: Request,
 	version: string,
 ): Promise<string | undefined> {
-	const id = field(request, 'id');
-	const method = field(request, 'method');
-	if (typeof method !== 'string') return undefined;
-	// A notification carries no id and gets no reply.
-	if (id === undefined) return undefined;
-
-	const handled = await dispatch(method, field(request, 'params'), version);
-	return JSON.stringify(sortedKeys({ jsonrpc: '2.0', id, ...handled }));
+	// A notification carries no id, or a null one, and gets no reply.
+	if (request.id === undefined || request.id === null) return undefined;
+	const handled = await dispatch(request.method, request.params, version);
+	return reply({ id: request.id, ...handled });
 }
 
 async function dispatch(
@@ -138,10 +147,7 @@ async function dispatch(
 	if (method === 'tools/call') return callTool(params);
 	if (method === 'ping') return { result: {} };
 	return {
-		error: {
-			code: METHOD_NOT_FOUND,
-			message: `this server does not implement ${method}`,
-		},
+		error: { code: METHOD_NOT_FOUND, message: `Unknown method: ${method}` },
 	};
 }
 
@@ -151,15 +157,13 @@ async function dispatch(
  * concluding the server is broken.
  */
 async function callTool(params: unknown): Promise<Handled> {
-	if (params === undefined) {
-		return {
-			error: { code: INVALID_PARAMS, message: 'no tool call was supplied' },
-		};
-	}
 	const name = field(params, 'name');
 	if (typeof name !== 'string') {
 		return {
-			error: { code: INVALID_PARAMS, message: 'the tool call named no tool' },
+			error: {
+				code: INVALID_PARAMS,
+				message: 'tools/call requires a string `name`',
+			},
 		};
 	}
 	// Absent arguments read as an empty object; present ones reach the tool
@@ -173,10 +177,7 @@ async function callTool(params: unknown): Promise<Handled> {
 		return { result: await outcome(async () => check(args)) };
 	}
 	return {
-		error: {
-			code: INVALID_PARAMS,
-			message: `this server offers no tool named ${name}`,
-		},
+		error: { code: INVALID_PARAMS, message: `Unknown tool: ${name}` },
 	};
 }
 
