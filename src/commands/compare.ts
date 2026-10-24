@@ -66,15 +66,23 @@ export async function compareWorkspace(
 		return;
 	}
 	const config = readConfig();
-	const exclude = `{${[...VENDORED, ...config.exclude].join(',')}}`;
+	const vendored = `{${VENDORED.join(',')}}`;
 	const qualify = roots.length > 1;
 	const documents: Document[] = [];
 	const unreadable: Diagnostic[] = [];
 	for (const root of roots) {
-		const found = await vscode.workspace.findFiles(
-			new vscode.RelativePattern(root, MANIFEST_GLOB),
-			exclude,
-		);
+		const include = new vscode.RelativePattern(root, MANIFEST_GLOB);
+		let found = await vscode.workspace.findFiles(include, vendored);
+		// One search per pattern. findFiles takes one exclude glob, and splicing
+		// the user's patterns into a brace group beside the vendored ones read a
+		// comma inside a pattern as the group's own separator: `**/a,b/**`
+		// excluded every file named `a` and everything under a top-level `b`.
+		for (const pattern of config.exclude) {
+			const kept = new Set(
+				(await vscode.workspace.findFiles(include, pattern)).map(String),
+			);
+			found = found.filter((uri) => kept.has(String(uri)));
+		}
 		for (const uri of found) {
 			const relative = uri.path.slice(root.path.replace(/\/$/, '').length + 1);
 			const label = qualify

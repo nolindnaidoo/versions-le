@@ -173,6 +173,24 @@ describe('versions-le.compare', () => {
 		expect(report()).not.toContain('web/Cargo.toml');
 	});
 
+	it('reads an exclude pattern holding a comma or a brace group as one pattern', async () => {
+		_setConfig('versions-le.exclude', ['**/a,b/**', '**/{skip,also}/**']);
+		useWorkspace({
+			'/w/keep/Cargo.toml': '[dependencies]\nx = "1"\n',
+			'/w/b/Cargo.toml': '[dependencies]\nx = "1"\n',
+			'/w/a,b/Cargo.toml': '[dependencies]\nx = "2"\n',
+			'/w/skip/Cargo.toml': '[dependencies]\nx = "3"\n',
+			'/w/also/Cargo.toml': '[dependencies]\nx = "4"\n',
+		});
+		await runCommand('versions-le.compare');
+		const text = report();
+		expect(text).toContain('- `keep/Cargo.toml`');
+		expect(text).toContain('- `b/Cargo.toml`');
+		expect(text).not.toContain('a,b/');
+		expect(text).not.toContain('skip/');
+		expect(text).not.toContain('also/');
+	});
+
 	it('says so when there are no manifests at all', async () => {
 		_setConfig('versions-le.notificationsLevel', 'all');
 		useWorkspace({ '/w/README.md': '# hi' });

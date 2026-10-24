@@ -258,9 +258,13 @@ function isDirectory(path: string): boolean {
 	return [...workspaceFiles.keys()].some((file) => file.startsWith(prefix));
 }
 
-/** A glob as VS Code reads one: `**` crosses separators, `*` does not, `{a,b}` is a choice. */
+/**
+ * A glob as VS Code reads one: `**` crosses separators, `*` does not, `{a,b}`
+ * is a choice, and a comma outside braces is a comma.
+ */
 function globToRegExp(glob: string): RegExp {
 	let out = '';
+	let braces = 0;
 	for (let i = 0; i < glob.length; i++) {
 		const c = glob.charAt(i);
 		if (c === '*' && glob.charAt(i + 1) === '*') {
@@ -268,9 +272,13 @@ function globToRegExp(glob: string): RegExp {
 			i += glob.charAt(i + 2) === '/' ? 2 : 1;
 		} else if (c === '*') out += '[^/]*';
 		else if (c === '?') out += '[^/]';
-		else if (c === '{') out += '(?:';
-		else if (c === '}') out += ')';
-		else if (c === ',') out += '|';
+		else if (c === '{') {
+			braces++;
+			out += '(?:';
+		} else if (c === '}') {
+			braces--;
+			out += ')';
+		} else if (c === ',') out += braces > 0 ? '|' : ',';
 		else out += c.replace(/[.+^$()|[\]\\]/g, '\\$&');
 	}
 	return new RegExp(`^${out}$`);

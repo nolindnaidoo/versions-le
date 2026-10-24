@@ -15,6 +15,11 @@ repository while it held the CLI alone.
 
 ### Fixed
 
+- An exclude pattern holding a comma excluded the wrong files: the
+  patterns were spliced into one brace group beside the built-in ones, so
+  `**/a,b/**` read as `**/a` and `b/**`, which left `a,b/Cargo.toml` in and
+  took everything under a top-level `b` out. Each pattern is now its own
+  exclusion.
 - A manifest saved with a byte order mark was read with the mark in its
   text, so a `package.json` was reported "not valid JSON", a `go.mod` lost
   its first line and a workflow its first key, where the CLI read the same

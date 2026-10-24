@@ -62,6 +62,29 @@ describe('Versions-LE integration', function () {
 		assert.ok(text.includes('CI builds on 1.85.0, below the declared minimum 1.88.0'), text);
 	});
 
+	it('honours an exclude pattern holding a comma or a brace group', async function () {
+		this.timeout(60_000);
+		const root = tree({
+			'keep/Cargo.toml': '[dependencies]\nx = "1"\n',
+			'b/Cargo.toml': '[dependencies]\nx = "1"\n',
+			'a,b/Cargo.toml': '[dependencies]\nx = "2"\n',
+			'skip/Cargo.toml': '[dependencies]\nx = "3"\n',
+			'also/Cargo.toml': '[dependencies]\nx = "4"\n',
+		});
+		const config = vscode.workspace.getConfiguration('versions-le');
+		await config.update('exclude', ['**/a,b/**', '**/{skip,also}/**'], vscode.ConfigurationTarget.Global);
+		try {
+			const text = await compare(root);
+			assert.ok(text.includes('- `keep/Cargo.toml`'), text);
+			assert.ok(text.includes('- `b/Cargo.toml`'), text);
+			assert.ok(!text.includes('a,b/'), text);
+			assert.ok(!text.includes('skip/'), text);
+			assert.ok(!text.includes('also/'), text);
+		} finally {
+			await config.update('exclude', undefined, vscode.ConfigurationTarget.Global);
+		}
+	});
+
 	it('offers its MCP server to agent mode', async () => {
 		// The registration itself is only observable in a real host, which
 		// scripts/e2e-vsix.js covers against the installed VSIX.
