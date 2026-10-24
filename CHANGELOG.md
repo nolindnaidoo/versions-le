@@ -13,6 +13,12 @@ repository while it held the CLI alone.
 
 ## [Unreleased]
 
+### Added
+
+- `bun run check:mcp-memory` drives the built MCP server through 3,000 tool
+  calls over one session, one in flight at a time, samples its resident
+  memory and fails if it keeps growing. Hand-run, like `benchmark`.
+
 ### Fixed
 
 - `versions-le` on npm, like the crate, ended its stderr summary with "no

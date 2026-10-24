@@ -178,6 +178,7 @@
 		"build:mcp": "node scripts/build-mcp.js",
 		"build:mcp:prod": "node scripts/build-mcp.js --prod",
 		"check:mcp-bundle": "node scripts/check-mcp-bundle.js",
+		"check:mcp-memory": "node scripts/check-mcp-memory.js",
 		"build:npm": "node scripts/build-npm.js",
 		"check:npm-package": "node scripts/check-npm-package.js",
 		"test": "vitest run --pool=threads",
