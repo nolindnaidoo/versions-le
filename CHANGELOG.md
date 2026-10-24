@@ -15,6 +15,9 @@ repository while it held the CLI alone.
 
 ### Fixed
 
+- A status bar flash after the extension was deactivated, from a command
+  that finished late, wrote to the disposed item and set a restore timer
+  that outlived the extension. It does nothing.
 - The MCP server held every byte of a frame until its newline, with no
   ceiling, so a client that streamed without one grew the process without
   bound and got no answer. A frame over 16 MiB is refused with a parse error
