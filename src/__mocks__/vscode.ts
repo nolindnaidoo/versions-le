@@ -470,14 +470,20 @@ export const window = {
 			token: typeof cancellationToken,
 		) => Promise<T>,
 	): Promise<T> => task({ report: () => {} }, cancellationToken),
-	createOutputChannel: (_name: string) => {
-		const linesOut: string[] = [];
-		outputChannels.push(linesOut);
-		return {
-			appendLine: (line: string) => linesOut.push(line),
-			dispose: () => {},
-			_lines: linesOut,
+	createOutputChannel: (name: string) => {
+		const channel = {
+			name,
+			disposed: false,
+			_lines: [] as string[],
+			appendLine(line: string): void {
+				channel._lines.push(line);
+			},
+			dispose(): void {
+				channel.disposed = true;
+			},
 		};
+		outputChannels.push(channel);
+		return channel;
 	},
 	createStatusBarItem: (_alignment?: unknown, _priority?: number) => {
 		const item = {
@@ -501,10 +507,23 @@ export const window = {
 	},
 };
 
-const outputChannels: string[][] = [];
+const outputChannels: Array<{
+	name: string;
+	disposed: boolean;
+	_lines: string[];
+}> = [];
 
 export function _outputChannelLines(): readonly string[] {
-	return outputChannels.flat();
+	return outputChannels.flatMap((channel) => channel._lines);
+}
+
+/** Every output channel created, disposed or not, in creation order. */
+export function _outputChannels(): readonly {
+	name: string;
+	disposed: boolean;
+	_lines: string[];
+}[] {
+	return outputChannels;
 }
 
 const statusBarItems: Array<{
@@ -693,6 +712,27 @@ export function _resetMockState(): void {
 	clipboard.value = '';
 	workspaceFiles.clear();
 	workspace.workspaceFolders = undefined;
+}
+
+/**
+ * What is still alive: created and not disposed, registered and not removed.
+ * A deactivation that leaves any of these behind is a leak.
+ */
+export function _live(): {
+	statusBarItems: number;
+	outputChannels: number;
+	configListeners: number;
+	commands: number;
+	mcpProviders: number;
+} {
+	return {
+		statusBarItems: statusBarItems.filter((item) => !item.disposed).length,
+		outputChannels: outputChannels.filter((channel) => !channel.disposed)
+			.length,
+		configListeners: configListeners.length,
+		commands: registeredCommands.size,
+		mcpProviders: mcpProviders.length,
+	};
 }
 
 export const l10n = {
