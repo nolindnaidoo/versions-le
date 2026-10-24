@@ -10,6 +10,7 @@
 	"Info": "Informations",
 	"Manifests": "Fichiers manifestes",
 	"No manifests found": "Aucun manifeste trouvé",
+	"{0} manifest(s) could not be read": "{0} manifeste(s) n’ont pas pu être lus",
 	"No manifests found.": "Aucun manifeste trouvé.",
 	"No version problems found.": "Aucun problème de version trouvé.",
 	"Not compared ({0})": "Non comparés ({0})",

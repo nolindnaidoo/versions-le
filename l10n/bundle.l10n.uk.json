@@ -10,6 +10,7 @@
 	"Info": "Відомості",
 	"Manifests": "Маніфести",
 	"No manifests found": "Маніфестів не знайдено",
+	"{0} manifest(s) could not be read": "Не вдалося прочитати маніфестів: {0}",
 	"No manifests found.": "Маніфестів не знайдено.",
 	"No version problems found.": "Проблем із версіями не знайдено.",
 	"Not compared ({0})": "Не порівнювалося ({0})",

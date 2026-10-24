@@ -82,8 +82,19 @@ function commentChar(code: number): boolean {
 	return code === 0x09 || (code >= 0x20 && code <= 0x7e) || code >= 0x80;
 }
 
+/**
+ * The toml crate's recursion limit (`de/parser/mod.rs` `LIMIT`): toml_parser's
+ * `RecursionGuard` refuses the 81st nested array or inline table, and
+ * `parse_key` refuses a dotted key with 80 or more segments before its last.
+ * Without it the port read what the crate refused, and the differential never
+ * generates a document that deep.
+ */
+const LIMIT = 80;
+
 class Parser {
 	private at = 0;
+	/** How many arrays and inline tables are open, for the recursion limit. */
+	private depth = 0;
 	/** `State`: the document, the table under construction, and the header that names it. */
 	private root = table();
 	private current = table();
@@ -174,6 +185,7 @@ class Parser {
 			this.skipWs();
 			if (this.peek() !== '.') {
 				this.at = save;
+				if (LIMIT <= parts.length - 1) invalid();
 				return parts;
 			}
 			this.at++;
@@ -297,6 +309,7 @@ class Parser {
 
 	private array(): Node {
 		this.at++;
+		if (++this.depth > LIMIT) invalid();
 		const items: Node[] = [];
 		this.skipWsCommentNewline();
 		while (this.peek() !== ']') {
@@ -310,12 +323,14 @@ class Parser {
 			}
 		}
 		this.at++;
+		this.depth--;
 		return { kind: 'array', tables: false, items };
 	}
 
 	/** TOML 1.1: newlines, comments and a trailing comma are allowed inside. `inline_table.rs`. */
 	private inlineTable(): Node {
 		this.at++;
+		if (++this.depth > LIMIT) invalid();
 		const result = table();
 		result.inline = true;
 		this.skipWsCommentNewline();
@@ -340,6 +355,7 @@ class Parser {
 			}
 		}
 		this.at++;
+		this.depth--;
 		return result;
 	}
 

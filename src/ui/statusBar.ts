@@ -31,8 +31,12 @@ export function createStatusBar(context: vscode.ExtensionContext): StatusBar {
 	);
 
 	let hideTimer: NodeJS.Timeout | undefined;
+	// A command that finishes after deactivation must not write to the disposed
+	// item or set a timer that outlives the extension.
+	let disposed = false;
 	context.subscriptions.push({
 		dispose(): void {
+			disposed = true;
 			if (hideTimer) clearTimeout(hideTimer);
 			hideTimer = undefined;
 		},
@@ -41,7 +45,7 @@ export function createStatusBar(context: vscode.ExtensionContext): StatusBar {
 	return Object.freeze({
 		flash(text: string): void {
 			// A short-lived status text instead of a notification.
-			if (!readConfig().statusBarEnabled) return;
+			if (disposed || !readConfig().statusBarEnabled) return;
 			item.text = `$(eye) ${text}`;
 			if (hideTimer) clearTimeout(hideTimer);
 			hideTimer = setTimeout(() => {

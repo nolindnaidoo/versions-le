@@ -13,8 +13,69 @@ repository while it held the CLI alone.
 
 ## [Unreleased]
 
+### Added
+
+- `bun run check:mcp-memory` drives the built MCP server through 3,000 tool
+  calls over one session, one in flight at a time, samples its resident
+  memory and fails if it keeps growing. Hand-run, like `benchmark`.
+
 ### Fixed
 
+- `versions-le` on npm, like the crate, ended its stderr summary with "no
+  manifests found" when manifests were found and every one failed to read.
+  It says "no manifests could be read".
+- The extension's MCP server echoed the client's protocol version in its
+  `initialize` answer, advertised `listChanged`, answered `initialize` sent
+  with a null id, ignored `notifications/initialized` sent with an id, and
+  read a frame led by a byte order mark where the crate's server refuses it.
+  It now answers `2025-06-18` and `{ tools: {} }`, treats a null id as a
+  notification whatever the method, refuses the method like any other it
+  does not implement, and trims a line as Rust trims, so the three servers
+  the repository ships answer every protocol frame alike.
+- `versions-le mcp` on npm held a frame whole until its newline, with no
+  ceiling. A frame over 16 MiB is refused with the parse error the
+  extension's server answers, and the next line is served.
+- **`versions-le mcp` on npm answers a malformed frame as the extension's
+  server does.** It dropped a line that was not JSON, or not a JSON-RPC 2.0
+  request, without a word, read a last line with no newline as a frame,
+  answered a request whose id is null, and worded its unknown-method and
+  unknown-tool refusals its own way. Each now matches the extension's
+  server: a parse error for the first two, in the same words, nothing for
+  the next two, and the same refusal words. The crate's server moves with
+  it, and `check:cli-pipes` holds the two.
+- Three Simplified Chinese strings mixed ASCII commas and colons into
+  Chinese sentences: the status bar tooltip, the report's summary line and
+  the telemetry setting's description. They use the fullwidth marks the rest
+  of the catalogue uses.
+- A `Cargo.toml` or `pyproject.toml` nested deeper than the toml crate
+  follows, 81 arrays or inline tables deep, or carrying a dotted key of 81
+  segments, was read by the extension and the npm server where the CLI
+  refused it as not valid TOML. The port carries the crate's limit.
+- An exclude pattern holding a comma excluded the wrong files: the
+  patterns were spliced into one brace group beside the built-in ones, so
+  `**/a,b/**` read as `**/a` and `b/**`, which left `a,b/Cargo.toml` in and
+  took everything under a top-level `b` out. Each pattern is now its own
+  exclusion.
+- A manifest saved with a byte order mark was read with the mark in its
+  text, so a `package.json` was reported "not valid JSON", a `go.mod` lost
+  its first line and a workflow its first key, where the CLI read the same
+  file whole. The mark is dropped before parsing, as the CLI drops it.
+- A run in which every manifest failed to read reported "No manifests
+  found" in a toast and in the report, which hid the files that failed. The
+  report lists them under "Could not be read" and the toast says how many
+  could not be read, at every notification level.
+- A manifest that could not be read, because it was deleted or made
+  unreadable between the listing and the read, was reported as "not readable
+  as UTF-8 text". The report says it could not be read, with the host's
+  reason, and says "not UTF-8 text", the CLI's words, only for a file that
+  was read and is not text.
+- When the editor refused to open the report, the command still flashed the
+  finding count in the status bar and announced the version problems in a
+  toast, describing a report nobody was handed. It announces the failure to
+  open and nothing more.
+- A status bar flash after the extension was deactivated, from a command
+  that finished late, wrote to the disposed item and set a restore timer
+  that outlived the extension. It does nothing.
 - The MCP server held every byte of a frame until its newline, with no
   ceiling, so a client that streamed without one grew the process without
   bound and got no answer. A frame over 16 MiB is refused with a parse error

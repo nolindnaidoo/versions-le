@@ -27,7 +27,23 @@ const VENDORED = Object.freeze([
 	'**/vendor/**',
 ]);
 
-const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+// The decoder's default drops a leading byte order mark, as the CLI's read
+// does; kept in the text it made a package.json "not valid JSON" and hid the
+// first line of a go.mod and the first key of a workflow.
+const decoder = new TextDecoder('utf-8', { fatal: true });
+
+const diagnostic = (file: string, message: string): Diagnostic => ({
+	severity: 'error',
+	code: 'unreadable',
+	file,
+	message,
+});
+
+/** The host's reason when it gives one: a `FileSystemError` carries a code such as `NoPermissions`. */
+function reason(error: unknown): string {
+	const code = (error as { code?: unknown } | null)?.code;
+	return typeof code === 'string' && code !== '' ? ` (${code})` : '';
+}
 
 /**
  * Compare every manifest under a folder: the one picked in the Explorer, or
@@ -50,15 +66,23 @@ export async function compareWorkspace(
 		return;
 	}
 	const config = readConfig();
-	const exclude = `{${[...VENDORED, ...config.exclude].join(',')}}`;
+	const vendored = `{${VENDORED.join(',')}}`;
 	const qualify = roots.length > 1;
 	const documents: Document[] = [];
 	const unreadable: Diagnostic[] = [];
 	for (const root of roots) {
-		const found = await vscode.workspace.findFiles(
-			new vscode.RelativePattern(root, MANIFEST_GLOB),
-			exclude,
-		);
+		const include = new vscode.RelativePattern(root, MANIFEST_GLOB);
+		let found = await vscode.workspace.findFiles(include, vendored);
+		// One search per pattern. findFiles takes one exclude glob, and splicing
+		// the user's patterns into a brace group beside the vendored ones read a
+		// comma inside a pattern as the group's own separator: `**/a,b/**`
+		// excluded every file named `a` and everything under a top-level `b`.
+		for (const pattern of config.exclude) {
+			const kept = new Set(
+				(await vscode.workspace.findFiles(include, pattern)).map(String),
+			);
+			found = found.filter((uri) => kept.has(String(uri)));
+		}
 		for (const uri of found) {
 			const relative = uri.path.slice(root.path.replace(/\/$/, '').length + 1);
 			const label = qualify
@@ -66,20 +90,20 @@ export async function compareWorkspace(
 				: relative;
 			const kind = manifestKind(relative);
 			if (kind === undefined) continue;
+			// Each failure is named for what happened, so the answer is never
+			// quietly narrower than it looks, and a file that went away between
+			// the listing and the read is never called "not UTF-8 text".
+			let bytes: Uint8Array;
 			try {
-				documents.push({
-					kind,
-					label,
-					content: decoder.decode(await vscode.workspace.fs.readFile(uri)),
-				});
+				bytes = await vscode.workspace.fs.readFile(uri);
+			} catch (error) {
+				unreadable.push(diagnostic(label, `could not be read${reason(error)}`));
+				continue;
+			}
+			try {
+				documents.push({ kind, label, content: decoder.decode(bytes) });
 			} catch {
-				// Named, so the answer is never quietly narrower than it looks.
-				unreadable.push({
-					severity: 'error',
-					code: 'unreadable',
-					file: label,
-					message: 'not readable as UTF-8 text',
-				});
+				unreadable.push(diagnostic(label, 'not UTF-8 text'));
 			}
 		}
 	}
@@ -94,7 +118,7 @@ export async function compareWorkspace(
 		},
 	};
 
-	await showReport(
+	const opened = await showReport(
 		formatReport(report, config.showPositions),
 		config,
 		deps,
@@ -104,11 +128,21 @@ export async function compareWorkspace(
 		manifests: String(report.summary.manifests),
 		findings: String(report.summary.findings),
 	});
+	// A report nobody can see announces nothing more: the failure to open it
+	// was shown, and a count or a toast after it would describe a result the
+	// user was never handed.
+	if (!opened) return;
 	deps.statusBar.flash(
 		vscode.l10n.t('{0} finding(s)', report.summary.findings),
 	);
 	if (report.summary.manifests === 0) {
-		deps.notifier.info(vscode.l10n.t('No manifests found'));
+		// Every manifest failing to read is a failed run, not an empty one, and
+		// it is shown at every notification level.
+		if (unreadable.length > 0)
+			deps.notifier.error(
+				vscode.l10n.t('{0} manifest(s) could not be read', unreadable.length),
+			);
+		else deps.notifier.info(vscode.l10n.t('No manifests found'));
 		return;
 	}
 	const failing = report.summary.errors + report.summary.warnings;

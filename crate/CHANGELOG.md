@@ -8,6 +8,28 @@ in this repository carries one version and releases from one tag.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- The MCP server dropped a line that was not JSON, and a request without a
+  method, without a word; read a last line with no newline as a frame;
+  answered a request lacking `jsonrpc: "2.0"` or carrying another version;
+  and answered a request whose id is null. Each is handled as the npm server
+  handles it: a parse error for the first two and the wrong version, in the
+  same words, and no reply for the last two. The unknown-method,
+  unknown-tool and unnamed-tool refusals use the npm server's words too, and
+  a line that is not UTF-8 is read with replacement characters rather than
+  dropped.
+- The MCP server held a frame whole until its newline, so input with no
+  newline grew the process by its own size. A frame over 16 MiB is refused
+  with a JSON-RPC parse error, in the npm server's words, and the server
+  keeps serving.
+- The last line on stderr said "no manifests found" when manifests were
+  found and every one failed to read, after naming each failure. It says
+  "no manifests could be read". The exit code is unchanged: 0, or 2 under
+  `--strict`, as the usage text states.
+
 ## [1.2.2] - 2026-10-18
 
 ### Changed

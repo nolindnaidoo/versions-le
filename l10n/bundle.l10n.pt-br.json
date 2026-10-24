@@ -10,6 +10,7 @@
 	"Info": "Informativo",
 	"Manifests": "Arquivos de manifesto",
 	"No manifests found": "Nenhum manifesto encontrado",
+	"{0} manifest(s) could not be read": "{0} manifesto(s) não puderam ser lidos",
 	"No manifests found.": "Nenhum manifesto encontrado.",
 	"No version problems found.": "Nenhum problema de versão encontrado.",
 	"Not compared ({0})": "Não comparados ({0})",

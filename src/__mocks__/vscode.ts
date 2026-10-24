@@ -5,6 +5,9 @@
  * underscore — test-only API.
  */
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 export interface WorkspaceFolder {
 	readonly uri: Uri;
 	readonly name: string;
@@ -218,6 +221,13 @@ export function _openedDocuments(): readonly MockDocument[] {
 	return openedDocuments;
 }
 
+let openDocumentError: Error | undefined;
+
+/** Make the next openTextDocument calls reject, as a host refusing a document does. */
+export function _setOpenDocumentError(error: Error | undefined): void {
+	openDocumentError = error;
+}
+
 /**
  * An in-memory filesystem: absolute path to the file's bytes. A directory is
  * any path some file sits under, and a path nothing sits at is not there.
@@ -231,14 +241,30 @@ export function _setWorkspaceFiles(files: Readonly<Record<string, string | Uint8
 	}
 }
 
+const readFileErrors = new Map<string, Error>();
+
+/**
+ * Make reading one listed file fail, as a file deleted or made unreadable
+ * between the listing and the read does. The error's `code` is what a
+ * `vscode.FileSystemError` carries: `NoPermissions`, `FileNotFound`, `Unavailable`.
+ */
+export function _setReadFileError(path: string, error: Error | undefined): void {
+	if (error) readFileErrors.set(path, error);
+	else readFileErrors.delete(path);
+}
+
 function isDirectory(path: string): boolean {
 	const prefix = path === '/' ? '/' : `${path}/`;
 	return [...workspaceFiles.keys()].some((file) => file.startsWith(prefix));
 }
 
-/** A glob as VS Code reads one: `**` crosses separators, `*` does not, `{a,b}` is a choice. */
+/**
+ * A glob as VS Code reads one: `**` crosses separators, `*` does not, `{a,b}`
+ * is a choice, and a comma outside braces is a comma.
+ */
 function globToRegExp(glob: string): RegExp {
 	let out = '';
+	let braces = 0;
 	for (let i = 0; i < glob.length; i++) {
 		const c = glob.charAt(i);
 		if (c === '*' && glob.charAt(i + 1) === '*') {
@@ -246,9 +272,13 @@ function globToRegExp(glob: string): RegExp {
 			i += glob.charAt(i + 2) === '/' ? 2 : 1;
 		} else if (c === '*') out += '[^/]*';
 		else if (c === '?') out += '[^/]';
-		else if (c === '{') out += '(?:';
-		else if (c === '}') out += ')';
-		else if (c === ',') out += '|';
+		else if (c === '{') {
+			braces++;
+			out += '(?:';
+		} else if (c === '}') {
+			braces--;
+			out += ')';
+		} else if (c === ',') out += braces > 0 ? '|' : ',';
 		else out += c.replace(/[.+^$()|[\]\\]/g, '\\$&');
 	}
 	return new RegExp(`^${out}$`);
@@ -283,8 +313,15 @@ export const workspace = {
 	asRelativePath: (target: Uri | string, _includeFolder?: boolean) => (typeof target === 'string' ? target : target.path),
 	fs: {
 		readFile: async (uri: Uri) => {
+			const failure = readFileErrors.get(uri.path);
+			if (failure) throw failure;
 			const bytes = workspaceFiles.get(uri.path);
-			if (bytes === undefined) throw new Error(`no such file: ${uri.path}`);
+			if (bytes === undefined) {
+				// As vscode.FileSystemError.FileNotFound presents itself: a code, not a class.
+				throw Object.assign(new Error(`no such file: ${uri.path}`), {
+					code: 'FileNotFound',
+				});
+			}
 			return bytes;
 		},
 		writeFile: async (_uri: Uri, _content: Uint8Array) => {},
@@ -331,6 +368,7 @@ export const workspace = {
 		content?: string;
 		language?: string;
 	}) => {
+		if (openDocumentError) throw openDocumentError;
 		const doc = _createDocument({
 			content: options?.content ?? '',
 			languageId: options?.language ?? 'plaintext',
@@ -467,34 +505,130 @@ export const window = {
 			token: typeof cancellationToken,
 		) => Promise<T>,
 	): Promise<T> => task({ report: () => {} }, cancellationToken),
-	createOutputChannel: (_name: string) => {
-		const linesOut: string[] = [];
-		outputChannels.push(linesOut);
-		return {
-			appendLine: (line: string) => linesOut.push(line),
-			dispose: () => {},
-			_lines: linesOut,
+	createOutputChannel: (name: string) => {
+		const channel = {
+			name,
+			disposed: false,
+			_lines: [] as string[],
+			appendLine(line: string): void {
+				channel._lines.push(line);
+			},
+			dispose(): void {
+				channel.disposed = true;
+			},
 		};
+		outputChannels.push(channel);
+		return channel;
 	},
-	createStatusBarItem: (_alignment?: unknown, _priority?: number) => ({
-		text: '',
-		tooltip: '',
-		command: undefined as unknown,
-		visible: false,
-		show(): void {
-			(this as { visible: boolean }).visible = true;
-		},
-		hide(): void {
-			(this as { visible: boolean }).visible = false;
-		},
-		dispose: () => {},
-	}),
+	createStatusBarItem: (_alignment?: unknown, _priority?: number) => {
+		const item = {
+			text: '',
+			tooltip: '',
+			command: undefined as unknown,
+			visible: false,
+			disposed: false,
+			show(): void {
+				item.visible = true;
+			},
+			hide(): void {
+				item.visible = false;
+			},
+			dispose(): void {
+				item.disposed = true;
+			},
+		};
+		statusBarItems.push(item);
+		return item;
+	},
 };
 
-const outputChannels: string[][] = [];
+const outputChannels: Array<{
+	name: string;
+	disposed: boolean;
+	_lines: string[];
+}> = [];
 
 export function _outputChannelLines(): readonly string[] {
-	return outputChannels.flat();
+	return outputChannels.flatMap((channel) => channel._lines);
+}
+
+/** Every output channel created, disposed or not, in creation order. */
+export function _outputChannels(): readonly {
+	name: string;
+	disposed: boolean;
+	_lines: string[];
+}[] {
+	return outputChannels;
+}
+
+const statusBarItems: Array<{
+	text: string;
+	tooltip: string;
+	visible: boolean;
+	disposed: boolean;
+}> = [];
+
+/** Every status bar item created, disposed or not, in creation order. */
+export function _statusBarItems(): readonly {
+	text: string;
+	tooltip: string;
+	visible: boolean;
+	disposed: boolean;
+}[] {
+	return statusBarItems;
+}
+
+// ---------------------------------------------------------------- lm
+
+export class McpStdioServerDefinition {
+	constructor(
+		public readonly label: string,
+		public readonly command: string,
+		public readonly args: readonly string[] = [],
+		public readonly env: Record<string, string | number | null> = {},
+		public readonly version?: string,
+	) {}
+}
+
+type McpProvider = { provideMcpServerDefinitions: () => unknown };
+const mcpProviders: Array<{ id: string; provider: McpProvider }> = [];
+
+/** Every MCP server definition provider registered and not yet disposed. */
+export function _mcpProviders(): ReadonlyArray<{
+	id: string;
+	provider: McpProvider;
+}> {
+	return mcpProviders;
+}
+
+/**
+ * `vscode.lm` as a host without the MCP API presents it: present, and empty.
+ * The extension feature-detects `registerMcpServerDefinitionProvider`
+ * because a fork can report a recent version and lack it; the default here
+ * is that fork, and `_setLmApi(true)` gives the host VS Code 1.101's.
+ */
+export const lm: {
+	registerMcpServerDefinitionProvider?: (
+		id: string,
+		provider: McpProvider,
+	) => { dispose(): void };
+} = {};
+
+export function _setLmApi(present: boolean): void {
+	if (!present) {
+		delete lm.registerMcpServerDefinitionProvider;
+		return;
+	}
+	lm.registerMcpServerDefinitionProvider = (id, provider) => {
+		const entry = { id, provider };
+		mcpProviders.push(entry);
+		return {
+			dispose: () => {
+				const index = mcpProviders.indexOf(entry);
+				if (index >= 0) mcpProviders.splice(index, 1);
+			},
+		};
+	};
 }
 
 // ---------------------------------------------------------- commands
@@ -530,12 +664,19 @@ export const executedBuiltins: Array<{ id: string; args: unknown[] }> = [];
 // --------------------------------------------------------------- env
 
 const clipboard = { value: '' };
+let clipboardError: Error | undefined;
+
+/** Make clipboard writes reject, as a headless or locked-down host does. */
+export function _setClipboardError(error: Error | undefined): void {
+	clipboardError = error;
+}
 
 export const env = {
 	/** What `vscode.env.appName` reports; `_setAppName` makes it another host. */
 	appName: 'Visual Studio Code',
 	clipboard: {
 		writeText: async (text: string) => {
+			if (clipboardError) throw clipboardError;
 			clipboard.value = text;
 		},
 		readText: async () => clipboard.value,
@@ -565,10 +706,18 @@ export function _createExtensionContext() {
 		},
 		extension: {
 			id: 'nolindnaidoo.versions-le',
-			packageJSON: { displayName: 'Versions-LE' },
+			packageJSON: { displayName: 'Versions-LE', version: manifestVersion },
 		},
+		asAbsolutePath: (relative: string) => `/mock/extension/${relative}`,
 	};
 }
+
+/** The manifest's version, read rather than typed, so a bump cannot leave the mock behind. */
+const manifestVersion = (
+	JSON.parse(
+		readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf8'),
+	) as { version: string }
+).version;
 
 export type MockExtensionContext = ReturnType<typeof _createExtensionContext>;
 
@@ -593,6 +742,9 @@ export function _resetMockState(): void {
 	shownDocumentOptions.length = 0;
 	openedDocuments.length = 0;
 	outputChannels.length = 0;
+	statusBarItems.length = 0;
+	mcpProviders.length = 0;
+	_setLmApi(false);
 	executedBuiltins.length = 0;
 	registeredCommands.clear();
 	activeTextEditor = undefined;
@@ -600,8 +752,32 @@ export function _resetMockState(): void {
 	inputBoxResponder = undefined;
 	warningResponder = undefined;
 	clipboard.value = '';
+	clipboardError = undefined;
+	openDocumentError = undefined;
 	workspaceFiles.clear();
+	readFileErrors.clear();
 	workspace.workspaceFolders = undefined;
+}
+
+/**
+ * What is still alive: created and not disposed, registered and not removed.
+ * A deactivation that leaves any of these behind is a leak.
+ */
+export function _live(): {
+	statusBarItems: number;
+	outputChannels: number;
+	configListeners: number;
+	commands: number;
+	mcpProviders: number;
+} {
+	return {
+		statusBarItems: statusBarItems.filter((item) => !item.disposed).length,
+		outputChannels: outputChannels.filter((channel) => !channel.disposed)
+			.length,
+		configListeners: configListeners.length,
+		commands: registeredCommands.size,
+		mcpProviders: mcpProviders.length,
+	};
 }
 
 export const l10n = {
