@@ -15,6 +15,17 @@ repository while it held the CLI alone.
 
 ### Fixed
 
+- The extension's MCP server echoed the client's protocol version in its
+  `initialize` answer, advertised `listChanged`, answered `initialize` sent
+  with a null id, ignored `notifications/initialized` sent with an id, and
+  read a frame led by a byte order mark where the crate's server refuses it.
+  It now answers `2025-06-18` and `{ tools: {} }`, treats a null id as a
+  notification whatever the method, refuses the method like any other it
+  does not implement, and trims a line as Rust trims, so the three servers
+  the repository ships answer every protocol frame alike.
+- `versions-le mcp` on npm held a frame whole until its newline, with no
+  ceiling. A frame over 16 MiB is refused with the parse error the
+  extension's server answers, and the next line is served.
 - **`versions-le mcp` on npm answers a malformed frame as the extension's
   server does.** It dropped a line that was not JSON, or not a JSON-RPC 2.0
   request, without a word, read a last line with no newline as a frame,

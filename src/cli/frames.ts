@@ -10,6 +10,8 @@
  * order mark is not whitespace to either parser, so a frame led by one is
  * not JSON.
  */
+import { MAX_FRAME_BYTES } from '../mcp/transport';
+
 export interface Request {
 	readonly jsonrpc: '2.0';
 	readonly method: string;
@@ -19,12 +21,19 @@ export interface Request {
 
 export type Frame =
 	| { readonly request: Request }
-	| { readonly refusal: 'Invalid JSON' | 'Not a JSON-RPC 2.0 request' };
+	| { readonly refusal: string };
+
+/** A frame past the limit is refused in the words the extension's server uses, and never held. */
+const FRAME_REFUSAL = `Message exceeds the ${MAX_FRAME_BYTES} byte frame limit`;
 
 export async function* frames(
 	input: AsyncIterable<Uint8Array>,
 ): AsyncGenerator<Frame> {
 	for await (const line of lines(input)) {
+		if (line === null) {
+			yield { refusal: FRAME_REFUSAL };
+			continue;
+		}
 		const text = rustTrim(line);
 		if (text === '') continue;
 		let parsed: unknown;
@@ -42,19 +51,38 @@ export async function* frames(
 	}
 }
 
-/** Complete lines, split on `\n`; whatever follows the last newline at close is dropped. */
+/**
+ * Complete lines, split on `\n`, or null for a line over the limit; whatever
+ * follows the last newline at close is dropped. Past the limit the rest of
+ * the line is dropped as it arrives, so an oversized frame is never held, and
+ * a line whose newline arrives in the chunk that takes it over is refused too.
+ */
 async function* lines(
 	input: AsyncIterable<Uint8Array>,
-): AsyncGenerator<string> {
+): AsyncGenerator<string | null> {
 	const decoder = new TextDecoder('utf-8', { ignoreBOM: true });
 	let pending = Buffer.alloc(0);
+	let discarding = false;
 	for await (const chunk of input) {
-		pending = Buffer.concat([pending, chunk]);
+		let bytes: Uint8Array = chunk;
+		if (discarding) {
+			const end = bytes.indexOf(10);
+			if (end === -1) continue;
+			discarding = false;
+			bytes = bytes.subarray(end + 1);
+		}
+		pending = Buffer.concat([pending, bytes]);
 		let newline = pending.indexOf(10);
 		while (newline !== -1) {
-			yield decoder.decode(pending.subarray(0, newline));
+			const line = pending.subarray(0, newline);
 			pending = pending.subarray(newline + 1);
 			newline = pending.indexOf(10);
+			yield line.length > MAX_FRAME_BYTES ? null : decoder.decode(line);
+		}
+		if (pending.length > MAX_FRAME_BYTES) {
+			pending = Buffer.alloc(0);
+			discarding = true;
+			yield null;
 		}
 	}
 }

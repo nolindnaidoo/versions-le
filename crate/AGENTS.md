@@ -241,6 +241,11 @@ nowhere else to go.
   frame at close is dropped. `serve_streams` is the seam; the unit tests
   under `mcp/mod.rs` drive it in 8 KiB chunks, and `check:cli-pipes` holds
   the npm command line to every one of those answers.
+- **A frame over `MAX_FRAME_BYTES` is refused, never held.** The loop in
+  `mcp/mod.rs` reads 8 KiB at a time and drops the rest of an oversized line
+  as it arrives, answering one parse error in the npm server's words. The
+  unit test drives it through a `BufReader` of that size, because a `Cursor`
+  hands the whole input over at once and would never reach the check.
 
 ## The corpus contract
 

@@ -21,6 +21,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   unknown-tool and unnamed-tool refusals use the npm server's words too, and
   a line that is not UTF-8 is read with replacement characters rather than
   dropped.
+- The MCP server held a frame whole until its newline, so input with no
+  newline grew the process by its own size. A frame over 16 MiB is refused
+  with a JSON-RPC parse error, in the npm server's words, and the server
+  keeps serving.
 
 ## [1.2.2] - 2026-10-18
 

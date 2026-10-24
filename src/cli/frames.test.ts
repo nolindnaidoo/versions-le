@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MAX_FRAME_BYTES } from '../mcp/transport';
 import { frames } from './frames';
 
 async function read(...chunks: (string | number[])[]): Promise<unknown[]> {
@@ -74,6 +75,35 @@ describe('frames', () => {
 				'{"jsonrpc":"2.0","id":1,"method":"ping"}\n{"jsonrpc":"2.0","id":2,"method":"ping"}',
 			),
 		).toEqual([ping(1)]);
+	});
+
+	it('refuses a frame over the limit and reads the next line, whenever its newline arrives', async () => {
+		// Input with no newline was held whole. One byte over with the newline
+		// in the same chunk; far over with the newline many chunks later.
+		const limit = {
+			refusal: `Message exceeds the ${MAX_FRAME_BYTES} byte frame limit`,
+		};
+		expect(
+			await read(
+				`${'x'.repeat(MAX_FRAME_BYTES + 1)}\n`,
+				'{"jsonrpc":"2.0","id":1,"method":"ping"}\n',
+			),
+		).toEqual([limit, ping(1)]);
+		expect(
+			await read(
+				'x'.repeat(MAX_FRAME_BYTES + 1),
+				'y'.repeat(1000),
+				'z\n{"jsonrpc":"2.0","id":1,"method":"ping"}\n',
+			),
+		).toEqual([limit, ping(1)]);
+	});
+
+	it('reads a frame exactly at the limit', async () => {
+		const head = '{"jsonrpc":"2.0","id":1,"method":"ping","params":{"pad":"';
+		const line = `${head}${'x'.repeat(MAX_FRAME_BYTES - head.length - 3)}"}}`;
+		expect(Buffer.byteLength(line)).toBe(MAX_FRAME_BYTES);
+		const [frame] = await read(`${line}\n`);
+		expect((frame as { request: { id: number } }).request.id).toBe(1);
 	});
 
 	it("skips a line Rust's trim leaves empty, and keeps a null id for the server to read as a notification", async () => {
