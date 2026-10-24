@@ -476,25 +476,49 @@ export const window = {
 			_lines: linesOut,
 		};
 	},
-	createStatusBarItem: (_alignment?: unknown, _priority?: number) => ({
-		text: '',
-		tooltip: '',
-		command: undefined as unknown,
-		visible: false,
-		show(): void {
-			(this as { visible: boolean }).visible = true;
-		},
-		hide(): void {
-			(this as { visible: boolean }).visible = false;
-		},
-		dispose: () => {},
-	}),
+	createStatusBarItem: (_alignment?: unknown, _priority?: number) => {
+		const item = {
+			text: '',
+			tooltip: '',
+			command: undefined as unknown,
+			visible: false,
+			disposed: false,
+			show(): void {
+				item.visible = true;
+			},
+			hide(): void {
+				item.visible = false;
+			},
+			dispose(): void {
+				item.disposed = true;
+			},
+		};
+		statusBarItems.push(item);
+		return item;
+	},
 };
 
 const outputChannels: string[][] = [];
 
 export function _outputChannelLines(): readonly string[] {
 	return outputChannels.flat();
+}
+
+const statusBarItems: Array<{
+	text: string;
+	tooltip: string;
+	visible: boolean;
+	disposed: boolean;
+}> = [];
+
+/** Every status bar item created, disposed or not, in creation order. */
+export function _statusBarItems(): readonly {
+	text: string;
+	tooltip: string;
+	visible: boolean;
+	disposed: boolean;
+}[] {
+	return statusBarItems;
 }
 
 // ---------------------------------------------------------- commands
@@ -593,6 +617,7 @@ export function _resetMockState(): void {
 	shownDocumentOptions.length = 0;
 	openedDocuments.length = 0;
 	outputChannels.length = 0;
+	statusBarItems.length = 0;
 	executedBuiltins.length = 0;
 	registeredCommands.clear();
 	activeTextEditor = undefined;

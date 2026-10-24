@@ -5,6 +5,7 @@ import {
 	_resetMockState,
 	_setConfig,
 	_shownMessages,
+	_statusBarItems,
 } from '../__mocks__/vscode';
 import { createNotifier } from './notifier';
 import { createStatusBar } from './statusBar';
@@ -58,28 +59,61 @@ describe('status bar', () => {
 		vi.useRealTimers();
 	});
 
-	it('shows by default and hides when disabled', () => {
-		const context = _createExtensionContext();
-		createStatusBar(context as never);
+	const IDLE = '$(versions) Versions-LE';
+
+	it('shows by default, hides when the setting turns off, and shows again when it turns on', () => {
+		createStatusBar(_createExtensionContext() as never);
+		const item = _statusBarItems()[0];
+		expect(item).toMatchObject({ text: IDLE, visible: true });
+		expect(item?.tooltip).toBe('Run Versions-LE: Compare Versions');
 
 		_setConfig('versions-le.statusBar.enabled', false);
 		_fireConfigChange('versions-le.statusBar.enabled');
-		// The item was hidden via the config listener; verify no throw and
-		// that a re-enable brings it back.
+		expect(item?.visible).toBe(false);
+
 		_setConfig('versions-le.statusBar.enabled', true);
 		_fireConfigChange('versions-le.statusBar.enabled');
+		expect(item?.visible).toBe(true);
 	});
 
-	it('restores its idle text after a flash', () => {
+	it('starts hidden when the setting is off', () => {
+		_setConfig('versions-le.statusBar.enabled', false);
+		createStatusBar(_createExtensionContext() as never);
+		expect(_statusBarItems()[0]?.visible).toBe(false);
+	});
+
+	it('shows a flash for two seconds, then its idle text again', () => {
 		vi.useFakeTimers();
 		const statusBar = createStatusBar(_createExtensionContext() as never);
 		statusBar.flash('3 finding(s)');
-		vi.advanceTimersByTime(2001);
+		const item = _statusBarItems()[0];
+		expect(item?.text).toBe('$(eye) 3 finding(s)');
+		vi.advanceTimersByTime(1999);
+		expect(item?.text).toBe('$(eye) 3 finding(s)');
+		vi.advanceTimersByTime(1);
+		expect(item?.text).toBe(IDLE);
+		expect(vi.getTimerCount()).toBe(0);
+	});
+
+	it('a second flash restarts the clock rather than racing the first', () => {
+		vi.useFakeTimers();
+		const statusBar = createStatusBar(_createExtensionContext() as never);
+		statusBar.flash('first');
+		vi.advanceTimersByTime(1500);
+		statusBar.flash('second');
+		vi.advanceTimersByTime(1500);
+		expect(_statusBarItems()[0]?.text).toBe('$(eye) second');
+		expect(vi.getTimerCount()).toBe(1);
+		vi.advanceTimersByTime(500);
+		expect(_statusBarItems()[0]?.text).toBe(IDLE);
 	});
 
 	it('flash is a no-op when the status bar is disabled', () => {
+		vi.useFakeTimers();
 		_setConfig('versions-le.statusBar.enabled', false);
 		const statusBar = createStatusBar(_createExtensionContext() as never);
 		statusBar.flash('nope');
+		expect(_statusBarItems()[0]?.text).toBe(IDLE);
+		expect(vi.getTimerCount()).toBe(0);
 	});
 });
