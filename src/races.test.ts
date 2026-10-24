@@ -55,9 +55,9 @@ describe('two invocations at once', () => {
 			for (const report of reports) {
 				expect(report).toContain('**disjoint-constraint** · cargo · `regex`');
 			}
-			expect(
-				_shownMessages().filter((m) => m.kind === 'warning'),
-			).toHaveLength(2);
+			expect(_shownMessages().filter((m) => m.kind === 'warning')).toHaveLength(
+				2,
+			);
 			expect(_statusBarItems()[0]?.text).toBe('$(eye) 1 finding(s)');
 			vi.advanceTimersByTime(2000);
 			expect(_statusBarItems()[0]?.text).toBe(IDLE);

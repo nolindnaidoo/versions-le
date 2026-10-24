@@ -157,7 +157,8 @@ describe('versions-le.compare', () => {
 	it('reads a manifest written with a byte order mark as the CLI reads it', async () => {
 		useWorkspace({
 			'/w/package.json': '\uFEFF{"dependencies": {"a": "latest"}}',
-			'/w/go.mod': '\uFEFFmodule x\n\ngo 1.22\n\nrequire example.com/p v1.2.3\n',
+			'/w/go.mod':
+				'\uFEFFmodule x\n\ngo 1.22\n\nrequire example.com/p v1.2.3\n',
 		});
 		await runCommand('versions-le.compare');
 		const text = report();
