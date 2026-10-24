@@ -7,7 +7,9 @@ import {
 	_registeredCommands,
 	_resetMockState,
 	_setActiveEditor,
+	_setClipboardError,
 	_setConfig,
+	_setOpenDocumentError,
 	_setWorkspaceFiles,
 	_shownMessages,
 	executedBuiltins,
@@ -162,6 +164,31 @@ describe('versions-le.compare', () => {
 		expect((report().match(/^ {2}- `/gm) ?? []).length).toBeGreaterThanOrEqual(
 			lines,
 		);
+	});
+
+	it('says the results could not open, and announces nothing else', async () => {
+		_setConfig('versions-le.notificationsLevel', 'all');
+		useWorkspace(TREE);
+		_setOpenDocumentError(new Error('the editor refused'));
+		await runCommand('versions-le.compare');
+		expect(_shownMessages().map((m) => [m.kind, m.message])).toEqual([
+			['error', 'Could not open results'],
+		]);
+		expect(flashes).toEqual([]);
+	});
+
+	it('warns when the clipboard refuses, and the report is still open', async () => {
+		_setConfig('versions-le.notificationsLevel', 'all');
+		_setConfig('versions-le.copyToClipboardEnabled', true);
+		useWorkspace(TREE);
+		_setClipboardError(new Error('no clipboard here'));
+		await runCommand('versions-le.compare');
+		expect(report()).toContain('Versions-LE report');
+		expect(_shownMessages().map((m) => [m.kind, m.message])).toContainEqual([
+			'warning',
+			'Could not copy to clipboard',
+		]);
+		expect(flashes.at(-1)).toMatch(/finding\(s\)$/);
 	});
 
 	it('decides positions for the clipboard separately from the report', async () => {

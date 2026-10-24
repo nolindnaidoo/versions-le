@@ -2,14 +2,19 @@ import * as vscode from 'vscode';
 import type { Configuration } from '../types';
 import type { CommandDependencies } from './index';
 
-/** Open the report beside the editor, and copy it when the setting asks. */
+/**
+ * Open the report beside the editor, and copy it when the setting asks.
+ * Returns whether the report opened, so the caller announces a result only
+ * when the user can see it.
+ */
 export async function showReport(
 	report: string,
 	config: Configuration,
 	deps: CommandDependencies,
 	// The copy is its own text: whether it carries positions is a separate setting.
 	forClipboard: string = report,
-): Promise<void> {
+): Promise<boolean> {
+	let opened = false;
 	try {
 		const document = await vscode.workspace.openTextDocument({
 			content: report,
@@ -21,17 +26,19 @@ export async function showReport(
 				? { viewColumn: vscode.ViewColumn.Beside }
 				: {}),
 		});
+		opened = true;
 		// Not awaited: it resolves when the toast is answered, and a command that
 		// waited on that would stay pending for as long as the toast is ignored.
 		void deps.ratingPrompt.recordSuccess();
 	} catch {
 		deps.notifier.error(vscode.l10n.t('Could not open results'));
 	}
-	if (!config.copyToClipboardEnabled) return;
+	if (!config.copyToClipboardEnabled) return opened;
 	// An unavailable clipboard must not fail the scan; the report is open.
 	try {
 		await vscode.env.clipboard.writeText(forClipboard);
 	} catch {
 		deps.notifier.warn(vscode.l10n.t('Could not copy to clipboard'));
 	}
+	return opened;
 }

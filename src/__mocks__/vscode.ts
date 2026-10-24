@@ -221,6 +221,13 @@ export function _openedDocuments(): readonly MockDocument[] {
 	return openedDocuments;
 }
 
+let openDocumentError: Error | undefined;
+
+/** Make the next openTextDocument calls reject, as a host refusing a document does. */
+export function _setOpenDocumentError(error: Error | undefined): void {
+	openDocumentError = error;
+}
+
 /**
  * An in-memory filesystem: absolute path to the file's bytes. A directory is
  * any path some file sits under, and a path nothing sits at is not there.
@@ -334,6 +341,7 @@ export const workspace = {
 		content?: string;
 		language?: string;
 	}) => {
+		if (openDocumentError) throw openDocumentError;
 		const doc = _createDocument({
 			content: options?.content ?? '',
 			languageId: options?.language ?? 'plaintext',
@@ -629,12 +637,19 @@ export const executedBuiltins: Array<{ id: string; args: unknown[] }> = [];
 // --------------------------------------------------------------- env
 
 const clipboard = { value: '' };
+let clipboardError: Error | undefined;
+
+/** Make clipboard writes reject, as a headless or locked-down host does. */
+export function _setClipboardError(error: Error | undefined): void {
+	clipboardError = error;
+}
 
 export const env = {
 	/** What `vscode.env.appName` reports; `_setAppName` makes it another host. */
 	appName: 'Visual Studio Code',
 	clipboard: {
 		writeText: async (text: string) => {
+			if (clipboardError) throw clipboardError;
 			clipboard.value = text;
 		},
 		readText: async () => clipboard.value,
@@ -710,6 +725,8 @@ export function _resetMockState(): void {
 	inputBoxResponder = undefined;
 	warningResponder = undefined;
 	clipboard.value = '';
+	clipboardError = undefined;
+	openDocumentError = undefined;
 	workspaceFiles.clear();
 	workspace.workspaceFolders = undefined;
 }

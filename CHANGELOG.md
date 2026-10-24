@@ -15,6 +15,10 @@ repository while it held the CLI alone.
 
 ### Fixed
 
+- When the editor refused to open the report, the command still flashed the
+  finding count in the status bar and announced the version problems in a
+  toast, describing a report nobody was handed. It announces the failure to
+  open and nothing more.
 - A status bar flash after the extension was deactivated, from a command
   that finished late, wrote to the disposed item and set a restore timer
   that outlived the extension. It does nothing.

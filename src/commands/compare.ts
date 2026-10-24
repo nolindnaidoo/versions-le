@@ -94,7 +94,7 @@ export async function compareWorkspace(
 		},
 	};
 
-	await showReport(
+	const opened = await showReport(
 		formatReport(report, config.showPositions),
 		config,
 		deps,
@@ -104,6 +104,10 @@ export async function compareWorkspace(
 		manifests: String(report.summary.manifests),
 		findings: String(report.summary.findings),
 	});
+	// A report nobody can see announces nothing more: the failure to open it
+	// was shown, and a count or a toast after it would describe a result the
+	// user was never handed.
+	if (!opened) return;
 	deps.statusBar.flash(
 		vscode.l10n.t('{0} finding(s)', report.summary.findings),
 	);
