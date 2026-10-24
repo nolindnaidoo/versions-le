@@ -146,6 +146,18 @@ describe('versions-le.compare', () => {
 		expect(text).not.toContain('Cargo.toml`: not');
 	});
 
+	it('reads a manifest written with a byte order mark as the CLI reads it', async () => {
+		useWorkspace({
+			'/w/package.json': '\uFEFF{"dependencies": {"a": "latest"}}',
+			'/w/go.mod': '\uFEFFmodule x\n\ngo 1.22\n\nrequire example.com/p v1.2.3\n',
+		});
+		await runCommand('versions-le.compare');
+		const text = report();
+		expect(text).toContain('2 manifest(s), 3 constraint(s)');
+		expect(text).toContain('**floating-pin** · npm · `a`');
+		expect(text).not.toContain('Could not be read');
+	});
+
 	it('leaves out what the exclude setting names', async () => {
 		_setConfig('versions-le.exclude', ['web/**']);
 		useWorkspace(TREE);

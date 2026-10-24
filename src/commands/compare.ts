@@ -27,7 +27,10 @@ const VENDORED = Object.freeze([
 	'**/vendor/**',
 ]);
 
-const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+// The decoder's default drops a leading byte order mark, as the CLI's read
+// does; kept in the text it made a package.json "not valid JSON" and hid the
+// first line of a go.mod and the first key of a workflow.
+const decoder = new TextDecoder('utf-8', { fatal: true });
 
 const diagnostic = (file: string, message: string): Diagnostic => ({
 	severity: 'error',

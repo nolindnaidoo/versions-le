@@ -15,6 +15,10 @@ repository while it held the CLI alone.
 
 ### Fixed
 
+- A manifest saved with a byte order mark was read with the mark in its
+  text, so a `package.json` was reported "not valid JSON", a `go.mod` lost
+  its first line and a workflow its first key, where the CLI read the same
+  file whole. The mark is dropped before parsing, as the CLI drops it.
 - A run in which every manifest failed to read reported "No manifests
   found" in a toast and in the report, which hid the files that failed. The
   report lists them under "Could not be read" and the toast says how many
