@@ -10,6 +10,7 @@
 	"Info": "Hinweise",
 	"Manifests": "Manifestdateien",
 	"No manifests found": "Keine Manifeste gefunden",
+	"{0} manifest(s) could not be read": "{0} Manifest(e) konnten nicht gelesen werden",
 	"No manifests found.": "Keine Manifeste gefunden.",
 	"No version problems found.": "Keine Versionsprobleme gefunden.",
 	"Not compared ({0})": "Nicht verglichen ({0})",

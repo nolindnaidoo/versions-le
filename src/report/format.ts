@@ -22,7 +22,10 @@ export function formatReport(report: Report, positions = true): string {
 		),
 		'',
 	);
-	if (summary.manifests === 0) {
+	// Nothing found and nothing failed is the only run with nothing to say. A
+	// run in which every manifest failed to read is not that run: its
+	// diagnostics are the result, and they follow below.
+	if (summary.manifests === 0 && report.diagnostics.length === 0) {
 		lines.push(vscode.l10n.t('No manifests found.'), '');
 		return lines.join('\n');
 	}
@@ -42,7 +45,7 @@ export function formatReport(report: Report, positions = true): string {
 		}
 		lines.push('');
 	}
-	if (report.findings.length === 0)
+	if (report.findings.length === 0 && summary.manifests > 0)
 		lines.push(vscode.l10n.t('No version problems found.'), '');
 
 	if (report.refusals.length > 0) {
@@ -70,12 +73,14 @@ export function formatReport(report: Report, positions = true): string {
 		lines.push('');
 	}
 
-	lines.push(`## ${vscode.l10n.t('Manifests')}`, '');
-	for (const manifest of report.manifests)
-		lines.push(
-			`- ${code(manifest.path)} · ${manifest.ecosystem} · ${manifest.entries}`,
-		);
-	lines.push('');
+	if (report.manifests.length > 0) {
+		lines.push(`## ${vscode.l10n.t('Manifests')}`, '');
+		for (const manifest of report.manifests)
+			lines.push(
+				`- ${code(manifest.path)} · ${manifest.ecosystem} · ${manifest.entries}`,
+			);
+		lines.push('');
+	}
 	return lines.join('\n');
 }
 

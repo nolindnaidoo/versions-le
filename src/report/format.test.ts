@@ -7,6 +7,26 @@ describe('the report', () => {
 		expect(formatReport(reportFor([]))).toContain('No manifests found.');
 	});
 
+	it('lists the files it could not read when none could, rather than saying none was found', () => {
+		const analysed = reportFor([]);
+		const text = formatReport({
+			...analysed,
+			diagnostics: [
+				{
+					severity: 'error',
+					code: 'unreadable',
+					file: 'go.mod',
+					message: 'not UTF-8 text',
+				},
+			],
+			summary: { ...analysed.summary, errors: 1 },
+		});
+		expect(text).toContain('## Could not be read (1)');
+		expect(text).toContain('- `go.mod`: not UTF-8 text');
+		expect(text).not.toContain('No manifests found.');
+		expect(text).not.toContain('No version problems found.');
+	});
+
 	it('says when manifests agree, and lists them', () => {
 		const text = formatReport(
 			reportFor([

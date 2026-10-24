@@ -125,7 +125,13 @@ export async function compareWorkspace(
 		vscode.l10n.t('{0} finding(s)', report.summary.findings),
 	);
 	if (report.summary.manifests === 0) {
-		deps.notifier.info(vscode.l10n.t('No manifests found'));
+		// Every manifest failing to read is a failed run, not an empty one, and
+		// it is shown at every notification level.
+		if (unreadable.length > 0)
+			deps.notifier.error(
+				vscode.l10n.t('{0} manifest(s) could not be read', unreadable.length),
+			);
+		else deps.notifier.info(vscode.l10n.t('No manifests found'));
 		return;
 	}
 	const failing = report.summary.errors + report.summary.warnings;

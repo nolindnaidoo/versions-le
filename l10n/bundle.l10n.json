@@ -10,6 +10,7 @@
 	"Info": "Info",
 	"Manifests": "Manifests",
 	"No manifests found": "No manifests found",
+	"{0} manifest(s) could not be read": "{0} manifest(s) could not be read",
 	"No manifests found.": "No manifests found.",
 	"No version problems found.": "No version problems found.",
 	"Not compared ({0})": "Not compared ({0})",

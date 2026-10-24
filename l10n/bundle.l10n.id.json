@@ -10,6 +10,7 @@
 	"Info": "Informasi",
 	"Manifests": "Berkas manifes",
 	"No manifests found": "Tidak ada manifes yang ditemukan",
+	"{0} manifest(s) could not be read": "{0} manifes tidak dapat dibaca",
 	"No manifests found.": "Tidak ada manifes yang ditemukan.",
 	"No version problems found.": "Tidak ada masalah versi yang ditemukan.",
 	"Not compared ({0})": "Tidak dibandingkan ({0})",

@@ -163,6 +163,21 @@ describe('versions-le.compare', () => {
 		).toBe(true);
 	});
 
+	it('says every manifest could not be read, rather than that none was found', async () => {
+		_setConfig('versions-le.notificationsLevel', 'all');
+		useWorkspace({
+			'/w/Cargo.toml': new Uint8Array([0xff, 0xfe]) as never,
+			'/w/sub/go.mod': new Uint8Array([0xff]) as never,
+		});
+		await runCommand('versions-le.compare');
+		const text = report();
+		expect(text).toContain('## Could not be read (2)');
+		expect(text).not.toContain('No manifests found.');
+		const toasts = _shownMessages().map((m) => [m.kind, m.message]);
+		expect(toasts).toContainEqual(['error', '2 manifest(s) could not be read']);
+		expect(toasts).not.toContainEqual(['info', 'No manifests found']);
+	});
+
 	it('copies the report when asked to', async () => {
 		_setConfig('versions-le.copyToClipboardEnabled', true);
 		useWorkspace(TREE);

@@ -10,6 +10,7 @@
 	"Info": "提示",
 	"Manifests": "清单文件",
 	"No manifests found": "未找到清单文件",
+	"{0} manifest(s) could not be read": "{0} 个清单文件无法读取",
 	"No manifests found.": "未找到清单文件。",
 	"No version problems found.": "未发现版本问题。",
 	"Not compared ({0})": "未比较({0})",

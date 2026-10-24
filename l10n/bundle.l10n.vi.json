@@ -10,6 +10,7 @@
 	"Info": "Thông tin",
 	"Manifests": "Tệp manifest",
 	"No manifests found": "Không tìm thấy tệp manifest nào",
+	"{0} manifest(s) could not be read": "Không đọc được {0} tệp manifest",
 	"No manifests found.": "Không tìm thấy tệp manifest nào.",
 	"No version problems found.": "Không tìm thấy vấn đề phiên bản nào.",
 	"Not compared ({0})": "Không so sánh ({0})",

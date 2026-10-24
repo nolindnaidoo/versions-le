@@ -15,6 +15,10 @@ repository while it held the CLI alone.
 
 ### Fixed
 
+- A run in which every manifest failed to read reported "No manifests
+  found" in a toast and in the report, which hid the files that failed. The
+  report lists them under "Could not be read" and the toast says how many
+  could not be read, at every notification level.
 - A manifest that could not be read, because it was deleted or made
   unreadable between the listing and the read, was reported as "not readable
   as UTF-8 text". The report says it could not be read, with the host's

@@ -10,6 +10,7 @@
 	"Info": "情報",
 	"Manifests": "マニフェスト",
 	"No manifests found": "マニフェストが見つかりません",
+	"{0} manifest(s) could not be read": "{0} 個のマニフェストを読み取れませんでした",
 	"No manifests found.": "マニフェストは見つかりませんでした。",
 	"No version problems found.": "バージョンの問題は見つかりませんでした。",
 	"Not compared ({0})": "比較しなかったもの ({0})",
