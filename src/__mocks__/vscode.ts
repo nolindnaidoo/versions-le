@@ -5,6 +5,9 @@
  * underscore — test-only API.
  */
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 export interface WorkspaceFolder {
 	readonly uri: Uri;
 	readonly name: string;
@@ -521,6 +524,59 @@ export function _statusBarItems(): readonly {
 	return statusBarItems;
 }
 
+// ---------------------------------------------------------------- lm
+
+export class McpStdioServerDefinition {
+	constructor(
+		public readonly label: string,
+		public readonly command: string,
+		public readonly args: readonly string[] = [],
+		public readonly env: Record<string, string | number | null> = {},
+		public readonly version?: string,
+	) {}
+}
+
+type McpProvider = { provideMcpServerDefinitions: () => unknown };
+const mcpProviders: Array<{ id: string; provider: McpProvider }> = [];
+
+/** Every MCP server definition provider registered and not yet disposed. */
+export function _mcpProviders(): ReadonlyArray<{
+	id: string;
+	provider: McpProvider;
+}> {
+	return mcpProviders;
+}
+
+/**
+ * `vscode.lm` as a host without the MCP API presents it: present, and empty.
+ * The extension feature-detects `registerMcpServerDefinitionProvider`
+ * because a fork can report a recent version and lack it; the default here
+ * is that fork, and `_setLmApi(true)` gives the host VS Code 1.101's.
+ */
+export const lm: {
+	registerMcpServerDefinitionProvider?: (
+		id: string,
+		provider: McpProvider,
+	) => { dispose(): void };
+} = {};
+
+export function _setLmApi(present: boolean): void {
+	if (!present) {
+		delete lm.registerMcpServerDefinitionProvider;
+		return;
+	}
+	lm.registerMcpServerDefinitionProvider = (id, provider) => {
+		const entry = { id, provider };
+		mcpProviders.push(entry);
+		return {
+			dispose: () => {
+				const index = mcpProviders.indexOf(entry);
+				if (index >= 0) mcpProviders.splice(index, 1);
+			},
+		};
+	};
+}
+
 // ---------------------------------------------------------- commands
 
 const registeredCommands = new Map<string, (...args: unknown[]) => unknown>();
@@ -589,10 +645,18 @@ export function _createExtensionContext() {
 		},
 		extension: {
 			id: 'nolindnaidoo.versions-le',
-			packageJSON: { displayName: 'Versions-LE' },
+			packageJSON: { displayName: 'Versions-LE', version: manifestVersion },
 		},
+		asAbsolutePath: (relative: string) => `/mock/extension/${relative}`,
 	};
 }
+
+/** The manifest's version, read rather than typed, so a bump cannot leave the mock behind. */
+const manifestVersion = (
+	JSON.parse(
+		readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf8'),
+	) as { version: string }
+).version;
 
 export type MockExtensionContext = ReturnType<typeof _createExtensionContext>;
 
@@ -618,6 +682,8 @@ export function _resetMockState(): void {
 	openedDocuments.length = 0;
 	outputChannels.length = 0;
 	statusBarItems.length = 0;
+	mcpProviders.length = 0;
+	_setLmApi(false);
 	executedBuiltins.length = 0;
 	registeredCommands.clear();
 	activeTextEditor = undefined;
