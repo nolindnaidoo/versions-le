@@ -11,6 +11,22 @@ npm command line. The Rust CLI in `crate/` keeps its own
 version and releases from one tag. The entries below 1.0.0 describe this
 repository while it held the CLI alone.
 
+## [Unreleased]
+
+### Fixed
+
+- The MCP server held every byte of a frame until its newline, with no
+  ceiling, so a client that streamed without one grew the process without
+  bound and got no answer. A frame over 16 MiB is refused with a parse error
+  and the next line is served.
+- A failure inside a command, such as the editor refusing to open a document
+  or a dialog going away, escaped as an unhandled rejection the editor
+  reported in its own words, home directory included. Every command reports
+  it as one redacted, localized error.
+- The crate release workflow read a crates.io answer it could not parse, or
+  a failed request, as "unpublished" and would have let the publish run. It
+  refuses to publish without a version list.
+
 ## [1.2.2] - 2026-10-18
 
 ### Changed

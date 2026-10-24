@@ -19,5 +19,6 @@
 	"Warnings": "경고",
 	"{0} finding(s)": "발견 {0}개",
 	"{0} version problem(s) across {1} manifest(s)": "매니페스트 {1}개에서 버전 문제 {0}개",
-	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "매니페스트 {0}개, 제약 {1}개: 오류 {2}개, 경고 {3}개, 정보 {4}개, 비교하지 않음 {5}개"
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "매니페스트 {0}개, 제약 {1}개: 오류 {2}개, 경고 {3}개, 정보 {4}개, 비교하지 않음 {5}개",
+	"Versions-LE could not finish: {0}": "Versions-LE을(를) 완료할 수 없습니다: {0}"
 }

@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import type { Telemetry } from '../telemetry/telemetry';
+import { createNotifier } from '../ui/notifier';
+import { guarded } from './guard';
 
 /**
  * Register the help command
@@ -10,10 +12,10 @@ export function registerHelpCommand(
 ): void {
 	const disposable = vscode.commands.registerCommand(
 		'versions-le.help',
-		async () => {
+		guarded(createNotifier(), async () => {
 			telemetry.event('command', { name: 'help' });
 			await showHelp();
-		},
+		}),
 	);
 	context.subscriptions.push(disposable);
 }

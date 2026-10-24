@@ -19,5 +19,6 @@
 	"Warnings": "警告",
 	"{0} finding(s)": "{0} 件の検出",
 	"{0} version problem(s) across {1} manifest(s)": "{1} 個のマニフェストに {0} 件のバージョンの問題",
-	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "マニフェスト {0} 個、制約 {1} 件: エラー {2} 件、警告 {3} 件、情報 {4} 件、比較なし {5} 件"
+	"{0} manifest(s), {1} constraint(s): {2} error(s), {3} warning(s), {4} info, {5} not compared": "マニフェスト {0} 個、制約 {1} 件: エラー {2} 件、警告 {3} 件、情報 {4} 件、比較なし {5} 件",
+	"Versions-LE could not finish: {0}": "Versions-LE を完了できませんでした: {0}"
 }
