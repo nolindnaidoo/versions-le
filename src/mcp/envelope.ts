@@ -40,31 +40,12 @@ export const DEFAULT_MAX_RESULTS = 500;
 export const MAX_MAX_RESULTS = 5000;
 
 /**
- * `ok` is not `success`, and it is not "clean" either: a document full of bidi
- * controls is the answer, not a failure to produce one. Only an error-severity
- * diagnostic clears it, and a refusal is a warning — the scan ran.
+ * `ok` is not `success`, and it is not "clean" either: a tree full of
+ * conflicting pins is the answer, not a failure to produce one. Only an
+ * error-severity diagnostic clears it, and a refusal is a warning — the check ran.
  */
-export function isOk(diagnostics: readonly Diagnostic[]): boolean {
+function isOk(diagnostics: readonly Diagnostic[]): boolean {
 	return !diagnostics.some((d) => d.severity === 'error');
-}
-
-/**
- * Apply the result cap, reporting honestly whether anything was dropped.
- *
- * The `truncated` flag matters more than the cap. Silently returning the first
- * 500 of 900 matches produces an answer that is wrong in the most expensive
- * way: confidently incomplete, with nothing to indicate it. A model told the
- * result was truncated can narrow its input or raise the cap; one that is not
- * told will state a count that is simply false.
- */
-export function capped<T>(
-	items: readonly T[],
-	maxResults: number,
-): { readonly items: readonly T[]; readonly truncated: boolean } {
-	if (items.length <= maxResults) {
-		return { items, truncated: false };
-	}
-	return { items: items.slice(0, maxResults), truncated: true };
 }
 
 export function envelope<T>(
@@ -98,24 +79,6 @@ export function readMaxResults(args: Record<string, unknown>): number {
 		throw new Error('maxResults must be a positive integer');
 	}
 	return Math.min(raw, MAX_MAX_RESULTS);
-}
-
-/**
- * Read a required string argument with a message naming the argument.
- *
- * The message names the argument because the caller is a model choosing what to
- * send next. "content is required and must be a string" is actionable;
- * "invalid arguments" costs an entire retry to learn nothing.
- */
-export function readString(
-	args: Record<string, unknown>,
-	name: string,
-): string {
-	const value = args[name];
-	if (typeof value !== 'string') {
-		throw new Error(`${name} is required and must be a string`);
-	}
-	return value;
 }
 
 /**

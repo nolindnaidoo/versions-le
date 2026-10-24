@@ -2,7 +2,7 @@ import { EventEmitter } from 'node:events';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { capped, readMaxResults } from './envelope';
+import { readMaxResults } from './envelope';
 import { TOOLS } from './tools';
 import { createResponder, MAX_FRAME_BYTES, serve } from './transport';
 
@@ -32,11 +32,6 @@ for (const match of readFileSync(
 }
 
 describe('envelope', () => {
-	it('reports truncation honestly when it drops items', () => {
-		expect(capped([1, 2, 3], 2)).toEqual({ items: [1, 2], truncated: true });
-		expect(capped([1, 2], 5)).toEqual({ items: [1, 2], truncated: false });
-	});
-
 	it('rejects a maxResults a tool cannot honour, and clamps an oversized one', () => {
 		expect(() => readMaxResults({ maxResults: 0 })).toThrow(/positive integer/);
 		expect(() => readMaxResults({ maxResults: 1.5 })).toThrow();
