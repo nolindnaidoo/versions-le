@@ -15,6 +15,10 @@ repository while it held the CLI alone.
 
 ### Fixed
 
+- Three Simplified Chinese strings mixed ASCII commas and colons into
+  Chinese sentences: the status bar tooltip, the report's summary line and
+  the telemetry setting's description. They use the fullwidth marks the rest
+  of the catalogue uses.
 - A `Cargo.toml` or `pyproject.toml` nested deeper than the toml crate
   follows, 81 arrays or inline tables deep, or carrying a dotted key of 81
   segments, was read by the extension and the npm server where the CLI
