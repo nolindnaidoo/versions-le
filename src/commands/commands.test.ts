@@ -117,6 +117,12 @@ describe('versions-le.compare', () => {
 		expect(text).toContain('`Cargo.toml` · cargo');
 	});
 
+	it('compares the workspace when the argument is not a folder, as a keybinding passes an editor', async () => {
+		useWorkspace(TREE);
+		await runCommand('versions-le.compare', { document: {}, selection: {} });
+		expect(report()).toContain('4 manifest(s)');
+	});
+
 	it('names a manifest that does not parse, and one that is not text', async () => {
 		_setConfig('versions-le.notificationsLevel', 'all');
 		useWorkspace({
