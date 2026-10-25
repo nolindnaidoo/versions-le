@@ -19,6 +19,15 @@ repository while it held the CLI alone.
   calls over one session, one in flight at a time, samples its resident
   memory and fails if it keeps growing. Hand-run, like `benchmark`.
 
+### Changed
+
+- **The listing carries the words people search for.** Open VSX ranks a
+  match in the name five times a match in the description and does not stem,
+  so "Dependency" in the name matched neither "dependencies" nor "monorepo",
+  which were keywords only: the extension ranked 47th for "dependencies" and
+  29th for "monorepo". The name is "Versions-LE: Monorepo Dependencies Version
+  Checker".
+
 ### Fixed
 
 - `versions-le` on npm, like the crate, ended its stderr summary with "no
