@@ -273,9 +273,9 @@ Both halves are covered — the manifest (command titles, setting names and desc
 <!-- performance:start -->
 | Input | Size | Found | Time | Rate | Scan speed |
 | --- | --- | --- | --- | --- | --- |
-| 50 crates, 50 packages | 0.01 MB | 450 | 2.37 ms | 189,660/sec | 6.1 MB/s |
-| 500 crates, 500 packages | 0.15 MB | 4,500 | 19.25 ms | 233,818/sec | 7.6 MB/s |
-| 2,000 crates, 2,000 packages | 0.58 MB | 18,000 | 197.84 ms | 90,983/sec | 3 MB/s |
+| 50 crates, 50 packages | 0.01 MB | 450 | 2.38 ms | 188,722/sec | 6.1 MB/s |
+| 500 crates, 500 packages | 0.15 MB | 4,500 | 27.13 ms | 165,892/sec | 5.4 MB/s |
+| 2,000 crates, 2,000 packages | 0.58 MB | 18,000 | 486.79 ms | 36,977/sec | 1.2 MB/s |
 
 Median of 7 runs after warmup, on Apple M5 Pro, 24 GB RAM, Node 24.3.0. Inputs are generated
 by `scripts/benchmark.ts` rather than checked in, so the sizes above are
@@ -290,12 +290,12 @@ a build only tells you how busy the runner was.
 <!-- coverage:start -->
 | Metric | Coverage |
 | --- | --- |
-| Statements | 79.31% |
-| Branches | 72.36% |
+| Statements | 79.30% |
+| Branches | 72.41% |
 | Functions | 82.44% |
 | Lines | 82.58% |
 
-379 test cases across 24 files, plus an integration suite that runs
+381 test cases across 24 files, plus an integration suite that runs
 in a real VS Code extension host and an end-to-end test that installs the
 built `.vsix` into a clean profile.
 
