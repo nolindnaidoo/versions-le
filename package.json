@@ -3,7 +3,7 @@
 	"publisher": "nolindnaidoo",
 	"displayName": "Versions-LE: Monorepo Dependencies Version Checker",
 	"description": "Dependency version checker: find where one dependency's version is constrained differently across a repository's manifests",
-	"version": "1.2.2",
+	"version": "1.3.0",
 	"license": "MIT",
 	"author": {
 		"name": "nolindnaidoo",
