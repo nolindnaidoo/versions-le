@@ -15,6 +15,10 @@ repository while it held the CLI alone.
 
 ### Fixed
 
+- The npm command line's MCP server joined the chunks of a line in progress
+  on every chunk, copying the whole line so far each time, so a 16 MiB line
+  cost about a gigabyte of transient copies on its way to the frame limit.
+  It joins them once, at the newline.
 - The MCP servers refused `arguments: null` as not being an object, where
   every other server in the family reads a null as "not supplied", as this
   one reads a null field. All three read it as no arguments now. The

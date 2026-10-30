@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { MAX_FRAME_BYTES } from '../mcp/transport';
 import { frames } from './frames';
 
@@ -96,6 +96,28 @@ describe('frames', () => {
 				'z\n{"jsonrpc":"2.0","id":1,"method":"ping"}\n',
 			),
 		).toEqual([limit, ping(1)]);
+	});
+
+	it('joins the chunks of a line once, at its newline', async () => {
+		// Joining on every chunk copied the whole line so far each time: a
+		// 16 MiB line cost about a gigabyte of transient copies on its way to
+		// the limit, with nothing held past it.
+		const concat = vi.spyOn(Buffer, 'concat');
+		try {
+			const body = Array.from({ length: 64 }, () => 'x'.repeat(1024));
+			const read_ = await read(
+				'{"jsonrpc":"2.0","id":1,"method":"ping","params":{"pad":"',
+				...body,
+				'"}}\n',
+				'{"jsonrpc":"2.0","id":2,"method":"ping"}\n',
+			);
+			expect(
+				read_.map((frame) => (frame as { request: { id: number } }).request.id),
+			).toEqual([1, 2]);
+			expect(concat).toHaveBeenCalledTimes(1);
+		} finally {
+			concat.mockRestore();
+		}
 	});
 
 	it('reads a frame exactly at the limit', async () => {
