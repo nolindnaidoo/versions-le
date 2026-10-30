@@ -80,7 +80,7 @@ describe('mcp', () => {
 			jsonrpc: '2.0',
 			id: 1,
 			method: 'tools/call',
-			params: { name: 'versions_le_check', arguments: null },
+			params: { name: 'versions_le_check', arguments: 5 },
 		};
 		await serve(
 			Readable.from([Buffer.from(`${JSON.stringify(request)}\n`)]),
@@ -90,6 +90,34 @@ describe('mcp', () => {
 		const reply = JSON.parse(written[0] ?? '{}');
 		expect(reply.result.isError).toBe(true);
 		expect(reply.result.content[0].text).toBe(
+			'this tool takes an object of arguments',
+		);
+	});
+
+	it('reads null arguments as none, as every server in the family does', async () => {
+		// `null` is how a client spells "not supplied"; it was refused as not
+		// being an object, and the crate's check-cli-parity holds both
+		// command lines to one answer.
+		const reply = async (args: unknown) => {
+			const written: string[] = [];
+			const request = {
+				jsonrpc: '2.0',
+				id: 1,
+				method: 'tools/call',
+				params: { name: 'compare_versions', arguments: args },
+			};
+			await serve(
+				Readable.from([Buffer.from(`${JSON.stringify(request)}\n`)]),
+				(line) => {
+					written.push(line);
+					return undefined;
+				},
+				'9.9.9',
+			);
+			return JSON.parse(written[0] ?? '{}');
+		};
+		expect(await reply(null)).toEqual(await reply({}));
+		expect((await reply(null)).result.content[0].text).not.toBe(
 			'this tool takes an object of arguments',
 		);
 	});
