@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { PassThrough } from 'node:stream';
 import { describe, expect, it } from 'vitest';
 import { readMaxResults } from './envelope';
 import { TOOLS } from './tools';
@@ -159,6 +160,48 @@ describe('protocol', () => {
 		expect(reply?.error?.code).toBe(-32601);
 	});
 
+	it('refuses in the words the other two servers use', async () => {
+		// Three servers ship from this repository; a client must not be able
+		// to tell them apart by what it sent.
+		expect(
+			(await respond({ jsonrpc: '2.0', id: 1, method: 'resources/list' }))
+				?.error?.message,
+		).toBe('Unknown method: resources/list');
+		expect(
+			(
+				await respond({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'tools/call',
+					params: { name: 'nope' },
+				})
+			)?.error?.message,
+		).toBe('Unknown tool: nope');
+		expect(
+			(await respond({ jsonrpc: '2.0', id: 1, method: 'tools/call' }))?.error
+				?.message,
+		).toBe('tools/call requires a string `name`');
+		expect(
+			(
+				await respond({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'tools/call',
+					params: { name: 3 },
+				})
+			)?.error?.message,
+		).toBe('tools/call requires a string `name`');
+	});
+
+	it("refuses notifications/initialized sent with an id as a method it does not implement, as the crate's server does", async () => {
+		const reply = await respond({
+			jsonrpc: '2.0',
+			id: 7,
+			method: 'notifications/initialized',
+		});
+		expect(reply?.error?.code).toBe(-32601);
+	});
+
 	it('reports an unknown method as a JSON-RPC error', async () => {
 		const reply = await respond({ jsonrpc: '2.0', id: 2, method: 'nope' });
 		expect(reply?.error?.code).toBe(-32601);
@@ -187,15 +230,24 @@ describe('protocol', () => {
 		expect(reply?.result?.isError).toBe(true);
 	});
 
-	it('refuses null arguments as the crate does, not as an empty object', async () => {
-		const reply = await respond({
-			jsonrpc: '2.0',
-			id: 5,
-			method: 'tools/call',
-			params: { name: 'compare_versions', arguments: null },
-		});
-		const content = reply?.result?.content as { text: string }[] | undefined;
-		expect(content?.[0]?.text).toBe('this tool takes an object of arguments');
+	it('reads null arguments as none, as every server in the family does', async () => {
+		// `null` is how a client spells "not supplied", which is how the crate
+		// reads a null field; it was refused here as not being an object, and
+		// the family's transport reads it as absent.
+		const call = (args: unknown) =>
+			respond({
+				jsonrpc: '2.0',
+				id: 5,
+				method: 'tools/call',
+				params: { name: 'compare_versions', arguments: args },
+			});
+		expect(await call(null)).toEqual(await call({}));
+		const content = (await call(null))?.result?.content as
+			| { text: string }[]
+			| undefined;
+		expect(content?.[0]?.text).not.toBe(
+			'this tool takes an object of arguments',
+		);
 	});
 });
 
@@ -339,5 +391,71 @@ describe('serve: the stdio loop', () => {
 			},
 			{ jsonrpc: '2.0', id: 9, result: {} },
 		]);
+	});
+});
+
+describe('serve: a client that reads slowly', () => {
+	// The pipe to the client fills; `write` answers false. Every reply after
+	// that would sit in this process until the client drained the pipe, so
+	// the server stops reading until it does: what it holds is bounded by
+	// the requests already in flight, not by everything the client sent.
+	function slowReader() {
+		const input = new PassThrough();
+		const written: string[] = [];
+		let full = false;
+		const output = Object.assign(new EventEmitter(), {
+			write: (chunk: string) => {
+				written.push(chunk);
+				return !full;
+			},
+		});
+		serve(
+			{ name: 'versions-le', version: '1.0.0' },
+			TOOLS,
+			input,
+			output as never,
+		);
+		return {
+			input,
+			output,
+			written,
+			fill: () => {
+				full = true;
+			},
+			drain: () => {
+				full = false;
+				output.emit('drain');
+			},
+		};
+	}
+
+	const settle = () => new Promise((r) => setTimeout(r, 20));
+	const ping = (id: number) => `{"jsonrpc":"2.0","id":${id},"method":"ping"}\n`;
+
+	it('stops reading while the pipe is full and resumes when it drains', async () => {
+		const reader = slowReader();
+		reader.fill();
+		reader.input.write(ping(1));
+		await settle();
+		expect(reader.written).toHaveLength(1);
+		expect(reader.input.isPaused()).toBe(true);
+
+		reader.input.write(ping(2));
+		await settle();
+		expect(reader.written).toHaveLength(1);
+
+		reader.drain();
+		await settle();
+		expect(reader.input.isPaused()).toBe(false);
+		expect(reader.written).toHaveLength(2);
+		expect(JSON.parse(reader.written[1] ?? '').id).toBe(2);
+	});
+
+	it('reads on while the pipe accepts every reply', async () => {
+		const reader = slowReader();
+		reader.input.write(ping(1) + ping(2) + ping(3));
+		await settle();
+		expect(reader.written).toHaveLength(3);
+		expect(reader.input.isPaused()).toBe(false);
 	});
 });

@@ -11,6 +11,16 @@ npm command line. The Rust CLI in `crate/` keeps its own
 version and releases from one tag. The entries below 1.0.0 describe this
 repository while it held the CLI alone.
 
+## [Unreleased]
+
+### Fixed
+
+- The MCP servers refused `arguments: null` as not being an object, where
+  every other server in the family reads a null as "not supplied", as this
+  one reads a null field. All three read it as no arguments now. The
+  extension's server also read on while the pipe to a slow client was full;
+  it stops reading until the pipe drains.
+
 ## [1.3.0] - 2026-10-27
 
 ### Added

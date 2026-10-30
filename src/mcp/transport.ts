@@ -119,15 +119,15 @@ export function createResponder(
 			});
 		}
 
-		// Absent arguments are an empty object; present ones reach the tool as
-		// sent, so `null` is refused for not being an object, as the crate does.
-		const args = (
-			params?.arguments === undefined ? {} : params.arguments
-		) as Record<string, unknown>;
+		// Absent or null arguments are an empty object, which the tool then
+		// refuses for what it lacks, in the same words the crate's server uses.
+		const args = (params?.arguments ?? {}) as Record<string, unknown>;
 
-		// A tool that throws is a tool-level failure, not a protocol failure: the
-		// client gets a result carrying isError so a model can read the reason,
-		// rather than a JSON-RPC error that reads as "the server is broken".
+		// An argument that does not fit the tool's schema is a protocol error,
+		// thrown with its code, which the responder answers as `-32602`. A tool
+		// that fails on what it was given at run time is a result carrying
+		// isError, so a model can read the reason rather than a JSON-RPC error
+		// that reads as "the server is broken".
 		try {
 			const data = await tool.handler(args);
 			return {
@@ -136,6 +136,7 @@ export function createResponder(
 				isError: false,
 			};
 		} catch (error) {
+			if ((error as { code?: unknown })?.code === INVALID_PARAMS) throw error;
 			const message = error instanceof Error ? error.message : String(error);
 			return {
 				content: [{ type: 'text', text: message }],
@@ -220,8 +221,19 @@ export function serve(
 	// as it arrives, so the oversized message is never held.
 	let discarding = false;
 
+	// A client that reads slowly fills the pipe, and every reply after that
+	// sits in this process until it drains. Reading stops while the pipe is
+	// full, so what is held is bounded by the requests already in flight
+	// rather than by everything the client has sent.
+	let waitingForDrain = false;
 	const write = (message: unknown): void => {
-		output.write(`${JSON.stringify(message)}\n`);
+		if (output.write(`${JSON.stringify(message)}\n`) || waitingForDrain) return;
+		waitingForDrain = true;
+		input.pause();
+		output.once('drain', () => {
+			waitingForDrain = false;
+			input.resume();
+		});
 	};
 
 	const frameRefusal = () => ({
