@@ -166,10 +166,11 @@ async function callTool(params: unknown): Promise<Handled> {
 			},
 		};
 	}
-	// Absent arguments read as an empty object; present ones reach the tool
-	// as sent, and both tools refuse anything but an object, as the crate's do.
+	// Absent or null arguments read as an empty object, since a null is how a
+	// client spells "not supplied"; anything else present reaches the tool as
+	// sent, and both tools refuse what is not an object, as the crate's do.
 	const raw = field(params, 'arguments');
-	const args = (raw === undefined ? {} : raw) as Record<string, unknown>;
+	const args = (raw ?? {}) as Record<string, unknown>;
 	if (name === 'compare_versions') {
 		return { result: await outcome(() => SHARED.handler(args)) };
 	}

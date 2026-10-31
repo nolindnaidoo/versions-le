@@ -8,6 +8,15 @@ in this repository carries one version and releases from one tag.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- The MCP server refused `arguments: null` as not being an object, where
+  it reads a null field as "not supplied" and every other server in the
+  family reads a null `arguments` the same way. It reads it as no arguments
+  now.
+
 ## [1.3.0] - 2026-10-27
 
 ### Fixed

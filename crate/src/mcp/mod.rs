@@ -238,8 +238,11 @@ fn call_tool(params: Option<&Value>) -> Result<Value, (i64, String)> {
         .get("name")
         .and_then(Value::as_str)
         .ok_or_else(no_name)?;
+    // A null is how a client spells "not supplied", as a null field is read
+    // below; it was refused here as not being an object.
     let arguments = params
         .get("arguments")
+        .filter(|value| !value.is_null())
         .cloned()
         .unwrap_or_else(|| json!({}));
 
@@ -449,6 +452,21 @@ mod tests {
         assert!(handle(&json!({ "jsonrpc": "2.0", "method": "initialized" })).is_none());
         let null_id = json!({ "jsonrpc": "2.0", "id": null, "method": "ping" });
         assert!(handle(&null_id).is_none(), "a null id is a notification");
+    }
+
+    /// `null` is how a client spells "not supplied", as this server reads a
+    /// null field; it was refused as not being an object, where every other
+    /// server in the family reads it as no arguments.
+    #[test]
+    fn null_arguments_read_as_none() {
+        assert_eq!(
+            call("compare_versions", &json!(null)),
+            call("compare_versions", &json!({}))
+        );
+        assert_ne!(
+            call("compare_versions", &json!(null))["result"]["content"][0]["text"],
+            "this tool takes an object of arguments"
+        );
     }
 
     /// The loop, driven with bytes in the 8 KiB chunks stdin arrives in,

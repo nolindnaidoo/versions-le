@@ -61,7 +61,11 @@ async function* lines(
 	input: AsyncIterable<Uint8Array>,
 ): AsyncGenerator<string | null> {
 	const decoder = new TextDecoder('utf-8', { ignoreBOM: true });
-	let pending = Buffer.alloc(0);
+	// The chunks of the line in progress, joined once at its newline. Joining
+	// on every chunk copied the whole line so far each time, and a 16 MiB
+	// line cost about a gigabyte of transient copies on its way to the limit.
+	let pending: Uint8Array[] = [];
+	let pendingBytes = 0;
 	let discarding = false;
 	for await (const chunk of input) {
 		let bytes: Uint8Array = chunk;
@@ -71,16 +75,24 @@ async function* lines(
 			discarding = false;
 			bytes = bytes.subarray(end + 1);
 		}
-		pending = Buffer.concat([pending, bytes]);
-		let newline = pending.indexOf(10);
+		let newline = bytes.indexOf(10);
 		while (newline !== -1) {
-			const line = pending.subarray(0, newline);
-			pending = pending.subarray(newline + 1);
-			newline = pending.indexOf(10);
+			const head = bytes.subarray(0, newline);
+			const line =
+				pending.length === 0 ? head : Buffer.concat([...pending, head]);
+			pending = [];
+			pendingBytes = 0;
+			bytes = bytes.subarray(newline + 1);
+			newline = bytes.indexOf(10);
 			yield line.length > MAX_FRAME_BYTES ? null : decoder.decode(line);
 		}
-		if (pending.length > MAX_FRAME_BYTES) {
-			pending = Buffer.alloc(0);
+		if (bytes.length > 0) {
+			pending.push(bytes);
+			pendingBytes += bytes.length;
+		}
+		if (pendingBytes > MAX_FRAME_BYTES) {
+			pending = [];
+			pendingBytes = 0;
 			discarding = true;
 			yield null;
 		}

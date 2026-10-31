@@ -11,6 +11,25 @@ npm command line. The Rust CLI in `crate/` keeps its own
 version and releases from one tag. The entries below 1.0.0 describe this
 repository while it held the CLI alone.
 
+## [Unreleased]
+
+### Fixed
+
+- The extension's MCP server, the one `versions-le-mcp` and the editor run, died
+  on an unhandled EPIPE with a Node stack trace when the client closed the
+  pipe, which a host logs as the server crashing. It exits 2 quietly at the
+  first reply it cannot write, as the crate's server and the npm command
+  line do.
+- The npm command line's MCP server joined the chunks of a line in progress
+  on every chunk, copying the whole line so far each time, so a 16 MiB line
+  cost about a gigabyte of transient copies on its way to the frame limit.
+  It joins them once, at the newline.
+- The MCP servers refused `arguments: null` as not being an object, where
+  every other server in the family reads a null as "not supplied", as this
+  one reads a null field. All three read it as no arguments now. The
+  extension's server also read on while the pipe to a slow client was full;
+  it stops reading until the pipe drains.
+
 ## [1.3.0] - 2026-10-27
 
 ### Added
